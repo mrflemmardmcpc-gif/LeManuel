@@ -2171,11 +2171,13 @@ export default function App() {
                   <span>🔄</span>
                   <span>{syncStatus === "connected" ? "Sync" : "Sync..."}</span>
                 </div>
-                <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: kvBadgeBg, color: kvBadgeColor, fontSize: 12, fontWeight: 700, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <span>💾</span>
-                  <span>{kvBadgeText}</span>
-                  {kvLastSaved && <span style={{ fontSize: 11, opacity: 0.85 }}>{new Date(kvLastSaved).toLocaleTimeString("fr-FR", { hour12: false })}</span>}
-                </div>
+                {isAuthenticated && (
+                  <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: kvBadgeBg, color: kvBadgeColor, fontSize: 12, fontWeight: 700, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span>💾</span>
+                    <span>{kvBadgeText}</span>
+                    {kvLastSaved && <span style={{ fontSize: 11, opacity: 0.85 }}>{new Date(kvLastSaved).toLocaleTimeString("fr-FR", { hour12: false })}</span>}
+                  </div>
+                )}
                 <button onClick={handleLogout} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
                 <button onClick={() => setShowGallery(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
                 <button onClick={() => setShowCollabModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>🤝</button>
@@ -2183,10 +2185,8 @@ export default function App() {
                 <button onClick={() => setDarkMode((d) => !d)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
                   {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
                 </button>
-                {isAuthenticated ? (
+                {isAuthenticated && (
                   <button onClick={() => setEditMode((e) => !e)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: editMode ? "#10b981" : theme.accent3, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>{editMode ? "✏️" : "🔒"}</button>
-                ) : (
-                  <button disabled style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "not-allowed", fontWeight: 600, opacity: 0.7, flexShrink: 0 }} title="Réservé à l'admin">🔒</button>
                 )}
               </div>
             </div>
