@@ -3,17 +3,10 @@ import CollaborativeEditor from "./CollaborativeEditor.jsx";
 
 const STORAGE_KEY = "memo_plomberie_full_v9";
 
-const SunIcon = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false" style={{ display: "block" }}>
-    <path d="M12 18a6 6 0 100-12 6 6 0 000 12z" />
-    <path d="M12 2.25a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zm0 17.25a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V20.25a.75.75 0 01.75-.75zm9-7.5a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75zm-17.25 0a.75.75 0 01-.75.75H1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75zm14.773 5.773a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-11.326 0a.75.75 0 010 1.06L4.088 19.89a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM18.364 5.636a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zM6.758 5.636a.75.75 0 010 1.06L5.697 7.757a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0z" />
-  </svg>
-);
-
-const MoonIcon = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false" style={{ display: "block" }}>
-    <path d="M21 12.79A9 9 0 1111.21 3 7.5 7.5 0 0021 12.79z" />
-  </svg>
+const Emoji = ({ symbol, label, size = 18 }) => (
+  <span role="img" aria-label={label} style={{ fontSize: size, lineHeight: 1, fontFamily: "'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif", display: "inline-block" }}>
+    {symbol}
+  </span>
 );
 
 const DEFAULT_DATA = {
@@ -1968,7 +1961,7 @@ export default function App() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
               <h1 style={{ margin: 0, fontSize: 28, fontWeight: "bold", color: theme.accent1 }}>Choisis un mode</h1>
               <button onClick={() => setDarkMode((d) => !d)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                {darkMode ? <SunIcon /> : <MoonIcon />}
+                {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={18} /> : <Emoji symbol="🌙" label="Mode sombre" size={18} />}
               </button>
             </div>
             <p style={{ margin: 0, color: theme.subtext, lineHeight: 1.6 }}>Visiteur : consultation uniquement. Admin : accès aux boutons d'édition (mot de passe requis).</p>
@@ -2004,7 +1997,7 @@ export default function App() {
                 <button onClick={() => setShowCollabModal(true)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: "600" }}>🤝</button>
                 <button onClick={() => setShowSearchModal(true)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer" }}>🔍</button>
                 <button onClick={() => setDarkMode((d) => !d)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  {darkMode ? <SunIcon /> : <MoonIcon />}
+                  {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={18} /> : <Emoji symbol="🌙" label="Mode sombre" size={18} />}
                 </button>
                 {isAuthenticated ? (
                   <button onClick={() => setEditMode((e) => !e)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: editMode ? "#10b981" : theme.accent3, color: "white", border: "none", cursor: "pointer", fontWeight: "600" }}>{editMode ? "✏️" : "🔒"}</button>
