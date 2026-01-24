@@ -4,25 +4,9 @@ import CollaborativeEditor from "./CollaborativeEditor.jsx";
 const STORAGE_KEY = "memo_plomberie_full_v9";
 
 const Emoji = ({ symbol, label, size = 18 }) => (
-  <span role="img" aria-label={label} style={{ fontSize: size, lineHeight: 1, fontFamily: "'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI Symbol', sans-serif", display: "inline-block" }}>
+  <span role="img" aria-label={label} style={{ fontSize: size, lineHeight: 1, fontFamily: "'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif", display: "inline-block" }}>
     {symbol}
   </span>
-);
-
-const EyeIcon = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ display: "block" }}>
-    <path d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z" />
-    <circle cx="12" cy="12" r="3.5" />
-    <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
-  </svg>
-);
-
-const ToolsIcon = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ display: "block" }}>
-    <path d="M7 7l2 2m3-5.5l2.5 2.5-2 2L10 6.5 8 8.5 5.5 6 7 4.5" />
-    <path d="M11 11l6.5 6.5a1.5 1.5 0 01-2.12 2.12L8.88 13.12" />
-    <path d="M15 11l1.5-1.5L19 12l-1.5 1.5" />
-  </svg>
 );
 
 const DEFAULT_DATA = {
@@ -1982,13 +1966,11 @@ export default function App() {
             </div>
             <p style={{ margin: 0, color: theme.subtext, lineHeight: 1.6 }}>Visiteur : consultation uniquement. Admin : accès aux boutons d'édition (mot de passe requis).</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
-              <button onClick={handleSelectVisitor} style={{ padding: "16px", borderRadius: 12, border: `1px solid ${theme.border}`, background: `linear-gradient(135deg, ${theme.panel} 0%, ${theme.input} 100%)`, color: theme.text, cursor: "pointer", fontSize: 18, fontWeight: 600, boxShadow: theme.shadow, display: "inline-flex", alignItems: "center", gap: 10 }}>
-                <EyeIcon size={18} />
-                Mode Visiteur
+              <button onClick={handleSelectVisitor} style={{ padding: "16px", borderRadius: 12, border: `1px solid ${theme.border}`, background: `linear-gradient(135deg, ${theme.panel} 0%, ${theme.input} 100%)`, color: theme.text, cursor: "pointer", fontSize: 18, fontWeight: 600, boxShadow: theme.shadow }}>
+                👀 Mode Visiteur
               </button>
-              <button onClick={handleOpenAdminLogin} style={{ padding: "16px", borderRadius: 12, border: `1px solid ${theme.border}`, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", cursor: "pointer", fontSize: 18, fontWeight: 700, boxShadow: theme.shadow, display: "inline-flex", alignItems: "center", gap: 10 }}>
-                <ToolsIcon size={18} />
-                Mode Admin
+              <button onClick={handleOpenAdminLogin} style={{ padding: "16px", borderRadius: 12, border: `1px solid ${theme.border}`, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", cursor: "pointer", fontSize: 18, fontWeight: 700, boxShadow: theme.shadow }}>
+                🛠️ Mode Admin
               </button>
             </div>
           </div>
