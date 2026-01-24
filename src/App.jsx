@@ -1468,12 +1468,16 @@ export default function App() {
         const res = await fetch("/api/state");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const body = await res.json();
-        if (!cancelled && body?.data && typeof body.data === "object") {
-          setData(body.data);
-        }
         if (!cancelled) {
+          if (body?.data && typeof body.data === "object") {
+            setData(body.data);
+            setKvStatus("loaded");
+          } else {
+            // Seed KV with defaults if empty
+            setData(DEFAULT_DATA);
+            setKvStatus("loaded");
+          }
           kvReadyRef.current = true;
-          setKvStatus("loaded");
         }
       } catch (err) {
         if (!cancelled) {
