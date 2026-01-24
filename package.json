@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vercel/blob": "^0.25.1",
     "@tiptap/extension-collaboration": "^2.6.6",
     "@tiptap/extension-collaboration-cursor": "^2.6.6",
     "@tiptap/pm": "^2.6.6",

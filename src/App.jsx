@@ -1402,6 +1402,10 @@ export default function App() {
   const yMapRef = useRef(null);
   const isApplyingRemoteRef = useRef(false);
   const [syncStatus, setSyncStatus] = useState("connecting");
+  const kvReadyRef = useRef(false);
+  const kvSaveTimerRef = useRef(null);
+  const [kvStatus, setKvStatus] = useState("idle");
+  const [kvLastSaved, setKvLastSaved] = useState(null);
 
   // Branch data on a shared Y.js document so edits are synchronized in real time across devices.
   useEffect(() => {
@@ -1455,6 +1459,57 @@ export default function App() {
     ymap.set("data", data);
   }, [data]);
 
+  // Hydrate from KV persistence (single snapshot) so fresh deployments reuse saved content.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setKvStatus("loading");
+      try {
+        const res = await fetch("/api/state");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const body = await res.json();
+        if (!cancelled && body?.data && typeof body.data === "object") {
+          setData(body.data);
+        }
+        if (!cancelled) {
+          kvReadyRef.current = true;
+          setKvStatus("loaded");
+        }
+      } catch (err) {
+        if (!cancelled) {
+          kvReadyRef.current = true;
+          setKvStatus("error");
+        }
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Persist every change (debounced) to KV to keep a durable snapshot.
+  useEffect(() => {
+    if (!kvReadyRef.current) return;
+    if (kvSaveTimerRef.current) clearTimeout(kvSaveTimerRef.current);
+    kvSaveTimerRef.current = setTimeout(async () => {
+      setKvStatus("saving");
+      try {
+        const res = await fetch("/api/state", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setKvStatus("saved");
+        setKvLastSaved(Date.now());
+      } catch (err) {
+        setKvStatus("error");
+      }
+    }, 1200);
+    return () => {
+      if (kvSaveTimerRef.current) clearTimeout(kvSaveTimerRef.current);
+    };
+  }, [data]);
+
   const [search, setSearch] = useState("");
   const [selectedSectionId, setSelectedSectionId] = useState(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
@@ -1479,6 +1534,7 @@ export default function App() {
   const [showGallery, setShowGallery] = useState(false);
   const [galleryFilterCatId, setGalleryFilterCatId] = useState(null);
   const [isAddingImage, setIsAddingImage] = useState(false);
+  const [galleryUploadBusy, setGalleryUploadBusy] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [newImageCatId, setNewImageCatId] = useState(null);
   const [newImageSubId, setNewImageSubId] = useState(null);
@@ -1487,6 +1543,7 @@ export default function App() {
   const [inlineImageUrl, setInlineImageUrl] = useState("");
   const [inlineImageDesc, setInlineImageDesc] = useState("");
   const [inlineImageLoading, setInlineImageLoading] = useState(false);
+  const [inlineUploadBusy, setInlineUploadBusy] = useState(false);
   const [showSectionPanel, setShowSectionPanel] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showEditSectionsPanel, setShowEditSectionsPanel] = useState(false);
@@ -1813,6 +1870,19 @@ export default function App() {
     setNewSubColor("#e6eef8");
   };
 
+  const uploadImageToBlob = async (dataUrl) => {
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dataUrl }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body?.url) {
+      throw new Error(body?.error || `Upload HTTP ${res.status}`);
+    }
+    return body.url;
+  };
+
   const startInlineImage = (catId, subId) => {
     setInlineImageTarget({ catId, subId });
     setInlineImageUrl("");
@@ -1859,18 +1929,26 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  const saveInlineImage = () => {
+  const saveInlineImage = async () => {
     if (!inlineImageTarget || !inlineImageUrl) { showToast("Choisis une image"); return; }
-    const image = { url: inlineImageUrl, desc: inlineImageDesc.trim() };
-    setData(prevData => ({
-      ...prevData,
-      categories: prevData.categories.map(cat => cat.id === inlineImageTarget.catId ? {
-        ...cat,
-        subs: cat.subs.map(sub => sub.id === inlineImageTarget.subId ? { ...sub, image } : sub)
-      } : cat)
-    }));
-    showToast("Image ajoutée");
-    cancelInlineImage();
+    setInlineUploadBusy(true);
+    try {
+      const uploadedUrl = await uploadImageToBlob(inlineImageUrl);
+      const image = { url: uploadedUrl, desc: inlineImageDesc.trim() };
+      setData(prevData => ({
+        ...prevData,
+        categories: prevData.categories.map(cat => cat.id === inlineImageTarget.catId ? {
+          ...cat,
+          subs: cat.subs.map(sub => sub.id === inlineImageTarget.subId ? { ...sub, image } : sub)
+        } : cat)
+      }));
+      showToast("Image ajoutée");
+      cancelInlineImage();
+    } catch (err) {
+      showToast("Échec de l'upload image");
+    } finally {
+      setInlineUploadBusy(false);
+    }
   };
 
   const onFileChange = (e) => {
@@ -1898,25 +1976,34 @@ export default function App() {
     e.target.value = '';
   };
 
-  const saveImage = () => {
+  const saveImage = async () => {
     if (!newImageCatId || !newImageSubId || !newImageUrl) { showToast("Remplis tous les champs"); return; }
-    const newImage = { url: newImageUrl, desc: newImageDesc.trim() };
-    setData(prevData => ({
-      ...prevData,
-      categories: prevData.categories.map(cat => cat.id === newImageCatId ? {
-        ...cat,
-        subs: cat.subs.map(sub => {
-          if (sub.id !== newImageSubId) return sub;
-          const list = getSubImages(sub);
-          return { ...sub, images: [...list, newImage], image: undefined };
-        })
-      } : cat)
-    }));
-    setNewImageUrl("");
-    setNewImageCatId(null);
-    setNewImageSubId(null);
-    setNewImageDesc("");
-    setIsAddingImage(false);
+    setGalleryUploadBusy(true);
+    try {
+      const uploadedUrl = await uploadImageToBlob(newImageUrl);
+      const newImage = { url: uploadedUrl, desc: newImageDesc.trim() };
+      setData(prevData => ({
+        ...prevData,
+        categories: prevData.categories.map(cat => cat.id === newImageCatId ? {
+          ...cat,
+          subs: cat.subs.map(sub => {
+            if (sub.id !== newImageSubId) return sub;
+            const list = getSubImages(sub);
+            return { ...sub, images: [...list, newImage], image: undefined };
+          })
+        } : cat)
+      }));
+      showToast("Image ajoutée");
+      setNewImageUrl("");
+      setNewImageCatId(null);
+      setNewImageSubId(null);
+      setNewImageDesc("");
+      setIsAddingImage(false);
+    } catch (err) {
+      showToast("Échec de l'upload image");
+    } finally {
+      setGalleryUploadBusy(false);
+    }
   };
 
   const deleteImage = (catId, subId, imageIndex) => {
@@ -2003,6 +2090,10 @@ export default function App() {
     ? { bg: "linear-gradient(135deg, #1a1a2e 0%, #2d1b4e 50%, #0f172a 100%)", panel: "rgba(255, 255, 255, 0.08)", border: "rgba(255, 255, 255, 0.1)", text: "#f8f9fa", subtext: "#b0b8c8", input: "rgba(255, 255, 255, 0.05)", accent1: "#FFB366", accent2: "#FF6B9D", accent3: "#4A4E69", shadow: "0 8px 32px rgba(0, 0, 0, 0.3)" }
     : { bg: "linear-gradient(135deg, #f8fafc 0%, #f0e6ff 50%, #fff5f0 100%)", panel: "rgba(255, 255, 255, 0.9)", border: "rgba(0, 0, 0, 0.08)", text: "#1a1a2e", subtext: "#6b7280", input: "rgba(0, 0, 0, 0.05)", accent1: "#FFB366", accent2: "#FF6B9D", accent3: "#4A4E69", shadow: "0 8px 32px rgba(0, 0, 0, 0.1)" };
 
+  const kvBadgeBg = kvStatus === "error" ? "#ef4444" : kvStatus === "saving" ? "#f59e0b" : (kvStatus === "loaded" || kvStatus === "saved") ? "#10b981" : theme.panel;
+  const kvBadgeText = kvStatus === "error" ? "KV err" : kvStatus === "saving" ? "KV..." : (kvStatus === "loaded" || kvStatus === "saved") ? "KV ok" : "KV";
+  const kvBadgeColor = kvStatus === "idle" ? theme.text : "white";
+
   const layout = useMemo(() => ({
     headerPad: isMobile ? 6 : 16,
     contentTop: isMobile ? 110 : 120,
@@ -2075,6 +2166,11 @@ export default function App() {
                 <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: syncStatus === "connected" ? "#10b981" : theme.panel, color: syncStatus === "connected" ? "white" : theme.text, fontSize: 12, fontWeight: 700, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
                   <span>🔄</span>
                   <span>{syncStatus === "connected" ? "Sync" : "Sync..."}</span>
+                </div>
+                <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: kvBadgeBg, color: kvBadgeColor, fontSize: 12, fontWeight: 700, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span>💾</span>
+                  <span>{kvBadgeText}</span>
+                  {kvLastSaved && <span style={{ fontSize: 11, opacity: 0.85 }}>{new Date(kvLastSaved).toLocaleTimeString("fr-FR", { hour12: false })}</span>}
                 </div>
                 <button onClick={handleLogout} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
                 <button onClick={() => setShowGallery(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
@@ -2275,8 +2371,10 @@ export default function App() {
                         <input type="file" ref={fileInputRef} onChange={onFileChange} accept="image/*" style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px dashed ${theme.border}`, backgroundColor: darkMode ? "rgba(26,30,46,0.9)" : "#f8fafc", color: theme.text, transition: "border-color 120ms ease, box-shadow 120ms ease" }} />
                         {newImageUrl && <img src={newImageUrl} alt="Preview" style={{ width: "100%", maxHeight: 200, borderRadius: 10, objectFit: "cover", border: `1px solid ${theme.border}` }} />}
                         <div style={{ display: "flex", gap: 10 }}>
-                          <button onClick={saveImage} style={{ flex: 1, padding: "10px 14px", borderRadius: 12, background: "linear-gradient(120deg, #10b981, #0ea5e9)", color: "white", border: "none", cursor: "pointer", fontWeight: 800 }}>💾 Enregistrer</button>
-                          <button onClick={() => { setNewImageUrl(""); setNewImageCatId(null); setNewImageSubId(null); setNewImageDesc(""); }} style={{ padding: "10px 14px", borderRadius: 12, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>Annuler</button>
+                          <button onClick={saveImage} disabled={galleryUploadBusy} style={{ flex: 1, padding: "10px 14px", borderRadius: 12, background: galleryUploadBusy ? "#6b7280" : "linear-gradient(120deg, #10b981, #0ea5e9)", color: "white", border: "none", cursor: galleryUploadBusy ? "not-allowed" : "pointer", fontWeight: 800 }}>
+                            {galleryUploadBusy ? "Upload..." : "💾 Enregistrer"}
+                          </button>
+                          <button onClick={() => { setNewImageUrl(""); setNewImageCatId(null); setNewImageSubId(null); setNewImageDesc(""); }} disabled={galleryUploadBusy} style={{ padding: "10px 14px", borderRadius: 12, backgroundColor: "#6b7280", color: "white", border: "none", cursor: galleryUploadBusy ? "not-allowed" : "pointer", fontWeight: 700, opacity: galleryUploadBusy ? 0.75 : 1 }}>Annuler</button>
                         </div>
                       </div>
                     </div>
@@ -2520,8 +2618,10 @@ export default function App() {
                                       <img src={inlineImageUrl} alt="Preview" style={{ maxWidth: "100%", maxHeight: 220, borderRadius: 8, objectFit: "cover" }} />
                                       <input value={inlineImageDesc} onChange={(e) => setInlineImageDesc(e.target.value)} placeholder="Description (optionnel)" style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }} />
                                       <div style={{ display: "flex", gap: 8 }}>
-                                        <button onClick={saveInlineImage} style={{ flex: 1, padding: "10px 12px", borderRadius: 8, backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>💾 Enregistrer</button>
-                                        <button onClick={cancelInlineImage} style={{ padding: "10px 12px", borderRadius: 8, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "pointer" }}>Annuler</button>
+                                        <button onClick={saveInlineImage} disabled={inlineUploadBusy} style={{ flex: 1, padding: "10px 12px", borderRadius: 8, backgroundColor: inlineUploadBusy ? "#6b7280" : "#10b981", color: "white", border: "none", cursor: inlineUploadBusy ? "not-allowed" : "pointer", fontWeight: 700 }}>
+                                          {inlineUploadBusy ? "Upload..." : "💾 Enregistrer"}
+                                        </button>
+                                        <button onClick={cancelInlineImage} disabled={inlineUploadBusy} style={{ padding: "10px 12px", borderRadius: 8, backgroundColor: "#6b7280", color: "white", border: "none", cursor: inlineUploadBusy ? "not-allowed" : "pointer", opacity: inlineUploadBusy ? 0.7 : 1 }}>Annuler</button>
                                       </div>
                                     </div>
                                   )}
