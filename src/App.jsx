@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
-import CollaborativeEditor from "./CollaborativeEditor.jsx";
 
 const Emoji = ({ symbol, label, size = 18 }) => (
   <span role="img" aria-label={label} style={{ fontSize: size, lineHeight: 1, fontFamily: "'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif", display: "inline-block" }}>
@@ -1545,6 +1544,8 @@ export default function App() {
   const [newImageDesc, setNewImageDesc] = useState("");
   const [imageDrawerOpen, setImageDrawerOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
+  const [drawerSectionId, setDrawerSectionId] = useState(null);
+  const [drawerCategoryId, setDrawerCategoryId] = useState(null);
   const [inlineImageTarget, setInlineImageTarget] = useState(null);
   const [inlineImageUrl, setInlineImageUrl] = useState("");
   const [inlineImageDesc, setInlineImageDesc] = useState("");
@@ -1573,15 +1574,12 @@ export default function App() {
   const [loginError, setLoginError] = useState("");
   const [confirmModal, setConfirmModal] = useState({ open: false, message: "", onConfirm: null });
   const [toast, setToast] = useState({ message: "" });
-  const [showCollabModal, setShowCollabModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const sectionScrollRef = useRef(null);
   const fileInputRef = useRef(null);
   const inlineFileInputRef = useRef(null);
   const subRefs = useRef({});
   const toastTimeoutRef = useRef(null);
-
-  const collabUser = useMemo(() => ({ name: isAuthenticated ? "Admin" : "Visiteur", color: isAuthenticated ? "#10b981" : "#3b82f6" }), [isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -1682,6 +1680,25 @@ export default function App() {
     return hasImagesForSelectedCategory;
   }, [isMobile, hasImagesForSelectedCategory]);
 
+  const sectionsWithImages = useMemo(() => {
+    const sectionIds = new Set();
+    allImages.forEach((img) => {
+      const cat = data.categories.find((c) => c.id === img.catId);
+      if (cat) sectionIds.add(cat.sectionId);
+    });
+    return data.sections.filter((s) => sectionIds.has(s.id));
+  }, [allImages, data.categories, data.sections]);
+
+  const drawerCategories = useMemo(() => {
+    const withImages = new Set(allImages.map((img) => img.catId));
+    return data.categories.filter((cat) => withImages.has(cat.id) && (!drawerSectionId || cat.sectionId === drawerSectionId));
+  }, [allImages, data.categories, drawerSectionId]);
+
+  const drawerImages = useMemo(() => {
+    if (!drawerCategoryId) return [];
+    return allImages.filter((img) => img.catId === drawerCategoryId);
+  }, [allImages, drawerCategoryId]);
+
   useEffect(() => {
     if (!hasImagesForSelectedCategory) setImageDrawerOpen(false);
   }, [hasImagesForSelectedCategory]);
@@ -1689,6 +1706,19 @@ export default function App() {
   useEffect(() => {
     if (!isMobile) setImageDrawerOpen(false);
   }, [isMobile]);
+
+  useEffect(() => {
+    if (!imageDrawerOpen) return;
+    // Seed drawer selectors based on current selection or available data.
+    const selectedCat = data.categories.find((c) => c.id === selectedCategoryId);
+    const fallbackSection = selectedCat?.sectionId || sectionsWithImages[0]?.id || null;
+    const nextSection = drawerSectionId && sectionsWithImages.some((s) => s.id === drawerSectionId) ? drawerSectionId : fallbackSection;
+    setDrawerSectionId(nextSection);
+
+    const availableCats = drawerCategories.filter((c) => !nextSection || c.sectionId === nextSection);
+    const chosenCat = selectedCat && availableCats.some((c) => c.id === selectedCat.id) ? selectedCat.id : availableCats[0]?.id || null;
+    setDrawerCategoryId(chosenCat);
+  }, [imageDrawerOpen, selectedCategoryId, data.categories, sectionsWithImages, drawerCategories, drawerSectionId]);
 
   const toggleCategory = (id) => {
     setExpandedCategories((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -2194,7 +2224,6 @@ export default function App() {
                 {isMobile && hasImagesForSelectedCategory && (
                   <button onClick={() => setImageDrawerOpen(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>Images ({filteredGalleryImages.filter(img => img.catId === selectedCategoryId).length})</button>
                 )}
-                <button onClick={() => setShowCollabModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>🤝</button>
                 <button onClick={() => setShowSearchModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
                 <button onClick={() => setDarkMode((d) => !d)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
                   {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
@@ -2214,7 +2243,7 @@ export default function App() {
             </div>
           </header>
 
-          <div style={{ marginTop: headerHeight ? `${headerHeight + 18}px` : `calc(${layout.contentTop + 60}px + ${safeTopInset})`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ marginTop: headerHeight ? `${headerHeight + 4}px` : `calc(${layout.contentTop + 20}px + ${safeTopInset})`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {selectedSectionId && (
               <div style={{ marginTop: 16, padding: `10px ${layout.contentPad}px 14px`, display: "flex", gap: 8, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
                 <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
@@ -2455,21 +2484,6 @@ export default function App() {
               </div>
             )}
 
-            {showCollabModal && (
-              <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-                <div style={{ width: "min(960px, 96vw)", backgroundColor: darkMode ? "rgba(13,16,28,0.95)" : "rgba(255,255,255,0.96)", borderRadius: 16, border: `1px solid ${theme.border}`, boxShadow: theme.shadow, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <h3 style={{ margin: 0, color: theme.accent1 }}>🤝 Éditeur collaboratif</h3>
-                      <div style={{ color: theme.subtext, fontSize: 12 }}>Tiptap + Y.js (temps réel, serveur démo)</div>
-                    </div>
-                    <button onClick={() => setShowCollabModal(false)} style={{ padding: "8px 12px", borderRadius: 10, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>✖</button>
-                  </div>
-                  <CollaborativeEditor room="carnet-plomberie" user={collabUser} />
-                </div>
-              </div>
-            )}
-
             <section style={{ flex: 1, overflow: "auto", padding: layout.contentPad }} ref={sectionScrollRef}>
               {editMode && (
                 <div style={{ background: `linear-gradient(135deg, ${theme.panel} 0%, ${theme.bg} 100%)`, padding: 20, borderRadius: 16, border: `1px solid ${theme.border}`, marginBottom: 20, boxShadow: theme.shadow }}>
@@ -2598,7 +2612,21 @@ export default function App() {
                                     value={editText}
                                     onChange={(e) => setEditText(e.target.value)}
                                     onSelect={(e) => handleTextSelect(e, "editSub")}
-                                    style={{ width: "100%", minHeight: 150, padding: 12, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontFamily: "monospace", marginBottom: 10 }}
+                                    placeholder="Saisis ou colle ton texte (markdown)"
+                                    style={{
+                                      width: "100%",
+                                      minHeight: 180,
+                                      padding: 14,
+                                      borderRadius: 12,
+                                      border: `1px solid ${theme.accent1}`,
+                                      background: darkMode ? "linear-gradient(135deg, rgba(26,32,44,0.92), rgba(17,24,39,0.92))" : "linear-gradient(135deg, #f8fafc, #eef2ff)",
+                                      color: theme.text,
+                                      fontFamily: "'Inter', 'SFMono-Regular', monospace",
+                                      lineHeight: 1.6,
+                                      boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+                                      marginBottom: 12,
+                                      borderColor: darkMode ? "rgba(255,179,102,0.45)" : "rgba(255,179,102,0.65)",
+                                    }}
                                   />
 
                                   {selectionInfo.text && selectionInfo.target === "editSub" && (
@@ -2656,11 +2684,24 @@ export default function App() {
                                 <h4 style={{ marginTop: 0, color: "#10b981" }}>➕ Module</h4>
                                 <input placeholder="Titre" value={newSubTitle} onChange={(e) => setNewSubTitle(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, marginBottom: 10 }} />
                                 <textarea
-                                  placeholder="Description"
+                                  placeholder="Saisis ou colle ton texte (markdown)"
                                   value={newSubText}
                                   onChange={(e) => setNewSubText(e.target.value)}
                                   onSelect={(e) => handleTextSelect(e, "newSub")}
-                                  style={{ width: "100%", minHeight: 100, padding: 12, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontFamily: "monospace", marginBottom: 10 }}
+                                  style={{
+                                    width: "100%",
+                                    minHeight: 160,
+                                    padding: 14,
+                                    borderRadius: 12,
+                                    border: `1px solid ${theme.accent1}`,
+                                    background: darkMode ? "linear-gradient(135deg, rgba(26,32,44,0.92), rgba(17,24,39,0.92))" : "linear-gradient(135deg, #f8fafc, #eef2ff)",
+                                    color: theme.text,
+                                    fontFamily: "'Inter', 'SFMono-Regular', monospace",
+                                    lineHeight: 1.6,
+                                    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+                                    marginBottom: 12,
+                                    borderColor: darkMode ? "rgba(255,179,102,0.45)" : "rgba(255,179,102,0.65)",
+                                  }}
                                 />
 
                                 {selectionInfo.text && selectionInfo.target === "newSub" && (
@@ -2696,10 +2737,10 @@ export default function App() {
         </div>
 
         {showImageSidebar && (
-          <div style={{ width: layout.sideWidth, minHeight: 0, backgroundColor: theme.panel, backdropFilter: "blur(20px)", borderLeft: `1px solid ${theme.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ width: layout.sideWidth, minHeight: 0, backgroundColor: theme.panel, backdropFilter: "blur(20px)", borderLeft: `1px solid ${theme.border}`, display: "flex", flexDirection: "column", overflow: "hidden", paddingTop: headerHeight ? headerHeight - layout.headerPad : 72 }}>
             <h3 style={{ margin: "0 16px 16px 16px", color: theme.accent1, flexShrink: 0 }}>📷 Images ({filteredGalleryImages.length})</h3>
             <div style={{ flex: 1, minHeight: 0, overflow: "auto", paddingRight: 8 }}>
-              <div style={{ paddingLeft: 16, paddingRight: 8, paddingTop: 85 }}>
+              <div style={{ paddingLeft: 16, paddingRight: 8, paddingTop: 12 }}>
                 {filteredGalleryImages.length === 0 ? (
                   <div style={{ color: theme.subtext, textAlign: "center", padding: 20 }}>Aucune image</div>
                 ) : (
@@ -2712,7 +2753,7 @@ export default function App() {
                           <div style={{ fontSize: 12, fontWeight: "bold", color: theme.accent1, marginBottom: 8 }}>🧩 {sub.title}</div>
                           {subImages.map((img) => (
                             <div key={`${img.catId}-${img.subId}-${img.index}`} style={{ borderRadius: 8, overflow: "hidden", border: `1px solid ${theme.border}`, marginBottom: 8 }}>
-                              <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 120, objectFit: "cover", cursor: "pointer" }} onClick={() => setLightboxImage(img)} />
+                              <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 120, objectFit: "cover", cursor: "pointer" }} onClick={() => { setLightboxImage(img); setImageDrawerOpen(false); }} />
                               {img.desc && <div style={{ padding: "6px 8px", fontSize: 12, color: theme.text }}>{img.desc}</div>}
                               <div style={{ display: "flex", gap: 4, padding: 6 }}>
                                 {isAuthenticated && editMode && <button onClick={() => deleteImage(img.catId, img.subId, img.index)} style={{ flex: 1, padding: "4px", backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontSize: 11, borderRadius: 4 }}>🗑️</button>}
@@ -2730,30 +2771,46 @@ export default function App() {
         )}
 
         {isMobile && imageDrawerOpen && hasImagesForSelectedCategory && (
-          <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 500, display: "flex", justifyContent: "flex-end" }} onClick={() => setImageDrawerOpen(false)}>
-            <div style={{ width: "80%", maxWidth: 360, backgroundColor: theme.panel, borderLeft: `1px solid ${theme.border}`, boxShadow: "-12px 0 32px rgba(0,0,0,0.25)", padding: 14, overflow: "auto" }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ position: "fixed", left: 0, right: 0, top: (headerHeight || 0) + 8, bottom: 0, backgroundColor: "rgba(0,0,0,0.55)", zIndex: 500, display: "flex", justifyContent: "flex-end" }} onClick={() => setImageDrawerOpen(false)}>
+            <div style={{ width: "80%", maxWidth: 380, backgroundColor: theme.panel, borderLeft: `1px solid ${theme.border}`, boxShadow: "-12px 0 32px rgba(0,0,0,0.25)", padding: 14, overflow: "auto", borderTopLeftRadius: 14, borderBottomLeftRadius: 14 }} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <h3 style={{ margin: 0, color: theme.accent1 }}>📷 Images ({filteredGalleryImages.filter(img => img.catId === selectedCategoryId).length})</h3>
                 <button onClick={() => setImageDrawerOpen(false)} style={{ padding: "8px 12px", borderRadius: 10, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>✖</button>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {data.categories.find(c => c.id === selectedCategoryId)?.subs.map((sub) => {
-                  const subImages = filteredGalleryImages.filter(img => img.subId === sub.id);
-                  if (subImages.length === 0) return null;
-                  return (
-                    <div key={sub.id}>
-                      <div style={{ fontSize: 12, fontWeight: "bold", color: theme.accent1, marginBottom: 8 }}>🧩 {sub.title}</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
-                        {subImages.map((img) => (
-                          <div key={`${img.catId}-${img.subId}-${img.index}`} style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${theme.border}`, backgroundColor: theme.bg, boxShadow: theme.shadow }}>
-                            <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 140, objectFit: "cover", display: "block", cursor: "pointer" }} onClick={() => setLightboxImage(img)} />
-                            {img.desc && <div style={{ padding: 8, fontSize: 12, color: theme.text }}>{img.desc}</div>}
-                          </div>
-                        ))}
-                      </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+                  <div>
+                    <label style={{ fontSize: 12, color: theme.subtext }}>Grande partie</label>
+                    <select value={drawerSectionId || ""} onChange={(e) => setDrawerSectionId(e.target.value ? Number(e.target.value) : null)} style={{ width: "100%", padding: 10, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }}>
+                      <option value="">Toutes</option>
+                      {sectionsWithImages.map((s) => (<option key={s.id} value={s.id}>{s.emoji} {s.name}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: theme.subtext }}>Catégorie</label>
+                    <select value={drawerCategoryId || ""} onChange={(e) => setDrawerCategoryId(e.target.value ? Number(e.target.value) : null)} style={{ width: "100%", padding: 10, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }}>
+                      <option value="">Choisir...</option>
+                      {drawerCategories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>))}
+                    </select>
+                  </div>
+                </div>
+
+                {drawerCategoryId && drawerImages.length === 0 && (
+                  <div style={{ color: theme.subtext, fontSize: 12 }}>Aucune image pour cette catégorie.</div>
+                )}
+
+                {drawerCategoryId && drawerImages.length > 0 && (
+                  <div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
+                      {drawerImages.map((img) => (
+                        <div key={`${img.catId}-${img.subId}-${img.index}`} style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${theme.border}`, backgroundColor: theme.bg, boxShadow: theme.shadow }}>
+                          <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 140, objectFit: "cover", display: "block", cursor: "pointer" }} onClick={() => { setLightboxImage(img); setImageDrawerOpen(false); }} />
+                          {img.desc && <div style={{ padding: 8, fontSize: 12, color: theme.text }}>{img.desc}</div>}
+                        </div>
+                      ))}
                     </div>
-                  );
-                })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
