@@ -1944,7 +1944,7 @@ export default function App() {
     : { bg: "linear-gradient(135deg, #f8fafc 0%, #f0e6ff 50%, #fff5f0 100%)", panel: "rgba(255, 255, 255, 0.9)", border: "rgba(0, 0, 0, 0.08)", text: "#1a1a2e", subtext: "#6b7280", input: "rgba(0, 0, 0, 0.05)", accent1: "#FFB366", accent2: "#FF6B9D", accent3: "#4A4E69", shadow: "0 8px 32px rgba(0, 0, 0, 0.1)" };
 
   return (
-    <div style={{ background: theme.bg, color: theme.text, height: "100vh", display: "flex", fontFamily: "'Inter', -apple-system, sans-serif", overflow: "hidden" }}>
+    <div style={{ background: theme.bg, color: theme.text, height: "100vh", display: "flex", fontFamily: "'Inter', -apple-system, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', sans-serif", overflow: "hidden" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); * { box-sizing: border-box; } html, body, #root { margin: 0; padding: 0; height: 100%; width: 100%; } button:hover { transform: translateY(-2px); } input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 3px rgba(255, 179, 102, 0.2); } ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); } ::-webkit-scrollbar-thumb { background: rgba(255, 179, 102, 0.4); border-radius: 4px; }`}</style>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={onFileChange} style={{ display: "none" }} />
       <input ref={inlineFileInputRef} type="file" accept="image/*" onChange={onInlineFileChange} style={{ display: "none" }} />
