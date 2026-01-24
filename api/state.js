@@ -26,7 +26,19 @@ const readFromKv = async () => {
   if (res.status === 404) return { data: null };
   if (!res.ok) throw new Error(`KV get failed ${res.status}`);
   const body = await res.json();
-  const value = body?.result?.value ?? body?.result ?? null;
+  const normalizeKvValue = (raw) => {
+    let v = raw;
+    if (typeof v === "string") {
+      try { v = JSON.parse(v); } catch (_) { return raw; }
+    }
+    if (v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 1 && Object.prototype.hasOwnProperty.call(v, "value")) {
+      v = v.value;
+    }
+    return v;
+  };
+
+  const rawValue = body?.result?.value ?? body?.result ?? null;
+  const value = normalizeKvValue(rawValue);
   return { data: value };
 };
 
