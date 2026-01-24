@@ -1421,21 +1421,27 @@ export default function App() {
       setTimeout(() => { isApplyingRemoteRef.current = false; }, 0);
     };
 
-    // Initialize shared state if room is empty, otherwise load existing remote data.
-    if (!ymap.has("data")) {
-      ymap.set("data", DEFAULT_DATA);
-    }
-    applyRemote();
-
     const observeData = () => applyRemote();
     ymap.observe(observeData);
 
     const statusHandler = ({ status }) => setSyncStatus(status);
     provider.on("status", statusHandler);
 
+    const syncHandler = (isSynced) => {
+      if (isSynced) {
+        // Only initialize defaults if the room is truly empty after first sync.
+        if (!ymap.has("data")) {
+          ymap.set("data", DEFAULT_DATA);
+        }
+        applyRemote();
+      }
+    };
+    provider.on("sync", syncHandler);
+
     return () => {
       ymap.unobserve(observeData);
       provider.off("status", statusHandler);
+      provider.off("sync", syncHandler);
       provider.destroy();
       ydoc.destroy();
     };
