@@ -1543,6 +1543,8 @@ export default function App() {
   const [newImageCatId, setNewImageCatId] = useState(null);
   const [newImageSubId, setNewImageSubId] = useState(null);
   const [newImageDesc, setNewImageDesc] = useState("");
+  const [imageDrawerOpen, setImageDrawerOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
   const [inlineImageTarget, setInlineImageTarget] = useState(null);
   const [inlineImageUrl, setInlineImageUrl] = useState("");
   const [inlineImageDesc, setInlineImageDesc] = useState("");
@@ -1670,10 +1672,23 @@ export default function App() {
     return allImages.filter(img => img.catId === galleryFilterCatId);
   }, [allImages, galleryFilterCatId]);
 
-  const showImageSidebar = useMemo(() => {
+  const hasImagesForSelectedCategory = useMemo(() => {
     if (selectedCategoryId === null) return false;
     return allImages.some(img => img.catId === selectedCategoryId);
   }, [selectedCategoryId, allImages]);
+
+  const showImageSidebar = useMemo(() => {
+    if (isMobile) return false;
+    return hasImagesForSelectedCategory;
+  }, [isMobile, hasImagesForSelectedCategory]);
+
+  useEffect(() => {
+    if (!hasImagesForSelectedCategory) setImageDrawerOpen(false);
+  }, [hasImagesForSelectedCategory]);
+
+  useEffect(() => {
+    if (!isMobile) setImageDrawerOpen(false);
+  }, [isMobile]);
 
   const toggleCategory = (id) => {
     setExpandedCategories((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -2167,10 +2182,6 @@ export default function App() {
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", width: "100%", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
                 <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{accessMode === "admin" ? "Admin" : "Visiteur"}</div>
-                <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: syncStatus === "connected" ? "#10b981" : theme.panel, color: syncStatus === "connected" ? "white" : theme.text, fontSize: 12, fontWeight: 700, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <span>🔄</span>
-                  <span>{syncStatus === "connected" ? "Sync" : "Sync..."}</span>
-                </div>
                 {isAuthenticated && (
                   <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: kvBadgeBg, color: kvBadgeColor, fontSize: 12, fontWeight: 700, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
                     <span>💾</span>
@@ -2180,6 +2191,9 @@ export default function App() {
                 )}
                 <button onClick={handleLogout} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
                 <button onClick={() => setShowGallery(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
+                {isMobile && hasImagesForSelectedCategory && (
+                  <button onClick={() => setImageDrawerOpen(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>Images ({filteredGalleryImages.filter(img => img.catId === selectedCategoryId).length})</button>
+                )}
                 <button onClick={() => setShowCollabModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>🤝</button>
                 <button onClick={() => setShowSearchModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
                 <button onClick={() => setDarkMode((d) => !d)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
@@ -2698,7 +2712,7 @@ export default function App() {
                           <div style={{ fontSize: 12, fontWeight: "bold", color: theme.accent1, marginBottom: 8 }}>🧩 {sub.title}</div>
                           {subImages.map((img) => (
                             <div key={`${img.catId}-${img.subId}-${img.index}`} style={{ borderRadius: 8, overflow: "hidden", border: `1px solid ${theme.border}`, marginBottom: 8 }}>
-                              <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 120, objectFit: "cover" }} />
+                              <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 120, objectFit: "cover", cursor: "pointer" }} onClick={() => setLightboxImage(img)} />
                               {img.desc && <div style={{ padding: "6px 8px", fontSize: 12, color: theme.text }}>{img.desc}</div>}
                               <div style={{ display: "flex", gap: 4, padding: 6 }}>
                                 {isAuthenticated && editMode && <button onClick={() => deleteImage(img.catId, img.subId, img.index)} style={{ flex: 1, padding: "4px", backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontSize: 11, borderRadius: 4 }}>🗑️</button>}
@@ -2710,6 +2724,36 @@ export default function App() {
                     })}
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isMobile && imageDrawerOpen && hasImagesForSelectedCategory && (
+          <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 500, display: "flex", justifyContent: "flex-end" }} onClick={() => setImageDrawerOpen(false)}>
+            <div style={{ width: "80%", maxWidth: 360, backgroundColor: theme.panel, borderLeft: `1px solid ${theme.border}`, boxShadow: "-12px 0 32px rgba(0,0,0,0.25)", padding: 14, overflow: "auto" }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <h3 style={{ margin: 0, color: theme.accent1 }}>📷 Images ({filteredGalleryImages.filter(img => img.catId === selectedCategoryId).length})</h3>
+                <button onClick={() => setImageDrawerOpen(false)} style={{ padding: "8px 12px", borderRadius: 10, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>✖</button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {data.categories.find(c => c.id === selectedCategoryId)?.subs.map((sub) => {
+                  const subImages = filteredGalleryImages.filter(img => img.subId === sub.id);
+                  if (subImages.length === 0) return null;
+                  return (
+                    <div key={sub.id}>
+                      <div style={{ fontSize: 12, fontWeight: "bold", color: theme.accent1, marginBottom: 8 }}>🧩 {sub.title}</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
+                        {subImages.map((img) => (
+                          <div key={`${img.catId}-${img.subId}-${img.index}`} style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${theme.border}`, backgroundColor: theme.bg, boxShadow: theme.shadow }}>
+                            <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 140, objectFit: "cover", display: "block", cursor: "pointer" }} onClick={() => setLightboxImage(img)} />
+                            {img.desc && <div style={{ padding: 8, fontSize: 12, color: theme.text }}>{img.desc}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -2749,6 +2793,21 @@ export default function App() {
             </div>
           </div>
         </>
+      )}
+
+      {lightboxImage && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.75)", zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setLightboxImage(null)}>
+          <div style={{ maxWidth: "90vw", maxHeight: "90vh", backgroundColor: darkMode ? "rgba(15,17,30,0.96)" : "rgba(255,255,255,0.98)", borderRadius: 14, overflow: "hidden", border: `1px solid ${theme.border}`, boxShadow: theme.shadow, position: "relative" }} onClick={(e) => e.stopPropagation()}>
+            <img src={lightboxImage.url} alt={lightboxImage.desc || lightboxImage.subTitle} style={{ display: "block", maxWidth: "90vw", maxHeight: "75vh", objectFit: "contain", backgroundColor: "black" }} />
+            {(lightboxImage.desc || lightboxImage.subTitle) && (
+              <div style={{ padding: 12, color: theme.text, fontSize: 13, borderTop: `1px solid ${theme.border}` }}>
+                <div style={{ fontWeight: 700 }}>{lightboxImage.subTitle}</div>
+                {lightboxImage.desc && <div style={{ marginTop: 4 }}>{lightboxImage.desc}</div>}
+              </div>
+            )}
+            <button onClick={() => setLightboxImage(null)} style={{ position: "absolute", top: 8, right: 8, padding: "8px 10px", borderRadius: 10, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>✖</button>
+          </div>
+        </div>
       )}
 
       {toast.message && (
