@@ -1,15 +1,13 @@
-export const config = { runtime: "edge" };
+export const config = { runtime: "nodejs18.x" };
 
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const KEY = "carnet-data";
 
-const jsonResponse = (status, payload) => new Response(JSON.stringify(payload), {
-  status,
-  headers: { "content-type": "application/json; charset=utf-8" },
-});
-
-const missingConfig = () => jsonResponse(500, { error: "KV REST API env vars are missing" });
+const send = (res, status, payload) => {
+  res.status(status).setHeader("content-type", "application/json; charset=utf-8");
+  res.end(JSON.stringify(payload));
+};
 
 const kvFetch = async (path, init = {}) => {
   const res = await fetch(`${KV_URL}${path}`, {
@@ -40,36 +38,49 @@ const writeToKv = async (data) => {
   return true;
 };
 
-export default async function handler(req) {
-  if (!KV_URL || !KV_TOKEN) return missingConfig();
+async function readJson(req) {
+  if (req.body) return req.body;
+  return new Promise((resolve, reject) => {
+    let data = "";
+    req.on("data", (chunk) => { data += chunk; });
+    req.on("end", () => {
+      if (!data) return resolve(null);
+      try { resolve(JSON.parse(data)); } catch (err) { reject(err); }
+    });
+    req.on("error", reject);
+  });
+}
+
+export default async function handler(req, res) {
+  if (!KV_URL || !KV_TOKEN) return send(res, 500, { error: "KV REST API env vars are missing" });
   const { method } = req;
 
   if (method === "GET") {
     try {
       const { data } = await readFromKv();
-      return jsonResponse(200, { data });
+      return send(res, 200, { data });
     } catch (err) {
-      return jsonResponse(500, { error: err.message || "KV read error" });
+      return send(res, 500, { error: err.message || "KV read error" });
     }
   }
 
   if (method === "POST") {
     let payload;
     try {
-      payload = await req.json();
+      payload = await readJson(req);
     } catch (err) {
-      return jsonResponse(400, { error: "Invalid JSON body" });
+      return send(res, 400, { error: "Invalid JSON body" });
     }
     if (!payload || typeof payload.data !== "object" || Array.isArray(payload.data)) {
-      return jsonResponse(400, { error: "Body must be { data: object }" });
+      return send(res, 400, { error: "Body must be { data: object }" });
     }
     try {
       await writeToKv(payload.data);
-      return jsonResponse(200, { ok: true });
+      return send(res, 200, { ok: true });
     } catch (err) {
-      return jsonResponse(500, { error: err.message || "KV write error" });
+      return send(res, 500, { error: err.message || "KV write error" });
     }
   }
 
-  return jsonResponse(405, { error: "Method not allowed" });
+  return send(res, 405, { error: "Method not allowed" });
 }
