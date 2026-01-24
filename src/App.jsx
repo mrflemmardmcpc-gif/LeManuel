@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import CollaborativeEditor from "./CollaborativeEditor.jsx";
 
 const STORAGE_KEY = "memo_plomberie_full_v9";
@@ -2551,6 +2552,7 @@ export default function App() {
           <span style={{ fontWeight: 600 }}>{toast.message}</span>
         </div>
       )}
+      <SpeedInsights />
     </div>
   );
 }
