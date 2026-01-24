@@ -2100,7 +2100,7 @@ export default function App() {
             </div>
           </header>
 
-          <div style={{ marginTop: headerHeight ? `${headerHeight + 12}px` : `calc(${layout.contentTop}px + ${safeTopInset})`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ marginTop: headerHeight ? `${headerHeight + 18}px` : `calc(${layout.contentTop + 60}px + ${safeTopInset})`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {selectedSectionId && (
               <div style={{ marginTop: 16, padding: `10px ${layout.contentPad}px 14px`, display: "flex", gap: 8, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
                 <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
