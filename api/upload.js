@@ -1,6 +1,6 @@
 import { put } from "@vercel/blob";
 
-export const config = { runtime: "nodejs" };
+export const config = { runtime: "nodejs" }; // Vercel accepts "nodejs"/edge only
 
 const send = (res, status, payload) => {
   res.status(status).setHeader("content-type", "application/json; charset=utf-8");
