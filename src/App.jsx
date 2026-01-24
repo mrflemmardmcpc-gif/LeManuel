@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import * as Y from "yjs";
+import { WebsocketProvider } from "y-websocket";
 import CollaborativeEditor from "./CollaborativeEditor.jsx";
-
-const STORAGE_KEY = "memo_plomberie_full_v9";
 
 const Emoji = ({ symbol, label, size = 18 }) => (
   <span role="img" aria-label={label} style={{ fontSize: size, lineHeight: 1, fontFamily: "'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif", display: "inline-block" }}>
@@ -1397,17 +1397,56 @@ function Markdown({ content }) {
 }
 
 export default function App() {
-  const [data, setData] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_DATA;
-    } catch {
-      return DEFAULT_DATA;
-    }
-  });
+  const [data, setData] = useState(DEFAULT_DATA);
+  const ydocRef = useRef(null);
+  const yMapRef = useRef(null);
+  const isApplyingRemoteRef = useRef(false);
+  const [syncStatus, setSyncStatus] = useState("connecting");
 
+  // Branch data on a shared Y.js document so edits are synchronized in real time across devices.
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const ydoc = new Y.Doc();
+    const provider = new WebsocketProvider("wss://demos.yjs.dev", "carnet-plomberie-data", ydoc);
+    const ymap = ydoc.getMap("app");
+
+    ydocRef.current = ydoc;
+    yMapRef.current = ymap;
+
+    const applyRemote = () => {
+      const incoming = ymap.get("data");
+      if (!incoming) return;
+      isApplyingRemoteRef.current = true;
+      setData((prev) => (prev === incoming ? prev : incoming));
+      // Release the guard after React has applied the state to avoid echoing the same change back to Y.js.
+      setTimeout(() => { isApplyingRemoteRef.current = false; }, 0);
+    };
+
+    // Initialize shared state if room is empty, otherwise load existing remote data.
+    if (!ymap.has("data")) {
+      ymap.set("data", DEFAULT_DATA);
+    }
+    applyRemote();
+
+    const observeData = () => applyRemote();
+    ymap.observe(observeData);
+
+    const statusHandler = ({ status }) => setSyncStatus(status);
+    provider.on("status", statusHandler);
+
+    return () => {
+      ymap.unobserve(observeData);
+      provider.off("status", statusHandler);
+      provider.destroy();
+      ydoc.destroy();
+    };
+  }, []);
+
+  // Push local changes to the shared Y.js map when they originate locally.
+  useEffect(() => {
+    const ymap = yMapRef.current;
+    if (!ymap) return;
+    if (isApplyingRemoteRef.current) return;
+    ymap.set("data", data);
   }, [data]);
 
   const [search, setSearch] = useState("");
@@ -1466,6 +1505,7 @@ export default function App() {
   const [confirmModal, setConfirmModal] = useState({ open: false, message: "", onConfirm: null });
   const [toast, setToast] = useState({ message: "" });
   const [showCollabModal, setShowCollabModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const sectionScrollRef = useRef(null);
   const fileInputRef = useRef(null);
   const inlineFileInputRef = useRef(null);
@@ -1484,6 +1524,14 @@ export default function App() {
       setEditingSubId(null);
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 720px)');
+    const handler = (e) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const filteredCategories = useMemo(() => {
     const normalize = (str) => str.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
@@ -1949,6 +1997,34 @@ export default function App() {
     ? { bg: "linear-gradient(135deg, #1a1a2e 0%, #2d1b4e 50%, #0f172a 100%)", panel: "rgba(255, 255, 255, 0.08)", border: "rgba(255, 255, 255, 0.1)", text: "#f8f9fa", subtext: "#b0b8c8", input: "rgba(255, 255, 255, 0.05)", accent1: "#FFB366", accent2: "#FF6B9D", accent3: "#4A4E69", shadow: "0 8px 32px rgba(0, 0, 0, 0.3)" }
     : { bg: "linear-gradient(135deg, #f8fafc 0%, #f0e6ff 50%, #fff5f0 100%)", panel: "rgba(255, 255, 255, 0.9)", border: "rgba(0, 0, 0, 0.08)", text: "#1a1a2e", subtext: "#6b7280", input: "rgba(0, 0, 0, 0.05)", accent1: "#FFB366", accent2: "#FF6B9D", accent3: "#4A4E69", shadow: "0 8px 32px rgba(0, 0, 0, 0.1)" };
 
+  const layout = useMemo(() => ({
+    headerPad: isMobile ? 6 : 16,
+    contentTop: isMobile ? 110 : 120,
+    contentPad: isMobile ? 12 : 20,
+    homeCardPad: isMobile ? 20 : 32,
+    homeGridMin: isMobile ? 200 : 240,
+    homeGridGap: isMobile ? 12 : 16,
+    sideWidth: isMobile ? 280 : 350,
+    modalPad: isMobile ? 16 : 24,
+    headerTitle: isMobile ? 16 : 28,
+    headerIconSize: isMobile ? 15 : 20,
+    headerButtonPad: isMobile ? "6px 10px" : "10px 16px",
+    headerRowGap: isMobile ? 6 : 12,
+  }), [isMobile]);
+
+  const safeTopInset = "env(safe-area-inset-top, 0px)";
+  const headerRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  useEffect(() => {
+    if (!headerRef.current || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      setHeaderHeight(headerRef.current?.getBoundingClientRect().height || 0);
+    });
+    observer.observe(headerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div style={{ background: theme.bg, color: theme.text, height: "100vh", display: "flex", fontFamily: "'Inter', -apple-system, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', sans-serif", overflow: "hidden" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); * { box-sizing: border-box; } html, body, #root { margin: 0; padding: 0; height: 100%; width: 100%; } button:hover { transform: translateY(-2px); } input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 3px rgba(255, 179, 102, 0.2); } ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); } ::-webkit-scrollbar-thumb { background: rgba(255, 179, 102, 0.4); border-radius: 4px; }`}</style>
@@ -1957,7 +2033,7 @@ export default function App() {
 
       {accessMode === "home" && (
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 32 }}>
-          <div style={{ maxWidth: 760, width: "100%", padding: 32, borderRadius: 16, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ maxWidth: 760, width: "100%", padding: layout.homeCardPad, borderRadius: 16, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
               <h1 style={{ margin: 0, fontSize: 28, fontWeight: "bold", color: theme.accent1 }}>Choisis un mode</h1>
               <button onClick={() => setDarkMode((d) => !d)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
@@ -1965,7 +2041,7 @@ export default function App() {
               </button>
             </div>
             <p style={{ margin: 0, color: theme.subtext, lineHeight: 1.6 }}>Visiteur : consultation uniquement. Admin : accès aux boutons d'édition (mot de passe requis).</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fit, minmax(${layout.homeGridMin}px, 1fr))`, gap: layout.homeGridGap }}>
               <button onClick={handleSelectVisitor} style={{ padding: "16px", borderRadius: 12, border: `1px solid ${theme.border}`, background: `linear-gradient(135deg, ${theme.panel} 0%, ${theme.input} 100%)`, color: theme.text, cursor: "pointer", fontSize: 18, fontWeight: 600, boxShadow: theme.shadow }}>
                 👀 Mode Visiteur
               </button>
@@ -1980,53 +2056,59 @@ export default function App() {
       {accessMode !== "home" && (
       <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, backgroundColor: theme.panel, backdropFilter: "blur(20px)", padding: 16, borderBottom: `1px solid ${theme.border}` }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <button onClick={() => setShowSectionPanel(true)} style={{ padding: "10px 16px", borderRadius: 12, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: 20, cursor: "pointer" }}>☰</button>
-                <h1 style={{ margin: 0, fontSize: 28, fontWeight: "bold", background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "0.5px" }}>Le Manuel du Plombier/Chauffagiste</h1>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button onClick={() => { setSelectedSectionId(null); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "6px 12px", borderRadius: 16, backgroundColor: selectedSectionId === null ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)` : theme.panel, color: selectedSectionId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12 }}>📌 Tout</button>
-                  {data.sections.map((section) => (
-                    <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "6px 12px", borderRadius: 16, backgroundColor: selectedSectionId === section.id ? section.color : theme.panel, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12 }}>
-                      {section.emoji} {section.name}
-                    </button>
-                  ))}
+          <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: layout.headerPad, paddingTop: `calc(${layout.headerPad}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: layout.headerRowGap, marginBottom: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, width: "100%", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, flex: 1, minWidth: 0 }}>
+                  <button onClick={() => setShowSectionPanel(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: layout.headerIconSize, cursor: "pointer", flexShrink: 0 }}>☰</button>
+                  <h1 style={{ margin: 0, fontSize: layout.headerTitle, fontWeight: 800, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "0.05px", lineHeight: 1.05, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Le Manuel du Plombier/Chauffagiste</h1>
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <div style={{ padding: "8px 12px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: 12, fontWeight: 700 }}>{accessMode === "admin" ? "Admin" : "Visiteur"}</div>
-                <button onClick={handleLogout} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer" }}>🏠</button>
-                <button onClick={() => setShowGallery(true)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: "600" }}>📷</button>
-                <button onClick={() => setShowCollabModal(true)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: "600" }}>🤝</button>
-                <button onClick={() => setShowSearchModal(true)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer" }}>🔍</button>
-                <button onClick={() => setDarkMode((d) => !d)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={18} /> : <Emoji symbol="🌙" label="Mode sombre" size={18} />}
+              <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", width: "100%", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
+                <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{accessMode === "admin" ? "Admin" : "Visiteur"}</div>
+                <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: syncStatus === "connected" ? "#10b981" : theme.panel, color: syncStatus === "connected" ? "white" : theme.text, fontSize: 12, fontWeight: 700, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span>🔄</span>
+                  <span>{syncStatus === "connected" ? "Sync" : "Sync..."}</span>
+                </div>
+                <button onClick={handleLogout} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
+                <button onClick={() => setShowGallery(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
+                <button onClick={() => setShowCollabModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>🤝</button>
+                <button onClick={() => setShowSearchModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
+                <button onClick={() => setDarkMode((d) => !d)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
+                  {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
                 </button>
                 {isAuthenticated ? (
-                  <button onClick={() => setEditMode((e) => !e)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: editMode ? "#10b981" : theme.accent3, color: "white", border: "none", cursor: "pointer", fontWeight: "600" }}>{editMode ? "✏️" : "🔒"}</button>
+                  <button onClick={() => setEditMode((e) => !e)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: editMode ? "#10b981" : theme.accent3, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>{editMode ? "✏️" : "🔒"}</button>
                 ) : (
-                  <button disabled style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "not-allowed", fontWeight: "600", opacity: 0.7 }} title="Réservé à l'admin">🔒</button>
+                  <button disabled style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "not-allowed", fontWeight: 600, opacity: 0.7, flexShrink: 0 }} title="Réservé à l'admin">🔒</button>
                 )}
               </div>
             </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "nowrap", overflowX: "auto", paddingBottom: isMobile ? 2 : 2 }}>
+              <button onClick={() => { setSelectedSectionId(null); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === null ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)` : theme.panel, color: selectedSectionId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>📌 Tout</button>
+              {data.sections.map((section) => (
+                <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === section.id ? section.color : theme.panel, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>
+                  {section.emoji} {section.name}
+                </button>
+              ))}
+            </div>
+          </header>
+
+          <div style={{ marginTop: headerHeight ? `${headerHeight + 12}px` : `calc(${layout.contentTop}px + ${safeTopInset})`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {selectedSectionId && (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 12px", borderRadius: 16, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11 }}>◆ Toutes</button>
+              <div style={{ marginTop: 16, padding: `10px ${layout.contentPad}px 14px`, display: "flex", gap: 8, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
+                <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
                 {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
-                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 12px", borderRadius: 16, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11 }}>
+                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
                     {cat.icon} {cat.name}
                   </button>
                 ))}
               </div>
             )}
-          </header>
-
-          <div style={{ marginTop: 120, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {showSectionPanel && (
               <>
                 <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.3)", zIndex: 200 }} onClick={() => setShowSectionPanel(false)} />
-                <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 350, backgroundColor: theme.panel, backdropFilter: "blur(20px)", zIndex: 300, overflow: "auto", padding: 24, borderRight: `1px solid ${theme.border}` }}>
+                <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: layout.sideWidth, backgroundColor: theme.panel, backdropFilter: "blur(20px)", zIndex: 300, overflow: "auto", padding: layout.modalPad, borderRight: `1px solid ${theme.border}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                     <h2 style={{ margin: 0, color: theme.accent1 }}>📂 Menu</h2>
                     <button onClick={() => setShowSectionPanel(false)} style={{ padding: "8px 12px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>✖</button>
@@ -2116,8 +2198,8 @@ export default function App() {
             )}
 
             {showGallery && (
-              <div style={{ position: "fixed", inset: 0, background: "radial-gradient(circle at 20% 20%, rgba(59,130,246,0.25), transparent 35%), radial-gradient(circle at 80% 10%, rgba(16,185,129,0.18), transparent 30%), rgba(0,0,0,0.82)", backdropFilter: "blur(6px)", zIndex: 200, overflow: "auto", padding: 24 }}>
-                <div style={{ maxWidth: 1180, margin: "0 auto", backgroundColor: darkMode ? "rgba(12,14,26,0.9)" : "rgba(255,255,255,0.94)", borderRadius: 18, padding: 24, border: `1px solid ${theme.border}`, boxShadow: "0 18px 50px rgba(0,0,0,0.35)" }}>
+              <div style={{ position: "fixed", inset: 0, background: "radial-gradient(circle at 20% 20%, rgba(59,130,246,0.25), transparent 35%), radial-gradient(circle at 80% 10%, rgba(16,185,129,0.18), transparent 30%), rgba(0,0,0,0.82)", backdropFilter: "blur(6px)", zIndex: 200, overflow: "auto", padding: layout.modalPad }}>
+                <div style={{ maxWidth: 1180, margin: "0 auto", backgroundColor: darkMode ? "rgba(12,14,26,0.9)" : "rgba(255,255,255,0.94)", borderRadius: 18, padding: layout.modalPad, border: `1px solid ${theme.border}`, boxShadow: "0 18px 50px rgba(0,0,0,0.35)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <h2 style={{ margin: 0, color: theme.accent1, letterSpacing: 0.4 }}>📷 Galerie</h2>
@@ -2266,7 +2348,7 @@ export default function App() {
               </div>
             )}
 
-            <section style={{ flex: 1, overflow: "auto", padding: "20px" }} ref={sectionScrollRef}>
+            <section style={{ flex: 1, overflow: "auto", padding: layout.contentPad }} ref={sectionScrollRef}>
               {editMode && (
                 <div style={{ background: `linear-gradient(135deg, ${theme.panel} 0%, ${theme.bg} 100%)`, padding: 20, borderRadius: 16, border: `1px solid ${theme.border}`, marginBottom: 20, boxShadow: theme.shadow }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
@@ -2490,7 +2572,7 @@ export default function App() {
         </div>
 
         {showImageSidebar && (
-          <div style={{ width: 350, minHeight: 0, backgroundColor: theme.panel, backdropFilter: "blur(20px)", borderLeft: `1px solid ${theme.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ width: layout.sideWidth, minHeight: 0, backgroundColor: theme.panel, backdropFilter: "blur(20px)", borderLeft: `1px solid ${theme.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <h3 style={{ margin: "0 16px 16px 16px", color: theme.accent1, flexShrink: 0 }}>📷 Images ({filteredGalleryImages.length})</h3>
             <div style={{ flex: 1, minHeight: 0, overflow: "auto", paddingRight: 8 }}>
               <div style={{ paddingLeft: 16, paddingRight: 8, paddingTop: 85 }}>
