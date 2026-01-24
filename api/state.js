@@ -1,4 +1,4 @@
-export const config = { runtime: "nodejs18.x" };
+export const config = { runtime: "nodejs" };
 
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
