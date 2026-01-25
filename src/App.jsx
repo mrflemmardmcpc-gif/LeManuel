@@ -2114,54 +2114,45 @@ export default function App() {
       )}
 
       {accessMode !== "home" && (
-      <div style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "row",
-        overflow: "hidden",
-        width: isMobile && showSectionPanel ? "100vw" : undefined,
-        position: isMobile && showSectionPanel ? "fixed" : undefined,
-        left: isMobile && showSectionPanel ? 0 : undefined,
-        top: isMobile && showSectionPanel ? 0 : undefined,
-        height: isMobile && showSectionPanel ? "100vh" : undefined,
-        zIndex: isMobile && showSectionPanel ? 100 : undefined
-      }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: `${layout.headerPad/2}px ${layout.headerPad}px`, paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
-            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: layout.headerRowGap, marginBottom: 4 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, width: "100%", flexWrap: isMobile ? "wrap" : undefined }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: layout.headerRowGap, marginBottom: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, minWidth: 0 }}>
                 <button onClick={() => setShowSectionPanel(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: layout.headerIconSize, cursor: "pointer", flexShrink: 0 }}>☰</button>
                 <h1 style={{ margin: 0, fontSize: layout.headerTitle, fontWeight: 800, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "0.05px", lineHeight: 1.05, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>🛠️ Le Manuel</h1>
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 1 : 6, marginLeft: 'auto' }}>
-                  {/* Removed large header Sauvegarder button. Only floating save button remains for admin with unsaved changes. */}
-                  <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
-                  <button onClick={() => setShowGallery(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
-                  {isMobile && hasImagesForSelectedCategory && (
-                    <button
-                      onClick={() => setImageDrawerOpen(true)}
-                      style={{ padding: isAuthenticated ? '2px 2px' : '4px 7px', minWidth: isAuthenticated ? 15 : undefined, minHeight: isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}
-                    >
-                      🖼️
-                    </button>
-                  )}
-                  <button onClick={() => setShowSearchModal(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
-                  <button onClick={() => setDarkMode((d) => !d)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
-                    {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
-                  </button>
-                  {isAuthenticated && (
-                    <button onClick={() => setEditMode((e) => !e)} style={{ padding: isMobile ? '2px 2px' : layout.headerButtonPad, minWidth: isMobile ? 15 : undefined, minHeight: isMobile ? 15 : undefined, borderRadius: 10, backgroundColor: editMode ? "#10b981" : theme.accent3, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>{editMode ? "✏️" : "🔒"}</button>
-                  )}
-                </div>
+              </div>
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
+                <button onClick={() => setShowGallery(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: showGallery ? "#23202d" : `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
+                <button onClick={() => setShowSearchModal(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
+                <button onClick={() => setDarkMode((d) => !d)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
+                  {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
+                </button>
               </div>
             </div>
-            <div className="chips-scroll" style={{ display: "flex", gap: 6, flexWrap: "nowrap", overflowX: "auto", padding: '2px 0', alignItems: 'center', position: 'relative', top: 2 }}>
-              <button onClick={() => { setSelectedSectionId(null); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === null ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)` : theme.panel, color: selectedSectionId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap", marginTop: isMobile ? '-8px' : undefined }}>📌 Tout</button>
+
+            {/* Barre des grandes parties (sections) juste sous le header */}
+            <div className="chips-scroll" style={{ display: "flex", gap: 10, flexWrap: "nowrap", overflowX: "auto", padding: '8px 0 8px 0', alignItems: 'center', position: 'relative', top: 0, marginBottom: isAuthenticated && isMobile ? 2 : 8 }}>
+              <button onClick={() => { setSelectedSectionId(null); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === null ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)` : theme.panel, color: selectedSectionId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap", fontWeight: 700 }}>📌 Tout</button>
               {data.sections.map((section) => (
-                <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === section.id ? section.color : theme.panel, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>
+                <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === section.id ? section.color : theme.panel, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap", fontWeight: 700 }}>
                   {section.emoji} {section.name}
                 </button>
               ))}
             </div>
+
+            {/* Barre des catégories (mobile) juste sous la barre des grandes parties */}
+            {isMobile && selectedSectionId && (
+              <div className="chips-scroll" style={{ marginTop: 0, marginBottom: 0, padding: `6px 0 8px 0`, display: "flex", gap: 10, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
+                <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
+                {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
+                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
+                    {cat.icon} {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </header>
 
           <div style={{
@@ -2175,51 +2166,7 @@ export default function App() {
             overflow: "hidden",
             position: "relative"
           }}>
-            {selectedSectionId && (
-              <div className="chips-scroll" style={{
-                marginTop: isMobile ? 0 : 0,
-                marginBottom: isMobile ? 0 : 0,
-                padding: isMobile ? `0 ${layout.contentPad}px 2px` : `2px ${layout.contentPad}px 4px`,
-                minHeight: isMobile ? 36 : undefined,
-                height: isMobile ? 36 : undefined,
-                display: "flex",
-                gap: isMobile ? 6 : 10,
-                flexWrap: "nowrap",
-                overflowX: "auto",
-                backgroundColor: theme.panel,
-                borderBottom: `1px solid ${theme.border}`,
-                boxShadow: isMobile ? "" : "0 6px 14px rgba(0,0,0,0.12)"
-              }}>
-                <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{
-                  padding: isMobile ? "6px 12px" : "4px 10px",
-                  borderRadius: 14,
-                  backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel,
-                  color: selectedCategoryId === null ? "white" : theme.text,
-                  border: `1px solid ${theme.border}`,
-                  cursor: "pointer",
-                  fontSize: 12,
-                  whiteSpace: "nowrap",
-                  height: isMobile ? 28 : undefined,
-                  minHeight: isMobile ? 28 : undefined
-                }}>◆ Toutes</button>
-                {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
-                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{
-                    padding: isMobile ? "6px 12px" : "4px 10px",
-                    borderRadius: 14,
-                    backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel,
-                    color: selectedCategoryId === cat.id ? "white" : theme.text,
-                    border: `1px solid ${theme.border}`,
-                    cursor: "pointer",
-                    fontSize: 12,
-                    whiteSpace: "nowrap",
-                    height: isMobile ? 28 : undefined,
-                    minHeight: isMobile ? 28 : undefined
-                  }}>
-                    {cat.icon} {cat.name}
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Ancienne barre des catégories mobile supprimée ici */}
             {showSectionPanel && (
               <>
                 <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.3)", zIndex: 200 }} onClick={() => setShowSectionPanel(false)} />
@@ -2298,30 +2245,10 @@ export default function App() {
 
                   {selectedSectionId && (
                     <div>
-                      <h3 style={{ marginTop: 0, marginBottom: 8, color: theme.accent1, fontSize: 14 }}>📋 Catégories</h3>
-                      <div style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 8,
-                        width: "100%",
-                        marginTop: isMobile ? -24 : 0
-                      }}>
+                      <h3 style={{ marginTop: 0, marginBottom: 12, color: theme.accent1, fontSize: 14 }}>📋 Catégories</h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
-                          <button
-                            key={cat.id}
-                            onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); setShowSectionPanel(false); }}
-                            style={{
-                              padding: "12px 16px",
-                              borderRadius: 8,
-                              backgroundColor: selectedCategoryId === cat.id ? (cat.color || theme.accent1) : theme.bg,
-                              color: selectedCategoryId === cat.id ? "white" : theme.text,
-                              border: `1px solid ${theme.border}`,
-                              cursor: "pointer",
-                              textAlign: "left",
-                              fontSize: 14,
-                              width: "100%"
-                            }}
-                          >
+                          <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); setShowSectionPanel(false); }} style={{ padding: "12px 16px", borderRadius: 8, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.bg, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", textAlign: "left", fontSize: 14 }}>
                             {cat.icon} {cat.name}
                           </button>
                         ))}
