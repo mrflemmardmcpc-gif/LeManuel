@@ -2114,7 +2114,18 @@ export default function App() {
       )}
 
       {accessMode !== "home" && (
-      <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
+      <div style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "row",
+        overflow: "hidden",
+        width: isMobile && showSectionPanel ? "100vw" : undefined,
+        position: isMobile && showSectionPanel ? "fixed" : undefined,
+        left: isMobile && showSectionPanel ? 0 : undefined,
+        top: isMobile && showSectionPanel ? 0 : undefined,
+        height: isMobile && showSectionPanel ? "100vh" : undefined,
+        zIndex: isMobile && showSectionPanel ? 100 : undefined
+      }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: `${layout.headerPad/2}px ${layout.headerPad}px`, paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: layout.headerRowGap, marginBottom: 4 }}>
