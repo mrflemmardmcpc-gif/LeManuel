@@ -1408,6 +1408,28 @@ export default function App() {
   const [kvStatus, setKvStatus] = useState("idle");
   const [kvLastSaved, setKvLastSaved] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [kvErrorMsg, setKvErrorMsg] = useState("");
+  const [tableMenuOpen, setTableMenuOpen] = useState(null); // "editSub" | "newSub" | null
+  const tableTemplates = useMemo(() => ([
+    {
+      key: "simple",
+      label: "Table simple",
+      preview: "2 x 2",
+      text: `| Colonne 1 | Colonne 2 |\n|---|---|\n| Valeur A | Valeur B |\n| Valeur C | Valeur D |`,
+    },
+    {
+      key: "specs",
+      label: "Specs produit",
+      preview: "Caract. / Valeur",
+      text: `| Caractéristique | Valeur |\n|---|---|\n| Modèle | \n| Puissance | \n| Débit | \n| Notes | `,
+    },
+    {
+      key: "checklist",
+      label: "Checklist",
+      preview: "OK / A faire",
+      text: `| Étape | Statut |\n|---|---|\n| Vérifier alimentation | ✅ |\n| Purge circuit | ⏳ |\n| Contrôle étanchéité | ⏳ |`,
+    },
+  ]), []);
 
   // Branch data on a shared Y.js document so edits are synchronized in real time across devices.
   useEffect(() => {
@@ -1476,6 +1498,7 @@ export default function App() {
     let cancelled = false;
     const load = async () => {
       setKvStatus("loading");
+      setKvErrorMsg("");
       try {
         const res = await fetch("/api/state");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1491,11 +1514,13 @@ export default function App() {
           kvReadyRef.current = true;
           setIsDirty(false);
           setKvLastSaved(Date.now());
+          setKvErrorMsg("");
         }
       } catch (err) {
         if (!cancelled) {
           kvReadyRef.current = true;
           setKvStatus("error");
+          setKvErrorMsg(err?.message || "Chargement KV échoué");
         }
       }
     };
@@ -1813,6 +1838,25 @@ export default function App() {
       const updated = newSubText.slice(0, selectionInfo.start) + wrapStart + selectionInfo.text + wrapEnd + newSubText.slice(selectionInfo.end);
       setNewSubText(updated);
     }
+    setSelectionInfo({ text: "", start: 0, end: 0, target: null });
+  };
+
+  const insertTableTemplate = (target, tplText) => {
+    const useSelection = selectionInfo.target === target && typeof selectionInfo.start === "number";
+    if (target === "editSub") {
+      const base = editText;
+      const start = useSelection ? selectionInfo.start : base.length;
+      const end = useSelection ? selectionInfo.end : base.length;
+      const updated = base.slice(0, start) + tplText + base.slice(end);
+      setEditText(updated);
+    } else if (target === "newSub") {
+      const base = newSubText;
+      const start = useSelection ? selectionInfo.start : base.length;
+      const end = useSelection ? selectionInfo.end : base.length;
+      const updated = base.slice(0, start) + tplText + base.slice(end);
+      setNewSubText(updated);
+    }
+    setTableMenuOpen(null);
     setSelectionInfo({ text: "", start: 0, end: 0, target: null });
   };
 
@@ -2157,20 +2201,28 @@ export default function App() {
 
   const saveSnapshot = async () => {
     if (!isAuthenticated) { showToast("Réservé à l'admin"); return; }
+    if (!kvReadyRef.current) { showToast("KV non prêt"); return; }
     setKvStatus("saving");
+    setKvErrorMsg("");
     try {
       const res = await fetch("/api/state", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const msg = body?.error || `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
       setKvStatus("saved");
       setKvLastSaved(Date.now());
       setIsDirty(false);
+      setKvErrorMsg("");
       showToast("Sauvegardé");
     } catch (err) {
       setKvStatus("error");
+      setKvErrorMsg(err?.message || "Échec sauvegarde");
       showToast("Échec sauvegarde");
     }
   };
@@ -2269,6 +2321,7 @@ export default function App() {
                       <span>💾</span>
                       <span>{kvBadgeText}</span>
                       {kvLastSaved && <span style={{ fontSize: 11, opacity: 0.85 }}>{new Date(kvLastSaved).toLocaleTimeString("fr-FR", { hour12: false })}</span>}
+                      {kvStatus === "error" && kvErrorMsg && <span style={{ fontSize: 10, color: "#fee2e2" }}>{kvErrorMsg}</span>}
                     </div>
                     <button
                       onClick={saveSnapshot}
@@ -2292,7 +2345,7 @@ export default function App() {
                     </button>
                   </div>
                 )}
-                <button onClick={handleLogout} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
+                <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
                 <button onClick={() => setShowGallery(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
                 <button onClick={() => setShowSearchModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
                 <button onClick={() => setDarkMode((d) => !d)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
@@ -2313,9 +2366,9 @@ export default function App() {
             </div>
           </header>
 
-          <div style={{ marginTop: headerHeight ? `${headerHeight}px` : `calc(${layout.contentTop}px + ${safeTopInset})`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ marginTop: headerHeight ? `${headerHeight - 8}px` : `calc(${layout.contentTop}px + ${safeTopInset} - 8px)`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {selectedSectionId && (
-              <div style={{ marginTop: 6, padding: `8px ${layout.contentPad}px 10px`, display: "flex", gap: 8, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
+              <div style={{ marginTop: isMobile ? 0 : 6, padding: `6px ${layout.contentPad}px 8px`, display: "flex", gap: 8, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
                 <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
                 {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
                   <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
@@ -2518,17 +2571,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
-                    <button onClick={() => setGalleryFilterCatId(null)} style={{ padding: "8px 14px", borderRadius: 999, background: galleryFilterCatId === null ? "linear-gradient(120deg, #3b82f6, #22d3ee)" : theme.panel, color: galleryFilterCatId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 700 }}>Toutes</button>
-                    {galleryCategories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setGalleryFilterCatId(cat.id)}
-                        style={{ padding: "8px 14px", borderRadius: 999, background: galleryFilterCatId === cat.id ? (cat.color || theme.accent1) : theme.panel, color: galleryFilterCatId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 700 }}
-                      >{cat.icon} {cat.name}</button>
-                    ))}
-                  </div>
-
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 18 }}>
                     {filteredGalleryImages.map((img) => (
                       <div key={`${img.catId}-${img.subId}-${img.index}`} style={{ border: `1px solid ${theme.border}`, borderRadius: 14, overflow: "hidden", background: theme.panel, boxShadow: "0 12px 28px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column" }}>
@@ -2550,6 +2592,7 @@ export default function App() {
                                   sectionScrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                 }
                               }, 150);
+                              setShowGallery(false);
                             }} style={{ flex: 1, padding: "10px", borderRadius: 10, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 800, boxShadow: "0 8px 18px rgba(59,130,246,0.35)" }}>👁️ Voir</button>
                                 {isAuthenticated && editMode && (
                                   <button onClick={() => deleteImage(img.catId, img.subId, img.index)} style={{ width: 44, padding: "10px", borderRadius: 10, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 800 }}>🗑️</button>
@@ -2733,13 +2776,30 @@ export default function App() {
                                         {[14, 16, 18, 20].map((s) => (
                                           <button key={s} onClick={() => applyFormatting("size", s)} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", fontSize: 12 }}>{s}px</button>
                                         ))}
+                                        <div style={{ position: "relative" }}>
+                                          <button onClick={() => setTableMenuOpen(tableMenuOpen === "editSub" ? null : "editSub")}
+                                            style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                                            📊
+                                            <span style={{ fontWeight: 700 }}>Table</span>
+                                          </button>
+                                          {tableMenuOpen === "editSub" && (
+                                            <div style={{ position: "absolute", top: "110%", left: 0, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 10, boxShadow: theme.shadow, padding: 8, minWidth: 180, zIndex: 50 }}>
+                                              {tableTemplates.map((tpl) => (
+                                                <button key={tpl.key} onClick={() => insertTableTemplate("editSub", tpl.text)} style={{ width: "100%", textAlign: "left", padding: 8, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", marginBottom: 6, fontSize: 12 }}>
+                                                  <div style={{ fontWeight: 700 }}>{tpl.label}</div>
+                                                  <div style={{ fontFamily: "monospace", fontSize: 11, opacity: 0.8 }}>{tpl.preview}</div>
+                                                </button>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                       {quickColors.map((c) => (
                                         <button key={c} onClick={() => applyColorToSelection(c)} style={{ width: 24, height: 24, borderRadius: 6, border: `1px solid ${theme.border}`, backgroundColor: c, cursor: "pointer" }} />
                                       ))}
                                       <input type="color" value={selectionCustomColor} onChange={(e) => setSelectionCustomColor(e.target.value)} style={{ width: 32, height: 32, padding: 2, borderRadius: 8, border: `1px solid ${theme.border}`, cursor: "pointer" }} />
                                       <button onClick={() => applyColorToSelection(selectionCustomColor)} style={{ padding: "6px 10px", borderRadius: 8, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer", fontSize: 12 }}>OK</button>
-                                      <button onClick={() => setSelectionInfo({ text: "", start: 0, end: 0, target: null })} style={{ padding: "6px 8px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontSize: 12 }}>✖</button>
+                                      <button onClick={() => { setSelectionInfo({ text: "", start: 0, end: 0, target: null }); setTableMenuOpen(null); }} style={{ padding: "6px 8px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontSize: 12 }}>✖</button>
                                     </div>
                                   )}
                                   
@@ -2819,13 +2879,30 @@ export default function App() {
                                       {[14, 16, 18, 20].map((s) => (
                                         <button key={s} onClick={() => applyFormatting("size", s)} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", fontSize: 12 }}>{s}px</button>
                                       ))}
+                                      <div style={{ position: "relative" }}>
+                                        <button onClick={() => setTableMenuOpen(tableMenuOpen === "newSub" ? null : "newSub")}
+                                          style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                                          📊
+                                          <span style={{ fontWeight: 700 }}>Table</span>
+                                        </button>
+                                        {tableMenuOpen === "newSub" && (
+                                          <div style={{ position: "absolute", top: "110%", left: 0, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 10, boxShadow: theme.shadow, padding: 8, minWidth: 180, zIndex: 50 }}>
+                                            {tableTemplates.map((tpl) => (
+                                              <button key={tpl.key} onClick={() => insertTableTemplate("newSub", tpl.text)} style={{ width: "100%", textAlign: "left", padding: 8, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", marginBottom: 6, fontSize: 12 }}>
+                                                <div style={{ fontWeight: 700 }}>{tpl.label}</div>
+                                                <div style={{ fontFamily: "monospace", fontSize: 11, opacity: 0.8 }}>{tpl.preview}</div>
+                                              </button>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
                                     {quickColors.map((c) => (
                                       <button key={c} onClick={() => applyColorToSelection(c)} style={{ width: 24, height: 24, borderRadius: 6, border: `1px solid ${theme.border}`, backgroundColor: c, cursor: "pointer" }} />
                                     ))}
                                     <input type="color" value={selectionCustomColor} onChange={(e) => setSelectionCustomColor(e.target.value)} style={{ width: 32, height: 32, padding: 2, borderRadius: 8, border: `1px solid ${theme.border}`, cursor: "pointer" }} />
                                     <button onClick={() => applyColorToSelection(selectionCustomColor)} style={{ padding: "6px 10px", borderRadius: 8, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer", fontSize: 12 }}>OK</button>
-                                    <button onClick={() => setSelectionInfo({ text: "", start: 0, end: 0, target: null })} style={{ padding: "6px 8px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontSize: 12 }}>✖</button>
+                                    <button onClick={() => { setSelectionInfo({ text: "", start: 0, end: 0, target: null }); setTableMenuOpen(null); }} style={{ padding: "6px 8px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontSize: 12 }}>✖</button>
                                   </div>
                                 )}
                                 
