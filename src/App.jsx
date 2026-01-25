@@ -2144,7 +2144,7 @@ export default function App() {
               </div>
             </div>
             <div className="chips-scroll" style={{ display: "flex", gap: 6, flexWrap: "nowrap", overflowX: "auto", padding: '2px 0', alignItems: 'center', position: 'relative', top: 2 }}>
-              <button onClick={() => { setSelectedSectionId(null); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === null ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)` : theme.panel, color: selectedSectionId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>📌 Tout</button>
+              <button onClick={() => { setSelectedSectionId(null); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === null ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)` : theme.panel, color: selectedSectionId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap", marginTop: isMobile ? '-8px' : undefined }}>📌 Tout</button>
               {data.sections.map((section) => (
                 <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === section.id ? section.color : theme.panel, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>
                   {section.emoji} {section.name}
@@ -2165,7 +2165,7 @@ export default function App() {
             position: "relative"
           }}>
             {selectedSectionId && (
-              <div className="chips-scroll" style={{ marginTop: isMobile ? -4 : 0, marginBottom: 0, padding: `6px ${layout.contentPad}px 8px`, display: "flex", gap: 10, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}`, boxShadow: isMobile ? "" : "0 6px 14px rgba(0,0,0,0.12)" }}>
+              <div className="chips-scroll" style={{ marginTop: 0, marginBottom: 0, padding: `2px ${layout.contentPad}px 4px`, display: "flex", gap: 10, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}`, boxShadow: isMobile ? "" : "0 6px 14px rgba(0,0,0,0.12)" }}>
                 <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
                 {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
                   <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
@@ -2183,7 +2183,7 @@ export default function App() {
                     <button onClick={() => setShowSectionPanel(false)} style={{ padding: "8px 12px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>✖</button>
                   </div>
 
-                  <div style={{ marginBottom: 20 }}>
+                  <div style={{ marginBottom: isMobile ? 4 : 20 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                       <h3 style={{ margin: 0, color: theme.accent1, fontSize: 14 }}>🏗️ Grandes Parties</h3>
                       {isAuthenticated && (
@@ -2252,35 +2252,27 @@ export default function App() {
 
                   {selectedSectionId && (
                     <div>
-                      <h3 style={{ marginTop: 0, marginBottom: 8, color: theme.accent1, fontSize: 14 }}>📋 Catégories</h3>
+                      <h3 style={{ marginTop: isMobile ? 0 : 0, marginBottom: isMobile ? 2 : 8, color: theme.accent1, fontSize: 14 }}>📋 Catégories</h3>
                       <div style={{
                         display: "flex",
-                        flexDirection: isMobile ? "row" : "column",
-                        gap: isMobile ? 6 : 8,
-                        flexWrap: isMobile ? "nowrap" : "wrap",
-                        overflowX: isMobile ? "auto" : "visible",
-                        padding: isMobile ? "2px 0" : undefined,
-                        alignItems: isMobile ? "center" : undefined,
-                        position: isMobile ? "relative" : undefined,
-                        top: isMobile ? 2 : undefined,
-                        marginTop: isMobile ? -4 : undefined
+                        flexDirection: "column",
+                        gap: isMobile ? 4 : 8,
+                        width: "100%"
                       }}>
                         {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
                           <button
                             key={cat.id}
                             onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); setShowSectionPanel(false); }}
                             style={{
-                              padding: isMobile ? "4px 10px" : "12px 16px",
-                              borderRadius: isMobile ? 14 : 8,
+                              padding: "12px 16px",
+                              borderRadius: 8,
                               backgroundColor: selectedCategoryId === cat.id ? (cat.color || theme.accent1) : theme.bg,
                               color: selectedCategoryId === cat.id ? "white" : theme.text,
                               border: `1px solid ${theme.border}`,
                               cursor: "pointer",
-                              textAlign: isMobile ? "center" : "left",
-                              fontSize: isMobile ? 11 : 14,
-                              whiteSpace: isMobile ? "nowrap" : undefined,
-                              minWidth: isMobile ? 0 : undefined,
-                              minHeight: isMobile ? 0 : undefined
+                              textAlign: "left",
+                              fontSize: 14,
+                              width: "100%"
                             }}
                           >
                             {cat.icon} {cat.name}
