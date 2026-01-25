@@ -2,6 +2,16 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 
+// Utility to read file as Data URL
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 const Emoji = ({ symbol, label, size = 18 }) => (
   <span role="img" aria-label={label} style={{ fontSize: size, lineHeight: 1, fontFamily: "'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif", display: "inline-block" }}>
     {symbol}
@@ -1371,23 +1381,17 @@ function Markdown({ content }) {
     const lines = tableBlock.trim().split('\n').filter(l => l.trim().startsWith('|') && l.trim().endsWith('|'));
     if (lines.length < 2) return tableBlock;
     const headers = lines[0].split('|').filter(Boolean).map(h => h.trim());
-    const headerHtml = headers.map(h => `<th class="p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700 bg-slate-800 text-blue-400" style="word-break:break-word;white-space:pre-line;overflow-wrap:anywhere;">${h}</th>`).join('');
+    const headerHtml = headers.map(h => `<th class=\"p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700 bg-slate-800 text-blue-400\" style=\"word-break:break-word;white-space:pre-line;overflow-wrap:anywhere;\">${h}</th>`).join('');
     const bodyHtml = lines.slice(2).map(row => {
       const cols = row.split('|').filter(Boolean).map(c => c.trim());
-      return `<tr>${cols.map(c => `<td class="p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700" style="word-break:break-word;white-space:pre-line;overflow-wrap:anywhere;">${c}</td>`).join('')}</tr>`;
+      return `<tr>${cols.map(c => `<td class=\"p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700\" style=\"word-break:break-word;white-space:pre-line;overflow-wrap:anywhere;\">${c}</td>`).join('')}</tr>`;
     }).join('');
     // Bloc scrollable, largeur forcée, espace réduit
     return `
-      <div class="relative w-full" style="overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; margin:0; scrollbar-color: orange #fff0;">
-        <table class="border-collapse w-full min-w-full text-[clamp(14px,4vw,18px)]" style="margin:0;">
-          <colgroup>${headers.map(() => '<col style=\'width:auto;min-width:80px;max-width:1fr;\'>').join('')}</colgroup>
-          <thead>
-            <tr>${headerHtml}</tr>
-          </thead>
-          <tbody>${bodyHtml}</tbody>
-        </table>
-        <div class="pointer-events-none absolute top-0 right-0 h-full w-8 hidden sm:block" style="background:linear-gradient(to left,rgba(30,41,59,0.7),transparent);"></div>
-        <div class="pointer-events-none absolute top-0 left-0 h-full w-8 hidden sm:block" style="background:linear-gradient(to right,rgba(30,41,59,0.7),transparent);"></div>
+      <div class=\"relative w-full\" style=\"overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; margin:10px 0 6px 0;\">
+        <table class=\"border-collapse w-full min-w-full text-[clamp(14px,4vw,18px)]\" style=\"margin:0;\"><colgroup>${headers.map(() => '<col style=\'width:auto;min-width:80px;max-width:1fr;\'>').join('')}</colgroup><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>
+        <div class=\"pointer-events-none absolute top-0 right-0 h-full w-8 hidden sm:block\" style=\"background:linear-gradient(to left,rgba(30,41,59,0.7),transparent);\"></div>
+        <div class=\"pointer-events-none absolute top-0 left-0 h-full w-8 hidden sm:block\" style=\"background:linear-gradient(to right,rgba(30,41,59,0.7),transparent);\"></div>
       </div>
     `;
   });
@@ -1561,7 +1565,6 @@ export default function App() {
   const [newCatTitle, setNewCatTitle] = useState("");
   const [newCatEmoji, setNewCatEmoji] = useState("📌");
   const [newCatSection, setNewCatSection] = useState(null);
-  const [newCatColor, setNewCatColor] = useState("#ffffff");
   const [newSubTitle, setNewSubTitle] = useState("");
   const [newSubText, setNewSubText] = useState("");
   const [newSubColor, setNewSubColor] = useState("#e6eef8");
@@ -1600,6 +1603,7 @@ export default function App() {
   const [editCatEmoji, setEditCatEmoji] = useState("");
   const [editCatSection, setEditCatSection] = useState(null);
   const [editCatColor, setEditCatColor] = useState("#ffffff");
+  const [newCatColor, setNewCatColor] = useState("#ffffff");
   const [accessMode, setAccessMode] = useState("home");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -1613,6 +1617,52 @@ export default function App() {
   const inlineFileInputRef = useRef(null);
   const subRefs = useRef({});
   const toastTimeoutRef = useRef(null);
+
+    // Handler for gallery image file input
+    const onFileChange = async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        setToast({ message: "Le fichier doit être une image." });
+        return;
+      }
+      if (file.size > 500 * 1024) {
+        setToast({ message: "Image trop lourde (>500KB)" });
+        return;
+      }
+      try {
+        setGalleryUploadBusy(true);
+        const dataUrl = await readFileAsDataURL(file);
+        setNewImageUrl(dataUrl);
+      } catch (err) {
+        setToast({ message: "Erreur lors de la lecture du fichier." });
+      } finally {
+        setGalleryUploadBusy(false);
+      }
+    };
+
+    // Handler for inline image file input
+    const onInlineFileChange = async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        setToast({ message: "Le fichier doit être une image." });
+        return;
+      }
+      if (file.size > 500 * 1024) {
+        setToast({ message: "Image trop lourde (>500KB)" });
+        return;
+      }
+      try {
+        setInlineImageLoading(true);
+        const dataUrl = await readFileAsDataURL(file);
+        setInlineImageUrl(dataUrl);
+      } catch (err) {
+        setToast({ message: "Erreur lors de la lecture du fichier." });
+      } finally {
+        setInlineImageLoading(false);
+      }
+    };
 
   // Affiche un avertissement de fermeture uniquement pour l'admin avec des changements non sauvegardés.
   useEffect(() => {
@@ -1882,296 +1932,6 @@ export default function App() {
     setSelectionInfo({ text: "", start: 0, end: 0, target: null });
   };
 
-  const addCategory = () => {
-    if (!newCatTitle.trim() || newCatSection === null) { showToast("Données requises"); return; }
-    const newId = Math.max(0, ...data.categories.map((c) => c.id)) + 1;
-    setData({ ...data, categories: [...data.categories, { id: newId, name: newCatTitle, icon: newCatEmoji || "📌", sectionId: newCatSection, color: newCatColor, subs: [] }] });
-    setNewCatTitle("");
-    setNewCatEmoji("📌");
-    setNewCatSection(null);
-    setNewCatColor("#ffffff");
-  };
-
-  const deleteCategory = (id) => {
-    askConfirm("Supprimer la catégorie ?", () => {
-      setData((d) => ({ ...d, categories: d.categories.filter((c) => c.id !== id) }));
-    });
-  };
-
-  const moveCategoryUp = (id) => {
-    const currentIndex = data.categories.findIndex(c => c.id === id);
-    if (currentIndex === 0) return;
-    const newCategories = [...data.categories];
-    [newCategories[currentIndex - 1], newCategories[currentIndex]] = [newCategories[currentIndex], newCategories[currentIndex - 1]];
-    setData({ ...data, categories: newCategories });
-  };
-
-  const moveCategoryDown = (id) => {
-    const currentIndex = data.categories.findIndex(c => c.id === id);
-    if (currentIndex === data.categories.length - 1) return;
-    const newCategories = [...data.categories];
-    [newCategories[currentIndex], newCategories[currentIndex + 1]] = [newCategories[currentIndex + 1], newCategories[currentIndex]];
-    setData({ ...data, categories: newCategories });
-  };
-
-  const startEditSection = (section) => {
-    setEditingSectionId(section.id);
-    setEditSectionName(section.name);
-    setEditSectionEmoji(section.emoji);
-    setEditSectionColor(section.color);
-  };
-
-  const saveEditSection = () => {
-    if (!editSectionName.trim()) { showToast("Nom requis"); return; }
-    setData(d => ({
-      ...d,
-      sections: d.sections.map(s => s.id === editingSectionId ? { ...s, name: editSectionName, emoji: editSectionEmoji, color: editSectionColor } : s)
-    }));
-    setEditingSectionId(null);
-    setEditSectionName("");
-    setEditSectionEmoji("");
-    setEditSectionColor("");
-  };
-
-  const cancelEditSection = () => {
-    setEditingSectionId(null);
-    setEditSectionName("");
-    setEditSectionEmoji("");
-    setEditSectionColor("");
-  };
-
-  const addSection = () => {
-    if (!newSectionName.trim()) { showToast("Nom requis"); return; }
-    const newId = Math.max(0, ...data.sections.map(s => s.id)) + 1;
-    setData({ ...data, sections: [...data.sections, { id: newId, name: newSectionName, emoji: newSectionEmoji, color: newSectionColor }] });
-    setNewSectionName("");
-    setNewSectionEmoji("📌");
-    setNewSectionColor("#3b82f6");
-  };
-
-  const deleteSection = (id) => {
-    askConfirm("Supprimer la grande partie ? (les catégories restent)", () => {
-      setData((d) => ({ ...d, sections: d.sections.filter(s => s.id !== id) }));
-    });
-  };
-
-  const startEditCategory = (cat) => {
-    setEditingCategoryId(cat.id);
-    setEditCatName(cat.name);
-    setEditCatEmoji(cat.icon);
-    setEditCatSection(cat.sectionId);
-    setEditCatColor(cat.color || "#ffffff");
-  };
-
-  const saveEditCategory = () => {
-    if (!editCatName.trim()) { showToast("Nom requis"); return; }
-    setData(d => ({
-      ...d,
-      categories: d.categories.map(c => c.id === editingCategoryId ? { ...c, name: editCatName, icon: editCatEmoji, sectionId: editCatSection, color: editCatColor } : c)
-    }));
-    setEditingCategoryId(null);
-    setEditCatName("");
-    setEditCatEmoji("");
-    setEditCatSection(null);
-    setEditCatColor("#ffffff");
-  };
-
-  const cancelEditCategory = () => {
-    setEditingCategoryId(null);
-    setEditCatName("");
-    setEditCatEmoji("");
-    setEditCatSection(null);
-    setEditCatColor("#ffffff");
-  };
-
-  const updateCategorySection = (catId, newSectionId) => {
-    setData({ ...data, categories: data.categories.map(cat => cat.id === catId ? { ...cat, sectionId: newSectionId } : cat) });
-  };
-
-  const startAddingSub = (catId) => {
-    setAddingSubToCatId(catId);
-    setNewSubTitle("");
-    setNewSubText("");
-    setNewSubColor("#e6eef8");
-  };
-
-  const saveNewSub = () => {
-    if (!newSubTitle.trim()) { showToast("Titre requis"); return; }
-    const category = data.categories.find(c => c.id === addingSubToCatId);
-    const newSubId = Math.max(0, ...category.subs.map(s => s.id), addingSubToCatId * 100) + 1;
-    setData(d => ({
-      ...d,
-      categories: d.categories.map(cat => cat.id === addingSubToCatId ? { ...cat, subs: [...cat.subs, { id: newSubId, title: newSubTitle, text: newSubText, color: newSubColor, image: null }] } : cat)
-    }));
-    setAddingSubToCatId(null);
-    setNewSubTitle("");
-    setNewSubText("");
-    setNewSubColor("#e6eef8");
-  };
-
-  const cancelAddingSub = () => {
-    setAddingSubToCatId(null);
-    setNewSubTitle("");
-    setNewSubText("");
-    setNewSubColor("#e6eef8");
-  };
-
-  const uploadImageToBlob = async (dataUrl) => {
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dataUrl }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok || !body?.url) {
-      throw new Error(body?.error || `Upload HTTP ${res.status}`);
-    }
-    return body.url;
-  };
-
-  const startInlineImage = (catId, subId) => {
-    setInlineImageTarget({ catId, subId });
-    setInlineImageUrl("");
-    setInlineImageDesc("");
-    setInlineImageLoading(false);
-    inlineFileInputRef.current?.click();
-  };
-
-  const cancelInlineImage = () => {
-    setInlineImageTarget(null);
-    setInlineImageUrl("");
-    setInlineImageDesc("");
-    setInlineImageLoading(false);
-  };
-
-  const onInlineFileChange = (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setInlineImageLoading(true);
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const maxWidth = 600;
-        const scale = Math.min(1, maxWidth / img.width);
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
-        const sizeInKB = dataUrl.length / 1024;
-        if (sizeInKB > 200) {
-          showToast(`Trop gros (${Math.round(sizeInKB)}KB)`);
-          setInlineImageLoading(false);
-          return;
-        }
-        setInlineImageUrl(dataUrl);
-        setInlineImageLoading(false);
-      };
-      img.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const saveInlineImage = async () => {
-    if (!inlineImageTarget || !inlineImageUrl) { showToast("Choisis une image"); return; }
-    setInlineUploadBusy(true);
-    try {
-      const uploadedUrl = await uploadImageToBlob(inlineImageUrl);
-      const image = { url: uploadedUrl, desc: inlineImageDesc.trim() };
-      setData(prevData => ({
-        ...prevData,
-        categories: prevData.categories.map(cat => cat.id === inlineImageTarget.catId ? {
-          ...cat,
-          subs: cat.subs.map(sub => sub.id === inlineImageTarget.subId ? { ...sub, image } : sub)
-        } : cat)
-      }));
-      showToast("Image ajoutée");
-      cancelInlineImage();
-    } catch (err) {
-      showToast("Échec de l'upload image");
-    } finally {
-      setInlineUploadBusy(false);
-    }
-  };
-
-  const onFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const maxWidth = 600;
-        const scale = maxWidth / img.width;
-        canvas.width = maxWidth;
-        canvas.height = img.height * scale;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
-        const sizeInKB = compressedDataUrl.length / 1024;
-        if (sizeInKB > 200) { showToast(`Trop gros (${Math.round(sizeInKB)}KB)`); return; }
-        setNewImageUrl(compressedDataUrl);
-      };
-      img.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-
-  const saveImage = async () => {
-    if (!newImageCatId || !newImageSubId || !newImageUrl) { showToast("Remplis tous les champs"); return; }
-    setGalleryUploadBusy(true);
-    try {
-      const uploadedUrl = await uploadImageToBlob(newImageUrl);
-      const newImage = { url: uploadedUrl, desc: newImageDesc.trim() };
-      setData(prevData => ({
-        ...prevData,
-        categories: prevData.categories.map(cat => cat.id === newImageCatId ? {
-          ...cat,
-          subs: cat.subs.map(sub => {
-            if (sub.id !== newImageSubId) return sub;
-            const list = getSubImages(sub);
-            return { ...sub, images: [...list, newImage], image: undefined };
-          })
-        } : cat)
-      }));
-      showToast("Image ajoutée");
-      setNewImageUrl("");
-      setNewImageCatId(null);
-      setNewImageSubId(null);
-      setNewImageDesc("");
-      setIsAddingImage(false);
-    } catch (err) {
-      showToast("Échec de l'upload image");
-    } finally {
-      setGalleryUploadBusy(false);
-    }
-  };
-
-  const deleteImage = (catId, subId, imageIndex) => {
-    askConfirm("Supprimer cette image ?", () => {
-      setData(prevData => ({
-        ...prevData,
-        categories: prevData.categories.map(cat => {
-          if (cat.id !== catId) return cat;
-          return {
-            ...cat,
-            subs: cat.subs.map(sub => {
-              if (sub.id !== subId) return sub;
-              const list = getSubImages(sub);
-              const next = list.filter((_, idx) => idx !== imageIndex);
-              return { ...sub, images: next, image: undefined };
-            })
-          };
-        })
-      }));
-    });
-  };
-
   const handleSelectVisitor = () => {
     setAccessMode("visitor");
     setIsAuthenticated(false);
@@ -2260,42 +2020,9 @@ export default function App() {
     closeConfirm();
   };
 
-  const [themeStyle, setThemeStyle] = useState('base'); // 'base', 'blanc', 'degrade'
-  const theme = (() => {
-    if (themeStyle === 'blanc') {
-      return {
-        bg: '#fff',
-        panel: '#fff',
-        border: '#e5e7eb',
-        text: '#222',
-        subtext: '#666',
-        input: '#f3f4f6',
-        accent1: '#3b82f6',
-        accent2: '#06b6d4',
-        accent3: '#10b981',
-        shadow: '0 4px 16px rgba(0,0,0,0.06)'
-      };
-    }
-    if (themeStyle === 'degrade') {
-      const degrade = 'linear-gradient(135deg, #ff5858 0%, #ffe66d 50%, #4caf50 100%)';
-      return {
-        bg: degrade,
-        panel: degrade,
-        border: 'rgba(255,255,255,0.18)',
-        text: '#1a1a2e',
-        subtext: '#6b7280',
-        input: degrade,
-        accent1: '#ff5858',
-        accent2: '#ffe66d',
-        accent3: '#4caf50',
-        shadow: '0 8px 32px rgba(255, 88, 88, 0.12)'
-      };
-    }
-    // base (actuel)
-    return darkMode
-      ? { bg: "linear-gradient(135deg, #1a1a2e 0%, #2d1b4e 50%, #0f172a 100%)", panel: "rgba(255, 255, 255, 0.08)", border: "rgba(255, 255, 255, 0.1)", text: "#f8f9fa", subtext: "#b0b8c8", input: "rgba(255, 255, 255, 0.05)", accent1: "#FFB366", accent2: "#FF6B9D", accent3: "#4A4E69", shadow: "0 8px 32px rgba(0, 0, 0, 0.3)" }
-      : { bg: "linear-gradient(135deg, #f8fafc 0%, #f0e6ff 50%, #fff5f0 100%)", panel: "rgba(255, 255, 255, 0.9)", border: "rgba(0, 0, 0, 0.08)", text: "#1a1a2e", subtext: "#6b7280", input: "rgba(0, 0, 0, 0.05)", accent1: "#FFB366", accent2: "#FF6B9D", accent3: "#4A4E69", shadow: "0 8px 32px rgba(0, 0, 0, 0.1)" };
-  })();
+  const theme = darkMode
+    ? { bg: "linear-gradient(135deg, #1a1a2e 0%, #2d1b4e 50%, #0f172a 100%)", panel: "rgba(255, 255, 255, 0.08)", border: "rgba(255, 255, 255, 0.1)", text: "#f8f9fa", subtext: "#b0b8c8", input: "rgba(255, 255, 255, 0.05)", accent1: "#FFB366", accent2: "#FF6B9D", accent3: "#4A4E69", shadow: "0 8px 32px rgba(0, 0, 0, 0.3)" }
+    : { bg: "linear-gradient(135deg, #f8fafc 0%, #f0e6ff 50%, #fff5f0 100%)", panel: "rgba(255, 255, 255, 0.9)", border: "rgba(0, 0, 0, 0.08)", text: "#1a1a2e", subtext: "#6b7280", input: "rgba(0, 0, 0, 0.05)", accent1: "#FFB366", accent2: "#FF6B9D", accent3: "#4A4E69", shadow: "0 8px 32px rgba(0, 0, 0, 0.1)" };
 
   const kvBadgeBg = kvStatus === "error" ? "#ef4444" : kvStatus === "saving" ? "#f59e0b" : (kvStatus === "loaded" || kvStatus === "saved") ? "#10b981" : theme.panel;
   const kvBadgeText = kvStatus === "error" ? "KV err" : kvStatus === "saving" ? "KV..." : (kvStatus === "loaded" || kvStatus === "saved") ? "KV ok" : "KV";
@@ -2337,38 +2064,12 @@ export default function App() {
 
       {accessMode === "home" && (
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 32 }}>
-          <div style={{ maxWidth: 760, width: "100%", padding: layout.homeCardPad, borderRadius: 16, background: theme.panel, border: `1px solid ${theme.border}`, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ maxWidth: 760, width: "100%", padding: layout.homeCardPad, borderRadius: 16, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-              <h1 style={{
-                margin: 0,
-                fontSize: 28,
-                fontWeight: "bold",
-                background: themeStyle === 'degrade'
-                  ? 'linear-gradient(135deg, #7a0000 0%, #bfa800 50%, #005000 100%)'
-                  : themeStyle === 'blanc'
-                  ? 'linear-gradient(135deg, #222 0%, #444 100%)'
-                  : 'linear-gradient(135deg, #FFB366 0%, #FF6B9D 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                letterSpacing: '0.05px',
-                lineHeight: 1.05,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}>Choisis un mode</h1>
-                <button
-                  onClick={() => {
-                    // Always cycle: base -> blanc -> degrade -> base
-                    setThemeStyle(prev => prev === 'base' ? 'blanc' : prev === 'blanc' ? 'degrade' : 'base');
-                  }}
-                  style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-                >
-                  <Emoji symbol={themeStyle === 'base' ? (darkMode ? "☀️" : "🌙") : themeStyle === 'blanc' ? "⬜" : "🌈"} label={themeStyle === 'base' ? (darkMode ? "Mode clair" : "Mode sombre") : themeStyle === 'blanc' ? "Style blanc" : "Dégradé"} size={18} />
-                  <span style={{ opacity: themeStyle === 'base' ? 1 : 0.5 }}><Emoji symbol={darkMode ? "☀️" : "🌙"} label="Base" size={18} /></span>
-                  <span style={{ opacity: themeStyle === 'blanc' ? 1 : 0.5 }}><Emoji symbol="⬜" label="Blanc" size={18} /></span>
-                  <span style={{ opacity: themeStyle === 'degrade' ? 1 : 0.5 }}><Emoji symbol="🌈" label="Dégradé" size={18} /></span>
-                </button>
+              <h1 style={{ margin: 0, fontSize: 28, fontWeight: "bold", color: theme.accent1 }}>Choisis un mode</h1>
+              <button onClick={() => setDarkMode((d) => !d)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={18} /> : <Emoji symbol="🌙" label="Mode sombre" size={18} />}
+              </button>
             </div>
             <p style={{ margin: 0, color: theme.subtext, lineHeight: 1.6 }}>Visiteur : consultation uniquement. Admin : accès aux boutons d'édition (mot de passe requis).</p>
             <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fit, minmax(${layout.homeGridMin}px, 1fr))`, gap: layout.homeGridGap }}>
@@ -2386,68 +2087,40 @@ export default function App() {
       {accessMode !== "home" && (
       <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, background: theme.panel, backdropFilter: "none", padding: `${layout.headerPad/2}px ${layout.headerPad}px`, paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
+          <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: `${layout.headerPad/2}px ${layout.headerPad}px`, paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: layout.headerRowGap, marginBottom: 4 }}>
               <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, width: "100%", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, flex: 1, minWidth: 0 }}>
-                  <button onClick={() => setShowSectionPanel(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, border: `1px solid ${theme.border}`, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : theme.panel, color: themeStyle === 'degrade' ? 'white' : theme.text, fontSize: layout.headerIconSize, cursor: "pointer", flexShrink: 0, boxShadow: themeStyle === 'degrade' ? '0 2px 8px rgba(0,0,0,0.10)' : undefined }}>☰</button>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: layout.headerTitle,
-                    fontWeight: 800,
-                    background: themeStyle === 'degrade'
-                      ? 'linear-gradient(135deg, #7a0000 0%, #bfa800 50%, #005000 100%)'
-                      : themeStyle === 'blanc'
-                      ? 'linear-gradient(135deg, #222 0%, #444 100%)'
-                      : 'linear-gradient(135deg, #FFB366 0%, #FF6B9D 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    letterSpacing: '0.05px',
-                    lineHeight: 1.05,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}>🛠️ Le Manuel</h1>
+                  <button onClick={() => setShowSectionPanel(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: layout.headerIconSize, cursor: "pointer", flexShrink: 0 }}>☰</button>
+                  <h1 style={{ margin: 0, fontSize: layout.headerTitle, fontWeight: 800, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "0.05px", lineHeight: 1.05, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>🛠️ Le Manuel</h1>
                 </div>
               </div>
               <div style={{ display: "flex", gap: isMobile ? 1 : 6, alignItems: "center", flexWrap: "wrap", width: "100%", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
                 <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{accessMode === "admin" ? "Admin" : "Visiteur"}</div>
-                {/* Theme switcher button always visible */}
-                <button
-                  onClick={() => {
-                    setThemeStyle(prev => prev === 'base' ? 'blanc' : prev === 'blanc' ? 'degrade' : 'base');
-                  }}
-                  style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, marginRight: 6 }}
-                >
-                  <Emoji symbol={themeStyle === 'base' ? (darkMode ? "☀️" : "🌙") : themeStyle === 'blanc' ? "⬜" : "🌈"} label={themeStyle === 'base' ? (darkMode ? "Mode clair" : "Mode sombre") : themeStyle === 'blanc' ? "Style blanc" : "Dégradé"} size={18} />
-                  <span style={{ opacity: themeStyle === 'base' ? 1 : 0.5 }}><Emoji symbol={darkMode ? "☀️" : "🌙"} label="Base" size={18} /></span>
-                  <span style={{ opacity: themeStyle === 'blanc' ? 1 : 0.5 }}><Emoji symbol="⬜" label="Blanc" size={18} /></span>
-                  <span style={{ opacity: themeStyle === 'degrade' ? 1 : 0.5 }}><Emoji symbol="🌈" label="Dégradé" size={18} /></span>
-                </button>
-                <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : theme.accent1, color: 'white', border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
-                <button onClick={() => setShowGallery(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}>📷</button>
+                {/* Removed large header Sauvegarder button. Only floating save button remains for admin with unsaved changes. */}
+                <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
+                <button onClick={() => setShowGallery(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
                 {isMobile && hasImagesForSelectedCategory && (
                   <button
                     onClick={() => setImageDrawerOpen(true)}
-                    style={{ padding: isAuthenticated ? '2px 2px' : '4px 7px', minWidth: isAuthenticated ? 15 : undefined, minHeight: isAuthenticated ? 15 : undefined, borderRadius: 10, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : theme.panel, color: themeStyle === 'degrade' ? 'white' : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}
+                    style={{ padding: isAuthenticated ? '2px 2px' : '4px 7px', minWidth: isAuthenticated ? 15 : undefined, minHeight: isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}
                   >
                     🖼️
                   </button>
                 )}
-                <button onClick={() => setShowSearchModal(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : theme.accent2, color: 'white', border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
-                <button onClick={() => setDarkMode((d) => !d)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent2} 0%, ${theme.accent3} 100%)` : theme.accent2, color: 'white', border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
+                <button onClick={() => setShowSearchModal(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
+                <button onClick={() => setDarkMode((d) => !d)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
                   {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
                 </button>
                 {isAuthenticated && (
-                  <button onClick={() => setEditMode((e) => !e)} style={{ padding: isMobile ? '2px 2px' : layout.headerButtonPad, minWidth: isMobile ? 15 : undefined, minHeight: isMobile ? 15 : undefined, borderRadius: 10, background: editMode ? "#10b981" : theme.accent3, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>{editMode ? "✏️" : "🔒"}</button>
+                  <button onClick={() => setEditMode((e) => !e)} style={{ padding: isMobile ? '2px 2px' : layout.headerButtonPad, minWidth: isMobile ? 15 : undefined, minHeight: isMobile ? 15 : undefined, borderRadius: 10, backgroundColor: editMode ? "#10b981" : theme.accent3, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>{editMode ? "✏️" : "🔒"}</button>
                 )}
               </div>
             </div>
             <div className="chips-scroll" style={{ display: "flex", gap: 6, flexWrap: "nowrap", overflowX: "auto", padding: '2px 0', alignItems: 'center', position: 'relative', top: 2 }}>
-              <button onClick={() => { setSelectedSectionId(null); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, background: selectedSectionId === null ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)` : theme.panel, color: selectedSectionId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>📌 Tout</button>
+              <button onClick={() => { setSelectedSectionId(null); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === null ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)` : theme.panel, color: selectedSectionId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>📌 Tout</button>
               {data.sections.map((section) => (
-                <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, background: selectedSectionId === section.id ? section.color : theme.panel, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>
+                <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === section.id ? section.color : theme.panel, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>
                   {section.emoji} {section.name}
                 </button>
               ))}
@@ -2466,10 +2139,10 @@ export default function App() {
             position: "relative"
           }}>
             {selectedSectionId && (
-              <div className="chips-scroll" style={{ marginTop: isAuthenticated && isMobile ? 30 : 0, marginBottom: isAuthenticated && isMobile ? 0 : 0, padding: `10px ${layout.contentPad}px 12px`, display: "flex", gap: 10, flexWrap: "nowrap", overflowX: "auto", background: theme.panel, borderBottom: `1px solid ${theme.border}`, boxShadow: isMobile ? "" : "0 6px 14px rgba(0,0,0,0.12)" }}>
-                <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, background: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
+              <div className="chips-scroll" style={{ marginTop: isAuthenticated && isMobile ? 30 : 0, marginBottom: isAuthenticated && isMobile ? 0 : 0, padding: `10px ${layout.contentPad}px 12px`, display: "flex", gap: 10, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}`, boxShadow: isMobile ? "" : "0 6px 14px rgba(0,0,0,0.12)" }}>
+                <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
                 {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
-                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, background: selectedCategoryId === cat.id ? (cat.color || theme.accent1) : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
+                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
                     {cat.icon} {cat.name}
                   </button>
                 ))}
@@ -2478,7 +2151,7 @@ export default function App() {
             {showSectionPanel && (
               <>
                 <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.3)", zIndex: 200 }} onClick={() => setShowSectionPanel(false)} />
-                <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: layout.sideWidth, background: theme.panel, backdropFilter: "blur(20px)", zIndex: 300, overflow: "auto", padding: layout.modalPad, borderRight: `1px solid ${theme.border}` }}>
+                <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: layout.sideWidth, backgroundColor: theme.panel, backdropFilter: "blur(20px)", zIndex: 300, overflow: "auto", padding: layout.modalPad, borderRight: `1px solid ${theme.border}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                     <h2 style={{ margin: 0, color: theme.accent1 }}>📂 Menu</h2>
                     <button onClick={() => setShowSectionPanel(false)} style={{ padding: "8px 12px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>✖</button>
@@ -2494,7 +2167,7 @@ export default function App() {
 
                     {isAuthenticated && showEditSectionsPanel ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        <div style={{ background: theme.bg, padding: 12, borderRadius: 8, border: `2px dashed ${theme.border}` }}>
+                        <div style={{ backgroundColor: theme.bg, padding: 12, borderRadius: 8, border: `2px dashed #10b981` }}>
                           <h4 style={{ margin: "0 0 8px 0", color: "#10b981", fontSize: 12 }}>➕ Ajouter</h4>
                           <input placeholder="Nom" value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} style={{ width: "100%", padding: 6, borderRadius: 4, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, marginBottom: 8, fontSize: 12 }} />
                           <input placeholder="Emoji" value={newSectionEmoji} onChange={(e) => setNewSectionEmoji(e.target.value)} style={{ width: "100%", padding: 6, borderRadius: 4, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, marginBottom: 8, fontSize: 12 }} />
@@ -2512,7 +2185,7 @@ export default function App() {
                         {data.sections.map((section) => (
                           <div key={section.id}>
                             {editingSectionId === section.id ? (
-                              <div style={{ background: theme.bg, padding: 12, borderRadius: 8, border: `1px solid ${theme.accent1}` }}>
+                              <div style={{ backgroundColor: theme.bg, padding: 12, borderRadius: 8, border: `1px solid ${theme.accent1}` }}>
                                 <input placeholder="Nom" value={editSectionName} onChange={(e) => setEditSectionName(e.target.value)} style={{ width: "100%", padding: 6, borderRadius: 4, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, marginBottom: 8, fontSize: 12 }} />
                                 <input placeholder="Emoji" value={editSectionEmoji} onChange={(e) => setEditSectionEmoji(e.target.value)} style={{ width: "100%", padding: 6, borderRadius: 4, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, marginBottom: 8, fontSize: 12 }} />
                                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -2543,7 +2216,7 @@ export default function App() {
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {data.sections.map((section) => (
-                          <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "12px 16px", borderRadius: 8, background: selectedSectionId === section.id ? section.color : theme.bg, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", textAlign: "left", fontSize: 14, fontWeight: "500" }}>
+                          <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "12px 16px", borderRadius: 8, backgroundColor: selectedSectionId === section.id ? section.color : theme.bg, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", textAlign: "left", fontSize: 14, fontWeight: "500" }}>
                             {section.emoji} {section.name}
                           </button>
                         ))}
@@ -2556,7 +2229,7 @@ export default function App() {
                       <h3 style={{ marginTop: 0, marginBottom: 12, color: theme.accent1, fontSize: 14 }}>📋 Catégories</h3>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
-                          <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); setShowSectionPanel(false); }} style={{ padding: "12px 16px", borderRadius: 8, background: selectedCategoryId === cat.id ? (cat.color || theme.accent1) : theme.bg, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", textAlign: "left", fontSize: 14 }}>
+                          <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); setShowSectionPanel(false); }} style={{ padding: "12px 16px", borderRadius: 8, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.bg, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", textAlign: "left", fontSize: 14 }}>
                             {cat.icon} {cat.name}
                           </button>
                         ))}
@@ -2568,8 +2241,8 @@ export default function App() {
             )}
 
             {showGallery && (
-              <div style={{ position: "fixed", inset: 0, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : "radial-gradient(circle at 20% 20%, rgba(59,130,246,0.25), transparent 35%), radial-gradient(circle at 80% 10%, rgba(16,185,129,0.18), transparent 30%), rgba(0,0,0,0.82)", backdropFilter: "blur(6px)", zIndex: 200, overflow: "auto", padding: layout.modalPad }}>
-                <div style={{ maxWidth: 1180, margin: "0 auto", background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : theme.panel, borderRadius: 18, padding: layout.modalPad, border: `1px solid ${theme.border}`, boxShadow: "0 18px 50px rgba(0,0,0,0.35)" }}>
+              <div style={{ position: "fixed", inset: 0, background: "radial-gradient(circle at 20% 20%, rgba(59,130,246,0.25), transparent 35%), radial-gradient(circle at 80% 10%, rgba(16,185,129,0.18), transparent 30%), rgba(0,0,0,0.82)", backdropFilter: "blur(6px)", zIndex: 200, overflow: "auto", padding: layout.modalPad }}>
+                <div style={{ maxWidth: 1180, margin: "0 auto", backgroundColor: darkMode ? "rgba(12,14,26,0.9)" : "rgba(255,255,255,0.94)", borderRadius: 18, padding: layout.modalPad, border: `1px solid ${theme.border}`, boxShadow: "0 18px 50px rgba(0,0,0,0.35)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       <h2 style={{ margin: 0, color: theme.accent1, letterSpacing: 0.4 }}>📷 Galerie</h2>
@@ -2705,8 +2378,8 @@ export default function App() {
             )}
 
             {showSearchModal && (
-              <div style={{ position: "fixed", inset: 0, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : "rgba(0,0,0,0.4)", zIndex: 150, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 20 }}>
-                <div style={{ background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : theme.panel, borderRadius: 12, padding: 16, width: "90%", maxWidth: 500 }}>
+              <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.4)", zIndex: 150, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 20 }}>
+                <div style={{ backgroundColor: theme.panel, borderRadius: 12, padding: 16, width: "90%", maxWidth: 500 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                     <h3 style={{ margin: 0, color: theme.accent1 }}>🔍 Rechercher</h3>
                     <button onClick={() => setShowSearchModal(false)} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>✖</button>
@@ -2852,37 +2525,9 @@ export default function App() {
                           const isEditing = editingSubId === sub.id;
                           const subImages = catImages.filter(img => img.subId === sub.id);
                           return (
-                            <div
-                              key={sub.id}
-                              ref={(el) => { if (el) subRefs.current[sub.id] = el; }}
-                              style={{
-                                backgroundColor: themeStyle === 'degrade' ? 'transparent' : theme.panel,
-                                padding: isMobile ? 7 : 16,
-                                borderRadius: isMobile ? 4 : 8,
-                                marginBottom: isMobile ? 6 : 12,
-                                border: `1px solid ${theme.border}`,
-                              }}
-                            >
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isMobile ? 6 : 12 }}>
-                                <h3
-                                  style={{
-                                    margin: 0,
-                                    color: sub.color || "#60a5fa",
-                                    cursor: "pointer",
-                                    fontSize: isMobile ? 14 : 18,
-                                    fontWeight: isMobile ? 600 : 700,
-                                    lineHeight: 1.2
-                                  }}
-                                  onClick={() => {
-                                    if (subImages.length > 0) {
-                                      setDrawerSectionId(cat.sectionId);
-                                      setDrawerCategoryId(cat.id);
-                                      setImageDrawerOpen(true);
-                                    }
-                                  }}
-                                >
-                                  {sub.title} {subImages.length > 0 && <span style={{ fontSize: isMobile ? 10 : 12, color: theme.accent1 }}>📷 {subImages.length}</span>}
-                                </h3>
+                            <div key={sub.id} ref={(el) => { if (el) subRefs.current[sub.id] = el; }} style={{ backgroundColor: theme.bg, padding: 16, borderRadius: 8, marginBottom: 12, border: `1px solid ${theme.border}` }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                                <h3 style={{ margin: 0, color: sub.color || "#60a5fa" }}>{sub.title} {subImages.length > 0 && <span style={{ fontSize: 12, color: theme.accent1 }}>📷 {subImages.length}</span>}</h3>
                                 {editMode && !isEditing && (
                                   <div style={{ display: "flex", gap: 8 }}>
                                     <button onClick={() => startEditSub(cat.id, sub)} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer" }}>✏️</button>
@@ -2969,11 +2614,11 @@ export default function App() {
                                 <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                                     <button onClick={() => startInlineImage(cat.id, sub.id)} style={{ padding: "8px 12px", borderRadius: 8, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>➕ Photo</button>
-                                    {inlineImageTarget && inlineImageTarget.catId === cat.id && inlineImageLoading && (
+                                    {inlineImageTarget && inlineImageTarget.catId === cat.id && inlineImageTarget.subId === sub.id && inlineImageLoading && (
                                       <span style={{ color: theme.subtext, fontSize: 12 }}>Compression...</span>
                                     )}
                                   </div>
-                                  {inlineImageTarget && inlineImageTarget.catId === cat.id && inlineImageUrl && (
+                                  {inlineImageTarget && inlineImageTarget.catId === cat.id && inlineImageTarget.subId === sub.id && inlineImageUrl && (
                                     <div style={{ backgroundColor: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 10, padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
                                       <img src={inlineImageUrl} alt="Preview" style={{ maxWidth: "100%", maxHeight: 220, borderRadius: 8, objectFit: "cover" }} />
                                       <input value={inlineImageDesc} onChange={(e) => setInlineImageDesc(e.target.value)} placeholder="Description (optionnel)" style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }} />
@@ -3102,7 +2747,7 @@ export default function App() {
                                 border: "1px solid rgba(255, 179, 102, 0.55)",
                                 boxShadow: "0 8px 20px rgba(0,0,0,0.25)",
                                 marginBottom: 10,
-                                background: darkMode ? "linear-gradient(135deg, rgba(26,32,44,0.7), rgba(17,24,39,0.85))" : "linear-gradient(135deg, #fffaf5, #f0f4ff)"
+                                background: darkMode ? "linear-gradient(135deg, rgba(26,32,44,0.7), rgba(17,24,39,0.85))" : "linear-gradient(135deg, #fffaf5, #f0f4ff)",
                               }}
                             >
                               <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 120, objectFit: "cover", cursor: "pointer" }} onClick={() => { setLightboxImage(img); setImageDrawerOpen(false); }} />
@@ -3129,8 +2774,8 @@ export default function App() {
         <>
           <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)", zIndex: 600 }} onClick={() => { setShowLoginModal(false); setAdminPassword(""); setLoginError(""); }} />
           <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 700 }}>
-            <div style={{ width: 360, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : theme.accent1, border: `1px solid ${theme.border}`, borderRadius: 12, padding: 24, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 12 }}>
-              <h3 style={{ margin: 0, color: themeStyle === 'degrade' ? 'white' : theme.accent1 }}>Accès Admin</h3>
+            <div style={{ width: 360, backgroundColor: darkMode ? "rgba(15,17,30,0.95)" : "rgba(255,255,255,0.98)", border: `1px solid ${theme.border}`, borderRadius: 12, padding: 24, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 12 }}>
+              <h3 style={{ margin: 0, color: theme.accent1 }}>Accès Admin</h3>
               <p style={{ margin: 0, color: theme.subtext, fontSize: 13 }}>Saisis le mot de passe pour activer l'édition.</p>
               <input type="password" value={adminPassword} onChange={(e) => { setAdminPassword(e.target.value); setLoginError(""); }} onKeyDown={(e) => { if (e.key === "Enter") handleAdminLogin(); }} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.input, color: theme.text }} placeholder="Mot de passe" />
               {loginError && <div style={{ color: "#ef4444", fontSize: 12 }}>{loginError}</div>}
@@ -3147,8 +2792,8 @@ export default function App() {
         <>
           <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 750 }} onClick={closeConfirm} />
           <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 800 }}>
-            <div style={{ width: 360, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : theme.accent1, border: `1px solid ${theme.border}`, borderRadius: 12, padding: 20, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 12 }}>
-              <h3 style={{ margin: 0, color: themeStyle === 'degrade' ? 'white' : theme.accent1 }}>Confirmation</h3>
+            <div style={{ width: 360, backgroundColor: darkMode ? "rgba(15,17,30,0.96)" : "rgba(255,255,255,0.98)", border: `1px solid ${theme.border}`, borderRadius: 12, padding: 20, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 12 }}>
+              <h3 style={{ margin: 0, color: theme.accent1 }}>Confirmation</h3>
               <div style={{ color: theme.text }}>{confirmModal.message}</div>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
                 <button onClick={closeConfirm} style={{ padding: "10px 16px", borderRadius: 10, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "pointer" }}>Retour</button>
@@ -3228,7 +2873,7 @@ export default function App() {
       )}
 
       {toast.message && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 850, display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 12, background: themeStyle === 'degrade' ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 50%, ${theme.accent3} 100%)` : theme.accent1, border: `1px solid ${theme.border}`, boxShadow: theme.shadow, color: themeStyle === 'degrade' ? 'white' : theme.text, minWidth: 200 }}>
+        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 850, display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 12, backgroundColor: darkMode ? "rgba(15,17,30,0.95)" : "rgba(255,255,255,0.98)", border: `1px solid ${theme.border}`, boxShadow: theme.shadow, color: theme.text, minWidth: 200 }}>
           <span style={{ fontSize: 16 }}>⚠️</span>
           <span style={{ fontWeight: 600 }}>{toast.message}</span>
         </div>
