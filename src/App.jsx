@@ -1618,6 +1618,35 @@ export default function App() {
   const subRefs = useRef({});
   const toastTimeoutRef = useRef(null);
 
+    // Ajoute une nouvelle catégorie
+    const addCategory = () => {
+      if (!newCatTitle.trim()) {
+        setToast({ message: "Le titre de la catégorie est requis." });
+        return;
+      }
+      if (!newCatSection) {
+        setToast({ message: "Sélectionne une grande partie." });
+        return;
+      }
+      const newCat = {
+        id: Date.now(),
+        name: newCatTitle,
+        icon: newCatEmoji || "📦",
+        sectionId: newCatSection,
+        color: newCatColor,
+        subs: [],
+      };
+      setData((d) => ({
+        ...d,
+        categories: [...d.categories, newCat],
+      }));
+      setNewCatTitle("");
+      setNewCatEmoji("📌");
+      setNewCatSection(null);
+      setNewCatColor("#ffffff");
+      setToast({ message: "Catégorie ajoutée !" });
+    };
+
     // Handler for gallery image file input
     const onFileChange = async (e) => {
       const file = e.target.files && e.target.files[0];
@@ -2527,7 +2556,16 @@ export default function App() {
                           return (
                             <div key={sub.id} ref={(el) => { if (el) subRefs.current[sub.id] = el; }} style={{ backgroundColor: theme.bg, padding: 16, borderRadius: 8, marginBottom: 12, border: `1px solid ${theme.border}` }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                                <h3 style={{ margin: 0, color: sub.color || "#60a5fa" }}>{sub.title} {subImages.length > 0 && <span style={{ fontSize: 12, color: theme.accent1 }}>📷 {subImages.length}</span>}</h3>
+                                <h3
+                                  style={{ margin: 0, color: sub.color || "#60a5fa", cursor: 'pointer', textDecoration: 'underline dotted' }}
+                                  onClick={() => {
+                                    setDrawerCategoryId(cat.id);
+                                    setDrawerSectionId(cat.sectionId);
+                                    setImageDrawerOpen(true);
+                                  }}
+                                >
+                                  {sub.title} {subImages.length > 0 && <span style={{ fontSize: 12, color: theme.accent1 }}>📷 {subImages.length}</span>}
+                                </h3>
                                 {editMode && !isEditing && (
                                   <div style={{ display: "flex", gap: 8 }}>
                                     <button onClick={() => startEditSub(cat.id, sub)} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer" }}>✏️</button>
