@@ -1,4 +1,36 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+// --- Prise de note personnelle ---
+function NoteModal({ open, onClose, sections, categories, onSave }) {
+  const [note, setNote] = useState("");
+  const [sectionId, setSectionId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+
+  if (!open) return null;
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(20,22,34,0.45)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: "#23202d", borderRadius: 16, padding: 20, minWidth: 280, maxWidth: 340, boxShadow: "0 8px 32px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", gap: 14, border: `1px solid #444` }}>
+        <h2 style={{ margin: 0, fontSize: 17, color: "#10b981", fontWeight: 700 }}>📝 Nouvelle note</h2>
+        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Votre note..." style={{ width: "100%", minHeight: 60, borderRadius: 8, border: "1px solid #444", background: "#181622", color: "#f3f3f3", padding: 8, fontSize: 14, resize: "vertical" }} />
+        <div style={{ display: "flex", gap: 8, width: "100%" }}>
+          <select value={sectionId} onChange={e => setSectionId(e.target.value)} style={{ flex: 1, borderRadius: 8, padding: 6, background: "#181622", color: "#f3f3f3", border: "1px solid #444", maxWidth: "50%", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+            <option value="">Grande partie...</option>
+            {sections.map(s => <option key={s.id} value={s.id}>{s.emoji} {s.name}</option>)}
+          </select>
+          <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={{ flex: 1, borderRadius: 8, padding: 6, background: "#181622", color: "#f3f3f3", border: "1px solid #444", maxWidth: "50%", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+            <option value="">Catégorie...</option>
+            {categories.filter(c => !sectionId || c.sectionId == sectionId).map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+          </select>
+        </div>
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ padding: "7px 14px", borderRadius: 8, background: "#35324a", color: "#eee", border: "none", fontWeight: 600, cursor: "pointer" }}>Annuler</button>
+          <button onClick={() => onSave({ note, sectionId, categoryId })} style={{ padding: "7px 14px", borderRadius: 8, background: "#10b981", color: "white", border: "none", fontWeight: 700, cursor: "pointer" }}>Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+// --- State pour la modale de note ---
+// (À placer dans le composant App)
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 
@@ -1405,6 +1437,8 @@ function Markdown({ content }) {
 }
 
 export default function App() {
+    // --- State pour la modale de note ---
+    const [showNoteModal, setShowNoteModal] = useState(false);
   const [data, setData] = useState(DEFAULT_DATA);
   const ydocRef = useRef(null);
   const yMapRef = useRef(null);
@@ -2115,7 +2149,43 @@ export default function App() {
 
       {accessMode !== "home" && (
       <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+          {/* Bouton Ajouter une note */}
+          <button
+            onClick={() => setShowNoteModal(true)}
+            style={{
+              position: "fixed",
+              bottom: 18,
+              right: 18,
+              zIndex: 300,
+              padding: isMobile ? "7px" : "7px 14px",
+              borderRadius: 18,
+              background: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
+              color: "white",
+              border: "none",
+              boxShadow: "0 2px 8px rgba(16,185,129,0.13)",
+              fontWeight: 700,
+              fontSize: isMobile ? 20 : 14,
+              letterSpacing: 0.1,
+              cursor: "pointer",
+              minWidth: isMobile ? 36 : undefined,
+              minHeight: isMobile ? 36 : undefined,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            📝{!isMobile && ' Ajouter une note'}
+          </button>
+
+          {/* Modale de prise de note personnelle */}
+          <NoteModal
+            open={showNoteModal}
+            onClose={() => setShowNoteModal(false)}
+            sections={data.sections}
+            categories={data.categories}
+            onSave={() => setShowNoteModal(false)}
+          />
           <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: `${layout.headerPad/2}px ${layout.headerPad}px`, paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: layout.headerRowGap, marginBottom: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, minWidth: 0 }}>
