@@ -1484,14 +1484,14 @@ export default function App() {
   }, [data]);
 
   useEffect(() => {
+    if (!isAuthenticated || !isDirty) return undefined;
     const handler = (e) => {
-      if (!isDirty) return;
       e.preventDefault();
       e.returnValue = "";
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [isDirty]);
+  }, [isDirty, isAuthenticated]);
 
   // Hydrate from KV persistence (single snapshot) so fresh deployments reuse saved content.
   useEffect(() => {
@@ -2347,6 +2347,14 @@ export default function App() {
                 )}
                 <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
                 <button onClick={() => setShowGallery(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
+                {isMobile && hasImagesForSelectedCategory && (
+                  <button
+                    onClick={() => setImageDrawerOpen(true)}
+                    style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}
+                  >
+                    🖼️
+                  </button>
+                )}
                 <button onClick={() => setShowSearchModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
                 <button onClick={() => setDarkMode((d) => !d)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
                   {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
@@ -2366,7 +2374,7 @@ export default function App() {
             </div>
           </header>
 
-          <div style={{ marginTop: headerHeight ? `${headerHeight - 8}px` : `calc(${layout.contentTop}px + ${safeTopInset} - 8px)`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ marginTop: headerHeight ? `${headerHeight + 18}px` : `calc(${layout.contentTop}px + ${safeTopInset} + 18px)`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {selectedSectionId && (
               <div style={{ marginTop: isMobile ? 0 : 6, padding: `6px ${layout.contentPad}px 8px`, display: "flex", gap: 8, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
                 <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
@@ -2927,7 +2935,7 @@ export default function App() {
         </div>
 
         {showImageSidebar && (
-          <div style={{ width: layout.sideWidth, minHeight: 0, backgroundColor: theme.panel, backdropFilter: "blur(20px)", borderLeft: `1px solid ${theme.border}`, display: "flex", flexDirection: "column", overflow: "hidden", paddingTop: headerHeight ? headerHeight - layout.headerPad : 72 }}>
+          <div style={{ width: layout.sideWidth, minHeight: 0, backgroundColor: theme.panel, backdropFilter: "blur(20px)", borderLeft: `1px solid ${theme.border}`, display: "flex", flexDirection: "column", overflow: "hidden", paddingTop: headerHeight ? headerHeight + 2 : 76 }}>
             <h3 style={{ margin: "0 16px 16px 16px", color: theme.accent1, flexShrink: 0 }}>📷 Images ({filteredGalleryImages.length})</h3>
             <div style={{ flex: 1, minHeight: 0, overflow: "auto", paddingRight: 8 }}>
               <div style={{ paddingLeft: 16, paddingRight: 8, paddingTop: 12 }}>
@@ -2942,7 +2950,17 @@ export default function App() {
                         <div key={sub.id}>
                           <div style={{ fontSize: 12, fontWeight: "bold", color: theme.accent1, marginBottom: 8 }}>🧩 {sub.title}</div>
                           {subImages.map((img) => (
-                            <div key={`${img.catId}-${img.subId}-${img.index}`} style={{ borderRadius: 8, overflow: "hidden", border: `1px solid ${theme.border}`, marginBottom: 8 }}>
+                            <div
+                              key={`${img.catId}-${img.subId}-${img.index}`}
+                              style={{
+                                borderRadius: 10,
+                                overflow: "hidden",
+                                border: "1px solid rgba(255, 179, 102, 0.55)",
+                                boxShadow: "0 8px 20px rgba(0,0,0,0.25)",
+                                marginBottom: 10,
+                                background: darkMode ? "linear-gradient(135deg, rgba(26,32,44,0.7), rgba(17,24,39,0.85))" : "linear-gradient(135deg, #fffaf5, #f0f4ff)",
+                              }}
+                            >
                               <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 120, objectFit: "cover", cursor: "pointer" }} onClick={() => { setLightboxImage(img); setImageDrawerOpen(false); }} />
                               {img.desc && <div style={{ padding: "6px 8px", fontSize: 12, color: theme.text }}>{img.desc}</div>}
                               <div style={{ display: "flex", gap: 4, padding: 6 }}>
@@ -2989,8 +3007,8 @@ export default function App() {
               <h3 style={{ margin: 0, color: theme.accent1 }}>Confirmation</h3>
               <div style={{ color: theme.text }}>{confirmModal.message}</div>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-                <button onClick={closeConfirm} style={{ padding: "10px 16px", borderRadius: 10, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "pointer" }}>Annuler</button>
-                <button onClick={acceptConfirm} style={{ padding: "10px 16px", borderRadius: 10, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>Supprimer</button>
+                <button onClick={closeConfirm} style={{ padding: "10px 16px", borderRadius: 10, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "pointer" }}>Retour</button>
+                <button onClick={acceptConfirm} style={{ padding: "10px 16px", borderRadius: 10, backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>Continuer</button>
               </div>
             </div>
           </div>
@@ -3010,6 +3028,59 @@ export default function App() {
             <button onClick={() => setLightboxImage(null)} style={{ position: "absolute", top: 8, right: 8, padding: "8px 10px", borderRadius: 10, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>✖</button>
           </div>
         </div>
+      )}
+
+      {isMobile && imageDrawerOpen && (
+        <>
+          <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 820 }} onClick={() => setImageDrawerOpen(false)} />
+          <div style={{ position: "fixed", top: headerHeight ? headerHeight + 6 : 80, right: 0, bottom: 0, width: "78vw", maxWidth: 360, backgroundColor: darkMode ? "rgba(17,24,39,0.95)" : "rgba(255,255,255,0.98)", borderLeft: `1px solid ${theme.border}`, boxShadow: "-8px 0 24px rgba(0,0,0,0.35)", zIndex: 840, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderBottom: `1px solid ${theme.border}` }}>
+              <div style={{ fontWeight: 800, color: theme.accent1 }}>📷 Images</div>
+              <button onClick={() => setImageDrawerOpen(false)} style={{ padding: "6px 10px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>✖</button>
+            </div>
+            <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <select
+                  value={drawerSectionId ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value ? Number(e.target.value) : null;
+                    setDrawerSectionId(val);
+                    const available = drawerCategories.filter((c) => !val || c.sectionId === val);
+                    setDrawerCategoryId(available[0]?.id || null);
+                  }}
+                  style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text }}
+                >
+                  {sectionsWithImages.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={drawerCategoryId ?? ""}
+                  onChange={(e) => setDrawerCategoryId(e.target.value ? Number(e.target.value) : null)}
+                  style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text }}
+                >
+                  {drawerCategories.filter((c) => !drawerSectionId || c.sectionId === drawerSectionId).map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div style={{ flex: 1, overflow: "auto", padding: "0 12px 12px" }}>
+              {drawerImages.length === 0 ? (
+                <div style={{ color: theme.subtext, textAlign: "center", padding: 20 }}>Aucune image</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {drawerImages.map((img) => (
+                    <div key={`${img.catId}-${img.subId}-${img.index}-drawer`} style={{ borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255, 179, 102, 0.55)", boxShadow: "0 8px 20px rgba(0,0,0,0.25)", background: darkMode ? "linear-gradient(135deg, rgba(26,32,44,0.7), rgba(17,24,39,0.85))" : "linear-gradient(135deg, #fffaf5, #f0f4ff)" }}>
+                      <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 160, objectFit: "cover", cursor: "pointer" }} onClick={() => { setLightboxImage(img); setImageDrawerOpen(false); }} />
+                      {img.desc && <div style={{ padding: "8px 10px", fontSize: 12, color: theme.text }}>{img.desc}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
       )}
 
       {toast.message && (
