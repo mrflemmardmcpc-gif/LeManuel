@@ -1342,59 +1342,47 @@ Permet pose propre sans solliciter cloison légère.`,
 };
 
 function Markdown({ content }) {
-  let html = content
-    .replace(/\[color=(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})\](.+?)\[\/color\]/g, '<span style="color:$1;font-weight:bold;">$2</span>')
-    .replace(/\[u\]([\s\S]+?)\[\/u\]/g, '<span style="text-decoration:underline;">$1</span>')
-    .replace(/\[size=(\d{1,3})\]([\s\S]+?)\[\/size\]/g, (_m, sz, txt) => `<span style="font-size:${sz}px;">${txt}</span>`)
-    .replace(/^### (.+)$/gm, '<h3 style="color:#60a5fa;margin-bottom:8px;">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 style="color:#3b82f6;margin-bottom:10px;">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 style="color:#2563eb;margin-bottom:12px;">$1</h1>')
-    .replace(/^(IMPORTANT:.*)$/gim, '<p style="color:#ef4444;font-weight:bold;">$1</p>')
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/_(.+?)_/g, "<em>$1</em>")
-    .replace(/^\s*[-*+] (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/gms, '<ul style="margin-left:20px;">$1<\/ul>');
+  // Amélioration du parsing Markdown pour gérer tous les cas imbriqués
+  let html = content;
 
-  const lines = html.split('\n');
-  let processedLines = [];
-  let inTable = false;
-  let tableRows = [];
+  // D'abord, traiter les balises imbriquées (color, size, underline)
+  html = html.replace(/\[color=(#[0-9a-fA-F]{3,6})\]([\s\S]+?)\[\/color\]/g, '<span style="color:$1;font-weight:bold;">$2</span>');
+  html = html.replace(/\[size=(\d{1,3})\]([\s\S]+?)\[\/size\]/g, (_m, sz, txt) => `<span style="font-size:${sz}px;">${txt}</span>`);
+  html = html.replace(/\[u\]([\s\S]+?)\[\/u\]/g, '<span style="text-decoration:underline;">$1</span>');
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
-      if (!inTable) { inTable = true; tableRows = []; }
-      tableRows.push(line);
-    } else {
-      if (inTable && tableRows.length > 0) {
-        const headers = tableRows[0].split('|').filter(Boolean).map(h => h.trim());
-        const headerHtml = headers.map(h => `<th style="border:1px solid #444;padding:8px;background:#1e293b;color:#60a5fa;">${h}</th>`).join('');
-        const bodyHtml = tableRows.slice(2).map(row => {
-          const cols = row.split('|').filter(Boolean).map(c => c.trim());
-          return `<tr>${cols.map(c => `<td style="border:1px solid #444;padding:8px;">${c}</td>`).join('')}</tr>`;
-        }).join('');
-        processedLines.push(`<table style="border-collapse:collapse;margin:12px 0;width:100%;"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`);
-        tableRows = [];
-        inTable = false;
-      }
-      processedLines.push(line);
-    }
-  }
+  // Titres
+  html = html.replace(/^### (.+)$/gm, '<h3 class="text-lg md:text-xl font-semibold mt-3 mb-1 text-blue-400">$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2 class="text-xl md:text-2xl font-semibold mt-4 mb-2 text-blue-500">$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1 class="text-2xl md:text-3xl font-bold mt-4 mb-2 text-blue-700">$1</h1>');
 
-  if (inTable && tableRows.length > 0) {
-    const headers = tableRows[0].split('|').filter(Boolean).map(h => h.trim());
-    const headerHtml = headers.map(h => `<th style="border:1px solid #444;padding:8px;background:#1e293b;color:#60a5fa;">${h}</th>`).join('');
-    const bodyHtml = tableRows.slice(2).map(row => {
+  // Important
+  html = html.replace(/^(IMPORTANT:.*)$/gim, '<p class="text-red-500 font-bold">$1</p>');
+
+  // Gras, italique
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+  // Listes
+  html = html.replace(/^\s*[-*+] (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*?<\/li>)/gms, '<ul class="ml-5 list-disc">$1<\/ul>');
+
+  // Tableaux Markdown
+  html = html.replace(/((?:^\|.+\|$\n?)+)/gm, (tableBlock) => {
+    const lines = tableBlock.trim().split('\n').filter(l => l.trim().startsWith('|') && l.trim().endsWith('|'));
+    if (lines.length < 2) return tableBlock;
+    const headers = lines[0].split('|').filter(Boolean).map(h => h.trim());
+    const headerHtml = headers.map(h => `<th class=\"p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700 bg-slate-800 text-blue-400\" style=\"word-break:break-word;white-space:normal;overflow-wrap:anywhere;\">${h}</th>`).join('');
+    const bodyHtml = lines.slice(2).map(row => {
       const cols = row.split('|').filter(Boolean).map(c => c.trim());
-      return `<tr>${cols.map(c => `<td style="border:1px solid #444;padding:8px;">${c}</td>`).join('')}</tr>`;
+      return `<tr>${cols.map(c => `<td class=\"p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700\" style=\"word-break:break-word;white-space:normal;overflow-wrap:anywhere;\">${c}</td>`).join('')}</tr>`;
     }).join('');
-    processedLines.push(`<table style="border-collapse:collapse;margin:12px 0;width:100%;"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`);
-  }
+    return `<div class=\"overflow-x-auto w-full\"><table class=\"w-full border-collapse my-3 max-w-full text-[clamp(14px,4vw,18px)]\"><colgroup>${headers.map(() => '<col>').join('')}</colgroup><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`;
+  });
 
-  html = processedLines.join('\n').replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br/>');
-  if (!html.startsWith('<p>') && !html.startsWith('<table>') && !html.startsWith('<h')) {
-    html = '<p>' + html + '</p>';
-  }
+  // Paragraphe et liste stylée
+  html = html.replace(/<p(.*?)>/g, '<p$1 class="text-[clamp(16px,4vw,20px)] leading-relaxed" style="white-space:pre-wrap;">');
+  html = html.replace(/<li(.*?)>/g, '<li$1 class="text-[clamp(16px,4vw,20px)] leading-relaxed" style="white-space:pre-wrap;">');
+
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
@@ -1482,16 +1470,6 @@ export default function App() {
     if (isApplyingRemoteRef.current) return;
     ymap.set("data", data);
   }, [data]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !isDirty) return undefined;
-    const handler = (e) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [isDirty, isAuthenticated]);
 
   // Hydrate from KV persistence (single snapshot) so fresh deployments reuse saved content.
   useEffect(() => {
@@ -1602,6 +1580,17 @@ export default function App() {
   const inlineFileInputRef = useRef(null);
   const subRefs = useRef({});
   const toastTimeoutRef = useRef(null);
+
+  // Affiche un avertissement de fermeture uniquement pour l'admin avec des changements non sauvegardés.
+  useEffect(() => {
+    if (!isAuthenticated || !isDirty) return undefined;
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty, isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -2276,7 +2265,7 @@ export default function App() {
 
   return (
     <div style={{ background: theme.bg, color: theme.text, height: "100vh", display: "flex", fontFamily: "'Inter', -apple-system, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', sans-serif", overflow: "hidden" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); * { box-sizing: border-box; } html, body, #root { margin: 0; padding: 0; height: 100%; width: 100%; } button:hover { transform: translateY(-2px); } input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 3px rgba(255, 179, 102, 0.2); } ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); } ::-webkit-scrollbar-thumb { background: rgba(255, 179, 102, 0.4); border-radius: 4px; }`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); * { box-sizing: border-box; } html, body, #root { margin: 0; padding: 0; height: 100%; width: 100%; } button:hover { transform: translateY(-2px); } input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 3px rgba(255, 179, 102, 0.2); } ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); } ::-webkit-scrollbar-thumb { background: #FFB366; border-radius: 4px; } .chips-scroll { scrollbar-width: thin; } .chips-scroll::-webkit-scrollbar { height: 4px; background: transparent; } .chips-scroll::-webkit-scrollbar-thumb { background: #FFB366 !important; border-radius: 4px; border: 2px solid #FFB366 !important; } .chips-scroll { scrollbar-color: #FFB366 transparent !important; }`}</style>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={onFileChange} style={{ display: "none" }} />
       <input ref={inlineFileInputRef} type="file" accept="image/*" onChange={onInlineFileChange} style={{ display: "none" }} />
 
@@ -2305,15 +2294,15 @@ export default function App() {
       {accessMode !== "home" && (
       <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: layout.headerPad, paddingTop: `calc(${layout.headerPad}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
+          <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: `${layout.headerPad/2}px ${layout.headerPad}px`, paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: layout.headerRowGap, marginBottom: 4 }}>
               <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, width: "100%", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, flex: 1, minWidth: 0 }}>
                   <button onClick={() => setShowSectionPanel(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: layout.headerIconSize, cursor: "pointer", flexShrink: 0 }}>☰</button>
-                  <h1 style={{ margin: 0, fontSize: layout.headerTitle, fontWeight: 800, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "0.05px", lineHeight: 1.05, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Le Manuel du Plombier/Chauffagiste</h1>
+                  <h1 style={{ margin: 0, fontSize: layout.headerTitle, fontWeight: 800, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "0.05px", lineHeight: 1.05, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>🛠️ Le Manuel</h1>
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", width: "100%", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
+              <div style={{ display: "flex", gap: isMobile ? 1 : 6, alignItems: "center", flexWrap: "wrap", width: "100%", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
                 <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{accessMode === "admin" ? "Admin" : "Visiteur"}</div>
                 {isAuthenticated && (
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -2345,26 +2334,26 @@ export default function App() {
                     </button>
                   </div>
                 )}
-                <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
-                <button onClick={() => setShowGallery(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
+                <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
+                <button onClick={() => setShowGallery(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
                 {isMobile && hasImagesForSelectedCategory && (
                   <button
                     onClick={() => setImageDrawerOpen(true)}
-                    style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}
+                    style={{ padding: isAuthenticated ? '2px 2px' : '4px 7px', minWidth: isAuthenticated ? 15 : undefined, minHeight: isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}
                   >
                     🖼️
                   </button>
                 )}
-                <button onClick={() => setShowSearchModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
-                <button onClick={() => setDarkMode((d) => !d)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
+                <button onClick={() => setShowSearchModal(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
+                <button onClick={() => setDarkMode((d) => !d)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
                   {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
                 </button>
                 {isAuthenticated && (
-                  <button onClick={() => setEditMode((e) => !e)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: editMode ? "#10b981" : theme.accent3, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>{editMode ? "✏️" : "🔒"}</button>
+                  <button onClick={() => setEditMode((e) => !e)} style={{ padding: isMobile ? '2px 2px' : layout.headerButtonPad, minWidth: isMobile ? 15 : undefined, minHeight: isMobile ? 15 : undefined, borderRadius: 10, backgroundColor: editMode ? "#10b981" : theme.accent3, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>{editMode ? "✏️" : "🔒"}</button>
                 )}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "nowrap", overflowX: "auto", paddingBottom: isMobile ? 2 : 2 }}>
+            <div className="chips-scroll" style={{ display: "flex", gap: 6, flexWrap: "nowrap", overflowX: "auto", padding: '2px 0', alignItems: 'center', position: 'relative', top: 2 }}>
               <button onClick={() => { setSelectedSectionId(null); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === null ? `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)` : theme.panel, color: selectedSectionId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>📌 Tout</button>
               {data.sections.map((section) => (
                 <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "5px 10px", borderRadius: 16, backgroundColor: selectedSectionId === section.id ? section.color : theme.panel, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>
@@ -2374,9 +2363,19 @@ export default function App() {
             </div>
           </header>
 
-          <div style={{ marginTop: headerHeight ? `${headerHeight + 18}px` : `calc(${layout.contentTop}px + ${safeTopInset} + 18px)`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{
+            marginTop:
+              (isAuthenticated && isMobile)
+                ? ((headerHeight || 0) + 160) + 'px'
+                : (headerHeight ? `${headerHeight}px` : `calc(${layout.contentTop}px + ${safeTopInset})`),
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            position: "relative"
+          }}>
             {selectedSectionId && (
-              <div style={{ marginTop: isMobile ? 0 : 6, padding: `6px ${layout.contentPad}px 8px`, display: "flex", gap: 8, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
+              <div className="chips-scroll" style={{ marginTop: isAuthenticated && isMobile ? 30 : 0, marginBottom: isAuthenticated && isMobile ? 0 : 0, padding: `10px ${layout.contentPad}px 12px`, display: "flex", gap: 10, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}`, boxShadow: isMobile ? "" : "0 6px 14px rgba(0,0,0,0.12)" }}>
                 <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
                 {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
                   <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
