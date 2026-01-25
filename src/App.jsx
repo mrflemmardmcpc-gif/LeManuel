@@ -2299,18 +2299,18 @@ export default function App() {
                   {selectedSectionId && (
                     <div>
                       <h3 style={{
-                        marginTop: isMobile ? 8 : 0,
-                        marginBottom: isMobile ? 2 : 8,
+                        marginTop: 0,
+                        marginBottom: 8,
                         color: theme.accent1,
                         fontSize: 14
                       }}>📋 Catégories</h3>
                       <div style={{
                         display: "flex",
                         flexDirection: "column",
-                        gap: isMobile ? 4 : 8,
+                        gap: 8,
                         width: "100%",
-                        marginTop: isMobile ? 4 : 0,
-                        paddingTop: isMobile ? 2 : 0
+                        marginTop: 0,
+                        paddingTop: 0
                       }}>
                         {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
                           <button
