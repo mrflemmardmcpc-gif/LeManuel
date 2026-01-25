@@ -1378,7 +1378,7 @@ function Markdown({ content }) {
     }).join('');
     // Bloc scrollable, largeur forcée, espace réduit
     return `
-      <div class=\"relative w-full\" style=\"overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; margin:10px 0 6px 0;\">
+      <div class=\"relative w-full\" style=\"overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; margin:2px 0 2px 0;\">
         <table class=\"border-collapse w-full min-w-full text-[clamp(14px,4vw,18px)]\" style=\"margin:0;\"><colgroup>${headers.map(() => '<col style=\'width:auto;min-width:80px;max-width:1fr;\'>').join('')}</colgroup><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>
         <div class=\"pointer-events-none absolute top-0 right-0 h-full w-8 hidden sm:block\" style=\"background:linear-gradient(to left,rgba(30,41,59,0.7),transparent);\"></div>
         <div class=\"pointer-events-none absolute top-0 left-0 h-full w-8 hidden sm:block\" style=\"background:linear-gradient(to right,rgba(30,41,59,0.7),transparent);\"></div>
@@ -2331,36 +2331,7 @@ export default function App() {
               </div>
               <div style={{ display: "flex", gap: isMobile ? 1 : 6, alignItems: "center", flexWrap: "wrap", width: "100%", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
                 <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{accessMode === "admin" ? "Admin" : "Visiteur"}</div>
-                {isAuthenticated && (
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: kvBadgeBg, color: kvBadgeColor, fontSize: 12, fontWeight: 700, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      <span>💾</span>
-                      <span>{kvBadgeText}</span>
-                      {kvLastSaved && <span style={{ fontSize: 11, opacity: 0.85 }}>{new Date(kvLastSaved).toLocaleTimeString("fr-FR", { hour12: false })}</span>}
-                      {kvStatus === "error" && kvErrorMsg && <span style={{ fontSize: 10, color: "#fee2e2" }}>{kvErrorMsg}</span>}
-                    </div>
-                    <button
-                      onClick={saveSnapshot}
-                      disabled={kvStatus === "saving"}
-                      style={{
-                        padding: layout.headerButtonPad,
-                        borderRadius: 10,
-                        border: "none",
-                        cursor: kvStatus === "saving" ? "wait" : "pointer",
-                        fontWeight: 700,
-                        color: "white",
-                        flexShrink: 0,
-                        backgroundColor:
-                          kvStatus === "saving" ? "#f59e0b" :
-                          kvStatus === "error" ? "#ef4444" :
-                          isDirty ? "#ef4444" : "#10b981",
-                        boxShadow: "0 8px 18px rgba(0,0,0,0.18)",
-                      }}
-                    >
-                      {kvStatus === "saving" ? "Sauvegarde..." : isDirty ? "Sauvegarder" : "Sauvegardé"}
-                    </button>
-                  </div>
-                )}
+                {/* Removed large header Sauvegarder button. Only floating save button remains for admin with unsaved changes. */}
                 <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
                 <button onClick={() => setShowGallery(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
                 {isMobile && hasImagesForSelectedCategory && (
@@ -2654,22 +2625,23 @@ export default function App() {
 
             <section style={{ flex: 1, overflow: "auto", padding: layout.contentPad }} ref={sectionScrollRef}>
               {/* Bouton flottant Sauvegarder (emoji) */}
-              {(editMode || isDirty) && (
+              {/* Bouton Sauvegarder flottant : admin uniquement, plus petit, et seulement si isDirty */}
+              {isAuthenticated && isDirty && (
                 <button
                   onClick={handleMainSave}
                   title="Sauvegarder"
                   style={{
                     position: "fixed",
-                    bottom: 24,
-                    right: 24,
+                    bottom: 18,
+                    right: 18,
                     zIndex: 999,
-                    width: 56,
-                    height: 56,
+                    width: 36,
+                    height: 36,
                     borderRadius: "50%",
                     background: "linear-gradient(120deg,#10b981,#3b82f6)",
                     color: "white",
-                    fontSize: 32,
-                    boxShadow: "0 8px 32px rgba(59,130,246,0.18)",
+                    fontSize: 20,
+                    boxShadow: "0 4px 16px rgba(59,130,246,0.18)",
                     border: "none",
                     cursor: "pointer",
                     display: "flex",
@@ -2789,7 +2761,18 @@ export default function App() {
                           return (
                             <div key={sub.id} ref={(el) => { if (el) subRefs.current[sub.id] = el; }} style={{ backgroundColor: theme.bg, padding: 16, borderRadius: 8, marginBottom: 12, border: `1px solid ${theme.border}` }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                                <h3 style={{ margin: 0, color: sub.color || "#60a5fa" }}>{sub.title} {subImages.length > 0 && <span style={{ fontSize: 12, color: theme.accent1 }}>📷 {subImages.length}</span>}</h3>
+                                <h3
+                                  style={{ margin: 0, color: sub.color || "#60a5fa", cursor: isMobile ? "pointer" : undefined }}
+                                  onClick={() => {
+                                    if (isMobile && subImages.length > 0) {
+                                      setDrawerSectionId(cat.sectionId);
+                                      setDrawerCategoryId(cat.id);
+                                      setImageDrawerOpen(true);
+                                    }
+                                  }}
+                                >
+                                  {sub.title} {subImages.length > 0 && <span style={{ fontSize: 12, color: theme.accent1 }}>📷 {subImages.length}</span>}
+                                </h3>
                                 {editMode && !isEditing && (
                                   <div style={{ display: "flex", gap: 8 }}>
                                     <button onClick={() => startEditSub(cat.id, sub)} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer" }}>✏️</button>
