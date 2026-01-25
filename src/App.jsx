@@ -2299,7 +2299,7 @@ export default function App() {
                   {selectedSectionId && (
                     <div>
                       <h3 style={{
-                        marginTop: 0,
+                        marginTop: isMobile ? -30 : 0,
                         marginBottom: 8,
                         color: theme.accent1,
                         fontSize: 14
