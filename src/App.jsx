@@ -1344,13 +1344,16 @@ Permet pose propre sans solliciter cloison légère.`,
 function Markdown({ content }) {
   let html = content
     .replace(/\[color=(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})\](.+?)\[\/color\]/g, '<span style="color:$1;font-weight:bold;">$2</span>')
+    .replace(/\[u\]([\s\S]+?)\[\/u\]/g, '<span style="text-decoration:underline;">$1</span>')
+    .replace(/\[size=(\d{1,3})\]([\s\S]+?)\[\/size\]/g, (_m, sz, txt) => `<span style="font-size:${sz}px;">${txt}</span>`)
     .replace(/^### (.+)$/gm, '<h3 style="color:#60a5fa;margin-bottom:8px;">$1</h3>')
     .replace(/^## (.+)$/gm, '<h2 style="color:#3b82f6;margin-bottom:10px;">$1</h2>')
     .replace(/^# (.+)$/gm, '<h1 style="color:#2563eb;margin-bottom:12px;">$1</h1>')
     .replace(/^(IMPORTANT:.*)$/gim, '<p style="color:#ef4444;font-weight:bold;">$1</p>')
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/_(.+?)_/g, "<em>$1</em>")
     .replace(/^\s*[-*+] (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/gms, '<ul style="margin-left:20px;">$1</ul>');
+    .replace(/(<li>.*<\/li>)/gms, '<ul style="margin-left:20px;">$1<\/ul>');
 
   const lines = html.split('\n');
   let processedLines = [];
@@ -1402,9 +1405,9 @@ export default function App() {
   const isApplyingRemoteRef = useRef(false);
   const [syncStatus, setSyncStatus] = useState("connecting");
   const kvReadyRef = useRef(false);
-  const kvSaveTimerRef = useRef(null);
   const [kvStatus, setKvStatus] = useState("idle");
   const [kvLastSaved, setKvLastSaved] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
 
   // Branch data on a shared Y.js document so edits are synchronized in real time across devices.
   useEffect(() => {
@@ -1458,6 +1461,16 @@ export default function App() {
     ymap.set("data", data);
   }, [data]);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
   // Hydrate from KV persistence (single snapshot) so fresh deployments reuse saved content.
   useEffect(() => {
     let cancelled = false;
@@ -1470,13 +1483,14 @@ export default function App() {
         if (!cancelled) {
           if (body?.data && typeof body.data === "object") {
             setData(body.data);
-            setKvStatus("loaded");
           } else {
             // Seed KV with defaults if empty
             setData(DEFAULT_DATA);
-            setKvStatus("loaded");
           }
+          setKvStatus("loaded");
           kvReadyRef.current = true;
+          setIsDirty(false);
+          setKvLastSaved(Date.now());
         }
       } catch (err) {
         if (!cancelled) {
@@ -1489,28 +1503,10 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
-  // Persist every change (debounced) to KV to keep a durable snapshot.
+  // Marque les changements locaux comme non sauvegardés une fois la KV chargée.
   useEffect(() => {
     if (!kvReadyRef.current) return;
-    if (kvSaveTimerRef.current) clearTimeout(kvSaveTimerRef.current);
-    kvSaveTimerRef.current = setTimeout(async () => {
-      setKvStatus("saving");
-      try {
-        const res = await fetch("/api/state", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data }),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        setKvStatus("saved");
-        setKvLastSaved(Date.now());
-      } catch (err) {
-        setKvStatus("error");
-      }
-    }, 1200);
-    return () => {
-      if (kvSaveTimerRef.current) clearTimeout(kvSaveTimerRef.current);
-    };
+    setIsDirty(true);
   }, [data]);
 
   const [search, setSearch] = useState("");
@@ -1536,6 +1532,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [showGallery, setShowGallery] = useState(false);
   const [galleryFilterCatId, setGalleryFilterCatId] = useState(null);
+  const [galleryFilterSectionId, setGalleryFilterSectionId] = useState(null);
   const [isAddingImage, setIsAddingImage] = useState(false);
   const [galleryUploadBusy, setGalleryUploadBusy] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -1666,14 +1663,28 @@ export default function App() {
   }, [data.categories]);
 
   const filteredGalleryImages = useMemo(() => {
-    if (galleryFilterCatId === null) return allImages;
-    return allImages.filter(img => img.catId === galleryFilterCatId);
-  }, [allImages, galleryFilterCatId]);
+    let list = allImages;
+    if (galleryFilterSectionId !== null) {
+      const catIds = data.categories.filter((c) => c.sectionId === galleryFilterSectionId).map((c) => c.id);
+      list = list.filter((img) => catIds.includes(img.catId));
+    }
+    if (galleryFilterCatId !== null) list = list.filter((img) => img.catId === galleryFilterCatId);
+    return list;
+  }, [allImages, galleryFilterCatId, galleryFilterSectionId, data.categories]);
+
+  useEffect(() => {
+    setGalleryFilterCatId(null);
+  }, [galleryFilterSectionId]);
 
   const hasImagesForSelectedCategory = useMemo(() => {
     if (selectedCategoryId === null) return false;
     return allImages.some(img => img.catId === selectedCategoryId);
   }, [selectedCategoryId, allImages]);
+
+  const galleryCategories = useMemo(() => {
+    if (galleryFilterSectionId === null) return data.categories;
+    return data.categories.filter((c) => c.sectionId === galleryFilterSectionId);
+  }, [data.categories, galleryFilterSectionId]);
 
   const showImageSidebar = useMemo(() => {
     if (isMobile) return false;
@@ -1780,6 +1791,26 @@ export default function App() {
       setEditText(updated);
     } else if (selectionInfo.target === "newSub") {
       const updated = newSubText.slice(0, selectionInfo.start) + wrap + newSubText.slice(selectionInfo.end);
+      setNewSubText(updated);
+    }
+    setSelectionInfo({ text: "", start: 0, end: 0, target: null });
+  };
+
+  const applyFormatting = (type, sizeValue) => {
+    if (!selectionInfo.text || !selectionInfo.target) { showToast("Sélectionne du texte"); return; }
+    let wrapStart = "";
+    let wrapEnd = "";
+    if (type === "bold") { wrapStart = "**"; wrapEnd = "**"; }
+    else if (type === "italic") { wrapStart = "_"; wrapEnd = "_"; }
+    else if (type === "underline") { wrapStart = "[u]"; wrapEnd = "[/u]"; }
+    else if (type === "size") { const sz = sizeValue || 16; wrapStart = `[size=${sz}]`; wrapEnd = "[/size]"; }
+    else { return; }
+
+    if (selectionInfo.target === "editSub") {
+      const updated = editText.slice(0, selectionInfo.start) + wrapStart + selectionInfo.text + wrapEnd + editText.slice(selectionInfo.end);
+      setEditText(updated);
+    } else if (selectionInfo.target === "newSub") {
+      const updated = newSubText.slice(0, selectionInfo.start) + wrapStart + selectionInfo.text + wrapEnd + newSubText.slice(selectionInfo.end);
       setNewSubText(updated);
     }
     setSelectionInfo({ text: "", start: 0, end: 0, target: null });
@@ -2124,6 +2155,26 @@ export default function App() {
     toastTimeoutRef.current = setTimeout(() => setToast({ message: "" }), 2200);
   };
 
+  const saveSnapshot = async () => {
+    if (!isAuthenticated) { showToast("Réservé à l'admin"); return; }
+    setKvStatus("saving");
+    try {
+      const res = await fetch("/api/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setKvStatus("saved");
+      setKvLastSaved(Date.now());
+      setIsDirty(false);
+      showToast("Sauvegardé");
+    } catch (err) {
+      setKvStatus("error");
+      showToast("Échec sauvegarde");
+    }
+  };
+
   const askConfirm = (message, onConfirm) => {
     setConfirmModal({ open: true, message, onConfirm });
   };
@@ -2213,17 +2264,36 @@ export default function App() {
               <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", width: "100%", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
                 <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{accessMode === "admin" ? "Admin" : "Visiteur"}</div>
                 {isAuthenticated && (
-                  <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: kvBadgeBg, color: kvBadgeColor, fontSize: 12, fontWeight: 700, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                    <span>💾</span>
-                    <span>{kvBadgeText}</span>
-                    {kvLastSaved && <span style={{ fontSize: 11, opacity: 0.85 }}>{new Date(kvLastSaved).toLocaleTimeString("fr-FR", { hour12: false })}</span>}
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <div style={{ padding: "6px 10px", borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: kvBadgeBg, color: kvBadgeColor, fontSize: 12, fontWeight: 700, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <span>💾</span>
+                      <span>{kvBadgeText}</span>
+                      {kvLastSaved && <span style={{ fontSize: 11, opacity: 0.85 }}>{new Date(kvLastSaved).toLocaleTimeString("fr-FR", { hour12: false })}</span>}
+                    </div>
+                    <button
+                      onClick={saveSnapshot}
+                      disabled={kvStatus === "saving"}
+                      style={{
+                        padding: layout.headerButtonPad,
+                        borderRadius: 10,
+                        border: "none",
+                        cursor: kvStatus === "saving" ? "wait" : "pointer",
+                        fontWeight: 700,
+                        color: "white",
+                        flexShrink: 0,
+                        backgroundColor:
+                          kvStatus === "saving" ? "#f59e0b" :
+                          kvStatus === "error" ? "#ef4444" :
+                          isDirty ? "#ef4444" : "#10b981",
+                        boxShadow: "0 8px 18px rgba(0,0,0,0.18)",
+                      }}
+                    >
+                      {kvStatus === "saving" ? "Sauvegarde..." : isDirty ? "Sauvegarder" : "Sauvegardé"}
+                    </button>
                   </div>
                 )}
                 <button onClick={handleLogout} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
                 <button onClick={() => setShowGallery(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
-                {isMobile && hasImagesForSelectedCategory && (
-                  <button onClick={() => setImageDrawerOpen(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>Images ({filteredGalleryImages.filter(img => img.catId === selectedCategoryId).length})</button>
-                )}
                 <button onClick={() => setShowSearchModal(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
                 <button onClick={() => setDarkMode((d) => !d)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
                   {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
@@ -2243,9 +2313,9 @@ export default function App() {
             </div>
           </header>
 
-          <div style={{ marginTop: headerHeight ? `${headerHeight + 4}px` : `calc(${layout.contentTop + 20}px + ${safeTopInset})`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ marginTop: headerHeight ? `${headerHeight}px` : `calc(${layout.contentTop}px + ${safeTopInset})`, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {selectedSectionId && (
-              <div style={{ marginTop: 16, padding: `10px ${layout.contentPad}px 14px`, display: "flex", gap: 8, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
+              <div style={{ marginTop: 6, padding: `8px ${layout.contentPad}px 10px`, display: "flex", gap: 8, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
                 <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
                 {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
                   <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
@@ -2427,9 +2497,30 @@ export default function App() {
                     </div>
                   )}
 
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 18 }}>
+                    <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 12, padding: 12, boxShadow: theme.shadow }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, color: theme.subtext, fontSize: 12 }}>
+                        <span>🌐</span><span>Grande partie</span>
+                      </div>
+                      <select value={galleryFilterSectionId ?? ""} onChange={(e) => setGalleryFilterSectionId(e.target.value ? Number(e.target.value) : null)} style={{ width: "100%", padding: 12, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }}>
+                        <option value="">Toutes</option>
+                        {data.sections.map((s) => (<option key={s.id} value={s.id}>{s.emoji} {s.name}</option>))}
+                      </select>
+                    </div>
+                    <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 12, padding: 12, boxShadow: theme.shadow }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, color: theme.subtext, fontSize: 12 }}>
+                        <span>📂</span><span>Catégorie</span>
+                      </div>
+                      <select value={galleryFilterCatId ?? ""} onChange={(e) => setGalleryFilterCatId(e.target.value ? Number(e.target.value) : null)} style={{ width: "100%", padding: 12, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }}>
+                        <option value="">Toutes</option>
+                        {galleryCategories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>))}
+                      </select>
+                    </div>
+                  </div>
+
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
                     <button onClick={() => setGalleryFilterCatId(null)} style={{ padding: "8px 14px", borderRadius: 999, background: galleryFilterCatId === null ? "linear-gradient(120deg, #3b82f6, #22d3ee)" : theme.panel, color: galleryFilterCatId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 700 }}>Toutes</button>
-                    {data.categories.map((cat) => (
+                    {galleryCategories.map((cat) => (
                       <button
                         key={cat.id}
                         onClick={() => setGalleryFilterCatId(cat.id)}
@@ -2630,8 +2721,19 @@ export default function App() {
                                   />
 
                                   {selectionInfo.text && selectionInfo.target === "editSub" && (
-                                    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 10, borderRadius: 10, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, marginBottom: 10 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: 10, borderRadius: 10, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, marginBottom: 10 }}>
                                       <span style={{ fontSize: 12, color: theme.subtext }}>{`"${selectionInfo.text}"`}</span>
+                                      <div style={{ display: "flex", gap: 6 }}>
+                                        <button onClick={() => applyFormatting("bold")}
+                                          style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, fontWeight: 800, cursor: "pointer", fontSize: 12 }}>G</button>
+                                        <button onClick={() => applyFormatting("italic")}
+                                          style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, fontStyle: "italic", cursor: "pointer", fontSize: 12 }}>I</button>
+                                        <button onClick={() => applyFormatting("underline")}
+                                          style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, textDecoration: "underline", cursor: "pointer", fontSize: 12 }}>U</button>
+                                        {[14, 16, 18, 20].map((s) => (
+                                          <button key={s} onClick={() => applyFormatting("size", s)} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", fontSize: 12 }}>{s}px</button>
+                                        ))}
+                                      </div>
                                       {quickColors.map((c) => (
                                         <button key={c} onClick={() => applyColorToSelection(c)} style={{ width: 24, height: 24, borderRadius: 6, border: `1px solid ${theme.border}`, backgroundColor: c, cursor: "pointer" }} />
                                       ))}
@@ -2705,8 +2807,19 @@ export default function App() {
                                 />
 
                                 {selectionInfo.text && selectionInfo.target === "newSub" && (
-                                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 10, borderRadius: 10, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, marginBottom: 10 }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: 10, borderRadius: 10, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, marginBottom: 10 }}>
                                     <span style={{ fontSize: 12, color: theme.subtext }}>{`"${selectionInfo.text}"`}</span>
+                                    <div style={{ display: "flex", gap: 6 }}>
+                                      <button onClick={() => applyFormatting("bold")}
+                                        style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, fontWeight: 800, cursor: "pointer", fontSize: 12 }}>G</button>
+                                      <button onClick={() => applyFormatting("italic")}
+                                        style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, fontStyle: "italic", cursor: "pointer", fontSize: 12 }}>I</button>
+                                      <button onClick={() => applyFormatting("underline")}
+                                        style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, textDecoration: "underline", cursor: "pointer", fontSize: 12 }}>U</button>
+                                      {[14, 16, 18, 20].map((s) => (
+                                        <button key={s} onClick={() => applyFormatting("size", s)} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", fontSize: 12 }}>{s}px</button>
+                                      ))}
+                                    </div>
                                     {quickColors.map((c) => (
                                       <button key={c} onClick={() => applyColorToSelection(c)} style={{ width: 24, height: 24, borderRadius: 6, border: `1px solid ${theme.border}`, backgroundColor: c, cursor: "pointer" }} />
                                     ))}
@@ -2770,51 +2883,6 @@ export default function App() {
           </div>
         )}
 
-        {isMobile && imageDrawerOpen && hasImagesForSelectedCategory && (
-          <div style={{ position: "fixed", left: 0, right: 0, top: (headerHeight || 0) + 8, bottom: 0, backgroundColor: "rgba(0,0,0,0.55)", zIndex: 500, display: "flex", justifyContent: "flex-end" }} onClick={() => setImageDrawerOpen(false)}>
-            <div style={{ width: "80%", maxWidth: 380, backgroundColor: theme.panel, borderLeft: `1px solid ${theme.border}`, boxShadow: "-12px 0 32px rgba(0,0,0,0.25)", padding: 14, overflow: "auto", borderTopLeftRadius: 14, borderBottomLeftRadius: 14 }} onClick={(e) => e.stopPropagation()}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <h3 style={{ margin: 0, color: theme.accent1 }}>📷 Images ({filteredGalleryImages.filter(img => img.catId === selectedCategoryId).length})</h3>
-                <button onClick={() => setImageDrawerOpen(false)} style={{ padding: "8px 12px", borderRadius: 10, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>✖</button>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
-                  <div>
-                    <label style={{ fontSize: 12, color: theme.subtext }}>Grande partie</label>
-                    <select value={drawerSectionId || ""} onChange={(e) => setDrawerSectionId(e.target.value ? Number(e.target.value) : null)} style={{ width: "100%", padding: 10, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }}>
-                      <option value="">Toutes</option>
-                      {sectionsWithImages.map((s) => (<option key={s.id} value={s.id}>{s.emoji} {s.name}</option>))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 12, color: theme.subtext }}>Catégorie</label>
-                    <select value={drawerCategoryId || ""} onChange={(e) => setDrawerCategoryId(e.target.value ? Number(e.target.value) : null)} style={{ width: "100%", padding: 10, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }}>
-                      <option value="">Choisir...</option>
-                      {drawerCategories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>))}
-                    </select>
-                  </div>
-                </div>
-
-                {drawerCategoryId && drawerImages.length === 0 && (
-                  <div style={{ color: theme.subtext, fontSize: 12 }}>Aucune image pour cette catégorie.</div>
-                )}
-
-                {drawerCategoryId && drawerImages.length > 0 && (
-                  <div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
-                      {drawerImages.map((img) => (
-                        <div key={`${img.catId}-${img.subId}-${img.index}`} style={{ borderRadius: 10, overflow: "hidden", border: `1px solid ${theme.border}`, backgroundColor: theme.bg, boxShadow: theme.shadow }}>
-                          <img src={img.url} alt={img.desc || img.subTitle} style={{ width: "100%", height: 140, objectFit: "cover", display: "block", cursor: "pointer" }} onClick={() => { setLightboxImage(img); setImageDrawerOpen(false); }} />
-                          {img.desc && <div style={{ padding: 8, fontSize: 12, color: theme.text }}>{img.desc}</div>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
       )}
 
