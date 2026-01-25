@@ -2176,10 +2176,45 @@ export default function App() {
             position: "relative"
           }}>
             {selectedSectionId && (
-              <div className="chips-scroll" style={{ marginTop: 0, marginBottom: 0, padding: `2px ${layout.contentPad}px 4px`, display: "flex", gap: 10, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}`, boxShadow: isMobile ? "" : "0 6px 14px rgba(0,0,0,0.12)" }}>
-                <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
+              <div className="chips-scroll" style={{
+                marginTop: isMobile ? 0 : 0,
+                marginBottom: isMobile ? 0 : 0,
+                padding: isMobile ? `0 ${layout.contentPad}px 2px` : `2px ${layout.contentPad}px 4px`,
+                minHeight: isMobile ? 36 : undefined,
+                height: isMobile ? 36 : undefined,
+                display: "flex",
+                gap: isMobile ? 6 : 10,
+                flexWrap: "nowrap",
+                overflowX: "auto",
+                backgroundColor: theme.panel,
+                borderBottom: `1px solid ${theme.border}`,
+                boxShadow: isMobile ? "" : "0 6px 14px rgba(0,0,0,0.12)"
+              }}>
+                <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{
+                  padding: isMobile ? "6px 12px" : "4px 10px",
+                  borderRadius: 14,
+                  backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel,
+                  color: selectedCategoryId === null ? "white" : theme.text,
+                  border: `1px solid ${theme.border}`,
+                  cursor: "pointer",
+                  fontSize: 12,
+                  whiteSpace: "nowrap",
+                  height: isMobile ? 28 : undefined,
+                  minHeight: isMobile ? 28 : undefined
+                }}>◆ Toutes</button>
                 {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
-                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
+                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{
+                    padding: isMobile ? "6px 12px" : "4px 10px",
+                    borderRadius: 14,
+                    backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel,
+                    color: selectedCategoryId === cat.id ? "white" : theme.text,
+                    border: `1px solid ${theme.border}`,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    whiteSpace: "nowrap",
+                    height: isMobile ? 28 : undefined,
+                    minHeight: isMobile ? 28 : undefined
+                  }}>
                     {cat.icon} {cat.name}
                   </button>
                 ))}
