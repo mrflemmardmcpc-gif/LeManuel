@@ -1371,19 +1371,27 @@ function Markdown({ content }) {
     const lines = tableBlock.trim().split('\n').filter(l => l.trim().startsWith('|') && l.trim().endsWith('|'));
     if (lines.length < 2) return tableBlock;
     const headers = lines[0].split('|').filter(Boolean).map(h => h.trim());
-    const headerHtml = headers.map(h => `<th class=\"p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700 bg-slate-800 text-blue-400\" style=\"word-break:break-word;white-space:normal;overflow-wrap:anywhere;\">${h}</th>`).join('');
+    const headerHtml = headers.map(h => `<th class=\"p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700 bg-slate-800 text-blue-400\" style=\"word-break:break-word;white-space:pre-line;overflow-wrap:anywhere;\">${h}</th>`).join('');
     const bodyHtml = lines.slice(2).map(row => {
       const cols = row.split('|').filter(Boolean).map(c => c.trim());
-      return `<tr>${cols.map(c => `<td class=\"p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700\" style=\"word-break:break-word;white-space:normal;overflow-wrap:anywhere;\">${c}</td>`).join('')}</tr>`;
+      return `<tr>${cols.map(c => `<td class=\"p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700\" style=\"word-break:break-word;white-space:pre-line;overflow-wrap:anywhere;\">${c}</td>`).join('')}</tr>`;
     }).join('');
-    return `<div class=\"overflow-x-auto w-full\"><table class=\"w-full border-collapse my-3 max-w-full text-[clamp(14px,4vw,18px)]\"><colgroup>${headers.map(() => '<col>').join('')}</colgroup><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`;
+    // Bloc scrollable, largeur forcée, espace réduit
+    return `
+      <div class=\"relative w-full\" style=\"overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; margin:10px 0 6px 0;\">
+        <table class=\"border-collapse w-full min-w-full text-[clamp(14px,4vw,18px)]\" style=\"margin:0;\"><colgroup>${headers.map(() => '<col style=\'width:auto;min-width:80px;max-width:1fr;\'>').join('')}</colgroup><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>
+        <div class=\"pointer-events-none absolute top-0 right-0 h-full w-8 hidden sm:block\" style=\"background:linear-gradient(to left,rgba(30,41,59,0.7),transparent);\"></div>
+        <div class=\"pointer-events-none absolute top-0 left-0 h-full w-8 hidden sm:block\" style=\"background:linear-gradient(to right,rgba(30,41,59,0.7),transparent);\"></div>
+      </div>
+    `;
   });
 
   // Paragraphe et liste stylée
   html = html.replace(/<p(.*?)>/g, '<p$1 class="text-[clamp(16px,4vw,20px)] leading-relaxed" style="white-space:pre-wrap;">');
   html = html.replace(/<li(.*?)>/g, '<li$1 class="text-[clamp(16px,4vw,20px)] leading-relaxed" style="white-space:pre-wrap;">');
 
-  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  // Forcer le retour à la ligne partout
+  return <div style={{ wordBreak: "break-word", whiteSpace: "pre-line", overflowWrap: "anywhere" }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 export default function App() {
@@ -1465,11 +1473,30 @@ export default function App() {
 
   // Push local changes to the shared Y.js map when they originate locally.
   useEffect(() => {
-    const ymap = yMapRef.current;
-    if (!ymap) return;
-    if (isApplyingRemoteRef.current) return;
-    ymap.set("data", data);
+    // Désactive la sauvegarde automatique sur modification locale
+    // La sauvegarde se fait uniquement via le bouton principal
+    // (ne rien faire ici)
   }, [data]);
+  // Bouton principal Sauvegarder
+  const handleMainSave = async () => {
+    setKvStatus("saving");
+    try {
+      const res = await fetch("/api/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data }),
+      });
+      if (!res.ok) throw new Error("Erreur sauvegarde");
+      setKvStatus("saved");
+      setKvLastSaved(Date.now());
+      setIsDirty(false);
+      showToast("Sauvegardé");
+    } catch (err) {
+      setKvStatus("error");
+      setKvErrorMsg(err?.message || "Échec sauvegarde");
+      showToast("Échec sauvegarde");
+    }
+  };
 
   // Hydrate from KV persistence (single snapshot) so fresh deployments reuse saved content.
   useEffect(() => {
@@ -2626,6 +2653,31 @@ export default function App() {
             )}
 
             <section style={{ flex: 1, overflow: "auto", padding: layout.contentPad }} ref={sectionScrollRef}>
+              {/* Bouton flottant Sauvegarder (emoji) */}
+              {(editMode || isDirty) && (
+                <button
+                  onClick={handleMainSave}
+                  title="Sauvegarder"
+                  style={{
+                    position: "fixed",
+                    bottom: 24,
+                    right: 24,
+                    zIndex: 999,
+                    width: 56,
+                    height: 56,
+                    borderRadius: "50%",
+                    background: "linear-gradient(120deg,#10b981,#3b82f6)",
+                    color: "white",
+                    fontSize: 32,
+                    boxShadow: "0 8px 32px rgba(59,130,246,0.18)",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >💾</button>
+              )}
               {editMode && (
                 <div style={{ background: `linear-gradient(135deg, ${theme.panel} 0%, ${theme.bg} 100%)`, padding: 20, borderRadius: 16, border: `1px solid ${theme.border}`, marginBottom: 20, boxShadow: theme.shadow }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
