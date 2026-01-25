@@ -2229,7 +2229,7 @@ export default function App() {
                     <button onClick={() => setShowSectionPanel(false)} style={{ padding: "8px 12px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>✖</button>
                   </div>
 
-                  <div style={{ marginBottom: isMobile ? 4 : 20 }}>
+                  <div style={{ marginBottom: isMobile ? 0 : 20 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                       <h3 style={{ margin: 0, color: theme.accent1, fontSize: 14 }}>🏗️ Grandes Parties</h3>
                       {isAuthenticated && (
