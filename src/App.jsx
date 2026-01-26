@@ -1,3 +1,110 @@
+// Drag & drop pour les sections (grandes parties) avec feedback visuel
+// Drag & drop pour les sections (grandes parties) avec feedback visuel et ligne d'insertion
+function SectionDraggable({ section, index, moveSection, draggingIndex, setDraggingIndex, insertPosition, setInsertPosition }) {
+  const ref = useRef(null);
+  const [isOver, setIsOver] = useState(false);
+  // Gestion souris
+  const onDragStart = (e) => {
+    setDraggingIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", index);
+    if (e.dataTransfer.setDragImage) {
+      e.dataTransfer.setDragImage(ref.current, 0, 0);
+    }
+  };
+  const onDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const bounds = ref.current.getBoundingClientRect();
+    const y = e.clientY - bounds.top;
+    // Si la souris est dans la moitié supérieure, on insère avant, sinon après
+    const pos = y < bounds.height / 2 ? index : index + 1;
+    setInsertPosition(pos);
+    setIsOver(true);
+  };
+  const onDragLeave = () => { setIsOver(false); setInsertPosition(null); };
+  const onDrop = (e) => {
+    e.preventDefault();
+    setIsOver(false);
+    const from = parseInt(e.dataTransfer.getData("text/plain"), 10);
+    if (insertPosition !== null && from !== insertPosition && from + 1 !== insertPosition) {
+      moveSection(from, insertPosition > from ? insertPosition - 1 : insertPosition);
+    }
+    setDraggingIndex(null);
+    setInsertPosition(null);
+  };
+  const onDragEnd = () => { setDraggingIndex(null); setIsOver(false); setInsertPosition(null); };
+  // Gestion tactile (mobile)
+  let touchStartY = null;
+  const onTouchStart = (e) => {
+    setDraggingIndex(index);
+    touchStartY = e.touches[0].clientY;
+  };
+  const onTouchMove = (e) => {
+    if (touchStartY === null) return;
+    const deltaY = e.touches[0].clientY - touchStartY;
+    if (Math.abs(deltaY) > 30) {
+      moveSection(index, deltaY > 0 ? index + 1 : index - 1);
+      touchStartY = e.touches[0].clientY;
+    }
+  };
+  const onTouchEnd = () => { setDraggingIndex(null); setIsOver(false); setInsertPosition(null); };
+  const isDragging = draggingIndex === index;
+  // Ligne d'insertion visuelle
+  const showInsertLine = insertPosition === index;
+  const showInsertLineAfter = insertPosition === index + 1;
+  return (
+    <div ref={ref}
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      style={{
+        opacity: isDragging ? 0.4 : 1,
+        cursor: "grab",
+        background: isDragging ? "linear-gradient(90deg,#3b82f6 0%,#10b981 100%)"
+          : isOver ? "rgba(59,130,246,0.12)" : undefined,
+        color: isDragging ? "white" : undefined,
+        boxShadow: isDragging ? "0 0 12px 2px #10b98155" : isOver ? "0 0 0 2px #3b82f6" : undefined,
+        zIndex: isDragging ? 10 : isOver ? 5 : 1,
+        position: 'relative',
+        transition: "background 0.2s, opacity 0.2s, color 0.2s, box-shadow 0.2s"
+      }}
+    >
+      {showInsertLine && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 0,
+          borderTop: '3px solid #10b981',
+          zIndex: 20
+        }} />
+      )}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderRadius: 8, backgroundColor: "inherit", color: "inherit", border: `1px solid #ccc`, position: 'relative' }}>
+        <span style={{ fontSize: 14, fontWeight: "500" }}>{section.emoji} {section.name}</span>
+        <span style={{ fontSize: 18, opacity: 0.5 }}>☰</span>
+      </div>
+      {showInsertLineAfter && (
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 0,
+          borderTop: '3px solid #10b981',
+          zIndex: 20
+        }} />
+      )}
+    </div>
+  );
+}
 import React, { useState, useEffect, useMemo, useRef } from "react";
 // import NoteModal from "./modals/NoteModal";
 import LoginModal from "./modals/LoginModal";
@@ -79,8 +186,10 @@ function Markdown({ content }) {
 }
 
 export default function App() {
-    // const [showNoteModal, setShowNoteModal] = useState(false); // Désactivé temporairement
+  // const [showNoteModal, setShowNoteModal] = useState(false); // Désactivé temporairement
   const [data, setData] = useState({ sections, categories });
+  const [draggingIndex, setDraggingIndex] = useState(null);
+  const [insertPosition, setInsertPosition] = useState(null);
   const ydocRef = useRef(null);
   const yMapRef = useRef(null);
   const isApplyingRemoteRef = useRef(false);
@@ -292,6 +401,57 @@ export default function App() {
   const inlineFileInputRef = useRef(null);
   const subRefs = useRef({});
   const toastTimeoutRef = useRef(null);
+
+  // SECTION EDIT/DELETE HANDLERS
+  const startEditSection = (section) => {
+    setEditingSectionId(section.id);
+    setEditSectionName(section.name);
+    setEditSectionEmoji(section.emoji || "");
+    setEditSectionColor(section.color || "#3b82f6");
+  };
+
+  const saveEditSection = () => {
+    setData((prev) => ({
+      ...prev,
+      sections: prev.sections.map((s) =>
+        s.id === editingSectionId
+          ? { ...s, name: editSectionName, emoji: editSectionEmoji, color: editSectionColor }
+          : s
+      ),
+    }));
+    setEditingSectionId(null);
+    setEditSectionName("");
+    setEditSectionEmoji("");
+    setEditSectionColor("");
+    setIsDirty(true);
+  };
+
+  const cancelEditSection = () => {
+    setEditingSectionId(null);
+    setEditSectionName("");
+    setEditSectionEmoji("");
+    setEditSectionColor("");
+  };
+
+  const deleteSection = (sectionId) => {
+    setConfirmModal({
+      open: true,
+      message: "Supprimer cette grande partie ? Toutes les catégories associées seront aussi supprimées.",
+      onConfirm: () => {
+        setData((prev) => ({
+          ...prev,
+          sections: prev.sections.filter((s) => s.id !== sectionId),
+          categories: prev.categories.filter((c) => c.sectionId !== sectionId),
+        }));
+        setEditingSectionId(null);
+        setEditSectionName("");
+        setEditSectionEmoji("");
+        setEditSectionColor("");
+        setIsDirty(true);
+        setConfirmModal({ open: false, message: "", onConfirm: null });
+      },
+    });
+  };
 
 
     // Ajoute une nouvelle grande partie (section)
@@ -1066,7 +1226,7 @@ export default function App() {
                           <button onClick={addSection} style={{ width: "100%", padding: "6px", borderRadius: 4, backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer", fontSize: 12, fontWeight: "bold" }}>➕ Ajouter</button>
                         </div>
 
-                        {data.sections.map((section) => (
+                        {data.sections.map((section, idx) => (
                           <div key={section.id}>
                             {editingSectionId === section.id ? (
                               <div style={{ backgroundColor: theme.bg, padding: 12, borderRadius: 8, border: `1px solid ${theme.accent1}` }}>
@@ -1099,11 +1259,32 @@ export default function App() {
                       </div>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {data.sections.map((section) => (
-                          <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "12px 16px", borderRadius: 8, backgroundColor: selectedSectionId === section.id ? section.color : theme.bg, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", textAlign: "left", fontSize: 14, fontWeight: "500" }}>
-                            {section.emoji} {section.name}
-                          </button>
-                        ))}
+                        {isAuthenticated ? (
+                          data.sections.map((section, idx) => (
+                            <SectionDraggable
+                              key={section.id}
+                              section={section}
+                              index={idx}
+                              moveSection={(from, to) => {
+                                if (to < 0 || to >= data.sections.length) return;
+                                const newSections = [...data.sections];
+                                const [removed] = newSections.splice(from, 1);
+                                newSections.splice(to, 0, removed);
+                                setData(d => ({ ...d, sections: newSections }));
+                              }}
+                              draggingIndex={draggingIndex}
+                              setDraggingIndex={setDraggingIndex}
+                              insertPosition={insertPosition}
+                              setInsertPosition={setInsertPosition}
+                            />
+                          ))
+                        ) : (
+                          data.sections.map((section) => (
+                            <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "12px 16px", borderRadius: 8, backgroundColor: selectedSectionId === section.id ? section.color : theme.bg, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", textAlign: "left", fontSize: 14, fontWeight: "500" }}>
+                              {section.emoji} {section.name}
+                            </button>
+                          ))
+                        )}
                       </div>
                     )}
                   </div>
@@ -1390,8 +1571,7 @@ export default function App() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => toggleCategory(cat.id)}>
                         <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: 12, color: cat.color || theme.accent1 }}><span style={{ fontSize: 28 }}>{cat.icon}</span>{cat.name}</h2>
                         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                          {editMode && <button onClick={(e) => { e.stopPropagation(); moveCategoryUp(cat.id); }} style={{ padding: "4px 8px", borderRadius: 4, backgroundColor: "#8b5cf6", color: "white", border: "none", cursor: "pointer", fontSize: 12 }} title="Monter">⬆️</button>}
-                          {editMode && <button onClick={(e) => { e.stopPropagation(); moveCategoryDown(cat.id); }} style={{ padding: "4px 8px", borderRadius: 4, backgroundColor: "#8b5cf6", color: "white", border: "none", cursor: "pointer", fontSize: 12 }} title="Descendre">⬇️</button>}
+                          {/* Flèches haut/bas supprimées */}
                           {editMode && <button onClick={(e) => { e.stopPropagation(); startEditCategory(cat); }} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer" }}>✏️</button>}
                           {editMode && <button onClick={(e) => { e.stopPropagation(); deleteCategory(cat.id); }} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>🗑️</button>}
                           <span style={{ fontSize: 20 }}>{expanded ? "▼" : "▶"}</span>
