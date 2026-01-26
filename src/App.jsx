@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 // --- Prise de note personnelle ---
-function NoteModal({ open, onClose, sections, categories, onSave, defaultSectionId, defaultCategoryId, defaultNote }) {
-  const [note, setNote] = useState(defaultNote || "");
-  const [sectionId, setSectionId] = useState(defaultSectionId || "");
-  const [categoryId, setCategoryId] = useState(defaultCategoryId || "");
-  useEffect(() => { setNote(defaultNote || ""); }, [defaultNote, open]);
-  useEffect(() => { setSectionId(defaultSectionId || ""); }, [defaultSectionId, open]);
-  useEffect(() => { setCategoryId(defaultCategoryId || ""); }, [defaultCategoryId, open]);
+function NoteModal({ open, onClose, sections, categories, onSave }) {
+  const [note, setNote] = useState("");
+  const [sectionId, setSectionId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+
   if (!open) return null;
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(20,22,34,0.45)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -30,23 +28,6 @@ function NoteModal({ open, onClose, sections, categories, onSave, defaultSection
       </div>
     </div>
   );
-}
-// Gestion des notes locales par catégorie
-function getLocalNotes() {
-  try {
-    return JSON.parse(localStorage.getItem("localNotesByCategory") || "{}") || {};
-  } catch {
-    return {};
-  }
-}
-function setLocalNote(categoryId, note) {
-  const notes = getLocalNotes();
-  if (note && note.trim()) {
-    notes[categoryId] = note;
-  } else {
-    delete notes[categoryId];
-  }
-  localStorage.setItem("localNotesByCategory", JSON.stringify(notes));
 }
 // --- State pour la modale de note ---
 // (À placer dans le composant App)
@@ -1458,19 +1439,6 @@ function Markdown({ content }) {
 export default function App() {
     // --- State pour la modale de note ---
     const [showNoteModal, setShowNoteModal] = useState(false);
-    const [noteModalDefaults, setNoteModalDefaults] = useState({ sectionId: "", categoryId: "", note: "" });
-    const [localNotes, setLocalNotes] = useState(() => getLocalNotes());
-      // Synchronise localNotes avec le localStorage à chaque ouverture de l'app
-      useEffect(() => {
-        setLocalNotes(getLocalNotes());
-      }, []);
-
-      // Fonction d'ouverture de la modale de note
-      function openNoteModal(sectionId = "", categoryId = "") {
-        let note = (categoryId && localNotes[categoryId]) || "";
-        setNoteModalDefaults({ sectionId, categoryId, note });
-        setShowNoteModal(true);
-      }
   const [data, setData] = useState(DEFAULT_DATA);
   const ydocRef = useRef(null);
   const yMapRef = useRef(null);
@@ -1684,6 +1652,29 @@ export default function App() {
   const subRefs = useRef({});
   const toastTimeoutRef = useRef(null);
 
+
+    // Ajoute une nouvelle grande partie (section)
+    const addSection = () => {
+      if (!newSectionName.trim()) {
+        setToast({ message: "Le nom de la grande partie est requis." });
+        return;
+      }
+      const newSection = {
+        id: Date.now(),
+        name: newSectionName,
+        emoji: newSectionEmoji || "📌",
+        color: newSectionColor || "#3b82f6",
+      };
+      setData((d) => ({
+        ...d,
+        sections: [...d.sections, newSection],
+      }));
+      setNewSectionName("");
+      setNewSectionEmoji("📌");
+      setNewSectionColor("#3b82f6");
+      setToast({ message: "Grande partie ajoutée !" });
+    };
+
     // Ajoute une nouvelle catégorie
     const addCategory = () => {
       if (!newCatTitle.trim()) {
@@ -1711,6 +1702,89 @@ export default function App() {
       setNewCatSection(null);
       setNewCatColor("#ffffff");
       setToast({ message: "Catégorie ajoutée !" });
+    };
+
+    // Edition d'une catégorie
+    const startEditCategory = (cat) => {
+      setEditingCategoryId(cat.id);
+      setEditCatName(cat.name);
+      setEditCatEmoji(cat.icon);
+      setEditCatSection(cat.sectionId);
+      setEditCatColor(cat.color || "#ffffff");
+    };
+
+    const saveEditCategory = () => {
+      if (!editCatName.trim()) {
+        setToast({ message: "Le nom de la catégorie est requis." });
+        return;
+      }
+      setData((d) => ({
+        ...d,
+        categories: d.categories.map((cat) =>
+          cat.id === editingCategoryId
+            ? { ...cat, name: editCatName, icon: editCatEmoji, sectionId: editCatSection, color: editCatColor }
+            : cat
+        ),
+      }));
+      setEditingCategoryId(null);
+      setEditCatName("");
+      setEditCatEmoji("");
+      setEditCatSection(null);
+      setEditCatColor("#ffffff");
+      setToast({ message: "Catégorie modifiée !" });
+    };
+
+    const cancelEditCategory = () => {
+      setEditingCategoryId(null);
+      setEditCatName("");
+      setEditCatEmoji("");
+      setEditCatSection(null);
+      setEditCatColor("#ffffff");
+    };
+
+    const deleteCategory = (catId) => {
+      askConfirm("Supprimer cette catégorie ?", () => {
+        setData((d) => ({
+          ...d,
+          categories: d.categories.filter((cat) => cat.id !== catId),
+        }));
+        if (editingCategoryId === catId) cancelEditCategory();
+      });
+    };
+
+    // Ajout d'un module (sous-catégorie)
+    const startAddingSub = (catId) => {
+      setAddingSubToCatId(catId);
+      setNewSubTitle("");
+      setNewSubText("");
+      setNewSubColor("#e6eef8");
+    };
+
+    const saveNewSub = () => {
+      if (!newSubTitle.trim()) {
+        setToast({ message: "Le titre du module est requis." });
+        return;
+      }
+      setData((d) => ({
+        ...d,
+        categories: d.categories.map((cat) =>
+          cat.id === addingSubToCatId
+            ? { ...cat, subs: [...cat.subs, { id: Date.now(), title: newSubTitle, text: newSubText, color: newSubColor }] }
+            : cat
+        ),
+      }));
+      setAddingSubToCatId(null);
+      setNewSubTitle("");
+      setNewSubText("");
+      setNewSubColor("#e6eef8");
+      setToast({ message: "Module ajouté !" });
+    };
+
+    const cancelAddingSub = () => {
+      setAddingSubToCatId(null);
+      setNewSubTitle("");
+      setNewSubText("");
+      setNewSubColor("#e6eef8");
     };
 
     // Handler for gallery image file input
@@ -2182,66 +2256,33 @@ export default function App() {
       {accessMode !== "home" && (
       <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
-          {/* Bouton Ajouter une note : mobile = flottant, desktop = header */}
-          {isMobile && (
-            <button
-              onClick={() => setShowNoteModal(true)}
-              style={{
-                position: "fixed",
-                bottom: 18,
-                left: 18,
-                zIndex: 300,
-                padding: "2px",
-                borderRadius: 12,
-                background: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
-                color: "white",
-                border: "none",
-                boxShadow: "0 2px 8px rgba(16,185,129,0.13)",
-                fontWeight: 700,
-                fontSize: 15,
-                letterSpacing: 0.1,
-                cursor: "pointer",
-                minWidth: 20,
-                minHeight: 20,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}
-            >
-              📝
-            </button>
-          )}
-
-          {/* Bouton Ajouter une note : visiteur PC = flottant en bas à droite */}
-          {!isMobile && !isAuthenticated && (
-            <button
-              onClick={() => setShowNoteModal(true)}
-              style={{
-                position: "fixed",
-                bottom: 18,
-                right: 18,
-                zIndex: 300,
-                padding: "10px 18px 10px 14px",
-                borderRadius: 22,
-                background: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
-                color: "white",
-                border: "none",
-                boxShadow: "0 2px 12px rgba(16,185,129,0.18)",
-                fontWeight: 700,
-                fontSize: 18,
-                letterSpacing: 0.1,
-                cursor: "pointer",
-                minWidth: 0,
-                minHeight: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8
-              }}
-            >
-              <span style={{fontSize:22,marginRight:6}}>📝</span> Ajouter une note
-            </button>
-          )}
+          {/* Bouton Ajouter une note */}
+          <button
+            onClick={() => setShowNoteModal(true)}
+            style={{
+              position: "fixed",
+              bottom: 18,
+              right: 18,
+              zIndex: 300,
+              padding: isMobile ? "7px" : "7px 14px",
+              borderRadius: 18,
+              background: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
+              color: "white",
+              border: "none",
+              boxShadow: "0 2px 8px rgba(16,185,129,0.13)",
+              fontWeight: 700,
+              fontSize: isMobile ? 20 : 14,
+              letterSpacing: 0.1,
+              cursor: "pointer",
+              minWidth: isMobile ? 36 : undefined,
+              minHeight: isMobile ? 36 : undefined,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            📝{!isMobile && ' Ajouter une note'}
+          </button>
 
           {/* Modale de prise de note personnelle */}
           <NoteModal
@@ -2249,92 +2290,39 @@ export default function App() {
             onClose={() => setShowNoteModal(false)}
             sections={data.sections}
             categories={data.categories}
-            defaultSectionId={noteModalDefaults.sectionId}
-            defaultCategoryId={noteModalDefaults.categoryId}
-            defaultNote={noteModalDefaults.note}
-            onSave={({ note, sectionId, categoryId }) => {
-              setShowNoteModal(false);
-              if (categoryId) {
-                setLocalNote(categoryId, note);
-                setLocalNotes(getLocalNotes());
-              }
-            }}
+            onSave={() => setShowNoteModal(false)}
           />
           <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: `${layout.headerPad/2}px ${layout.headerPad}px`, paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: layout.headerRowGap, marginBottom: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, minWidth: 0 }}>
                 <button onClick={() => setShowSectionPanel(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: layout.headerIconSize, cursor: "pointer", flexShrink: 0 }}>☰</button>
+                {/* Bouton édition supprimé ici */}
                 <h1 style={{ margin: 0, fontSize: layout.headerTitle, fontWeight: 800, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "0.05px", lineHeight: 1.05, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>🛠️ Le Manuel</h1>
               </div>
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                {isAuthenticated && !isMobile && (
-                  <>
-                    <button
-                      onClick={() => setShowNoteModal(true)}
-                      style={{
-                        marginLeft: 0,
-                        marginRight: 410,
-                        padding: "7px 14px",
-                        borderRadius: 18,
-                        background: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
-                        color: "white",
-                        border: "none",
-                        boxShadow: "0 2px 8px rgba(16,185,129,0.13)",
-                        fontWeight: 700,
-                        fontSize: 16,
-                        letterSpacing: 0.1,
-                        cursor: "pointer",
-                        minWidth: 36,
-                        minHeight: 36,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                      }}
-                    >
-                      📝
-                    </button>
-                    <button
-                      onClick={() => setEditMode((e) => !e)}
-                      style={{
-                        marginLeft: 2,
-                        marginRight: 2,
-                        padding: layout.headerButtonPad,
-                        borderRadius: 10,
-                        background: editMode ? "linear-gradient(120deg, #10b981, #22d3ee)" : theme.panel,
-                        color: editMode ? "white" : theme.text,
-                        border: `1px solid ${theme.border}`,
-                        cursor: "pointer",
-                        fontWeight: 700,
-                        boxShadow: editMode ? "0 8px 20px rgba(16,185,129,0.35)" : "none",
-                      }}
-                    >
-                      ✏️
-                    </button>
-                  </>
-                )}
-                <button onClick={() => { if (isAuthenticated) { askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout); } else { handleLogout(); } }} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
-                {isAuthenticated && isMobile && (
+                <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
+                <button onClick={() => setShowGallery(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: showGallery ? "#23202d" : `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
+                {isAuthenticated && (
                   <button
-                    onClick={() => setEditMode((e) => !e)}
+                    onClick={() => setEditMode((v) => !v)}
                     style={{
-                      padding: '2px 2px',
-                      minWidth: 15,
-                      minHeight: 15,
+                      padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad,
+                      minWidth: isMobile && isAuthenticated ? 15 : undefined,
+                      minHeight: isMobile && isAuthenticated ? 15 : undefined,
                       borderRadius: 10,
-                      background: editMode ? "linear-gradient(120deg, #10b981, #22d3ee)" : theme.panel,
-                      color: editMode ? "white" : theme.text,
+                      backgroundColor: editMode ? theme.accent1 : theme.panel,
+                      color: editMode ? 'white' : theme.text,
                       border: `1px solid ${theme.border}`,
                       cursor: "pointer",
-                      fontWeight: 700,
-                      boxShadow: editMode ? "0 8px 20px rgba(16,185,129,0.35)" : "none",
-                      marginLeft: 2,
-                      marginRight: 2,
+                      fontWeight: 600,
+                      flexShrink: 0,
+                      marginRight: 4
                     }}
+                    title={editMode ? "Quitter le mode édition" : "Activer le mode édition"}
                   >
                     ✏️
                   </button>
                 )}
-                <button onClick={() => setShowGallery(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: showGallery ? "#23202d" : `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
                 <button onClick={() => setShowSearchModal(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
                 <button onClick={() => setDarkMode((d) => !d)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
                   {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
@@ -2352,30 +2340,41 @@ export default function App() {
               ))}
             </div>
 
-            {/* Barre des catégories (mobile) juste sous la barre des grandes parties */}
-            {isMobile && selectedSectionId && (
-              <div className="chips-scroll" style={{ marginTop: 0, marginBottom: 0, padding: `6px 0 8px 0`, display: "flex", gap: 10, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
+            {/* Barre des catégories sous le header (mobile ET desktop) */}
+            {selectedSectionId && (
+              <div
+                className="chips-scroll"
+                style={{
+                  marginTop: 0,
+                  marginBottom: isMobile ? 0 : 16,
+                  padding: `6px 0 8px 0`,
+                  display: "flex",
+                  gap: 10,
+                  flexWrap: "nowrap",
+                  overflowX: "auto",
+                  backgroundColor: theme.panel,
+                  borderBottom: `1px solid ${theme.border}`
+                }}
+              >
                 <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
                 {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
-                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap", position: "relative" }}>
+                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
                     {cat.icon} {cat.name}
-                    {localNotes[cat.id] && (
-                      <span style={{ position: "absolute", top: 2, right: 2, fontSize: 13, color: "#10b981" }} title="Note personnelle">📝</span>
-                    )}
                   </button>
                 ))}
               </div>
             )}
           </header>
 
-          <div style={{
-            marginTop:
-              (isAuthenticated && isMobile)
-                ? ((headerHeight || 0) + 160) + 'px'
-                : (headerHeight ? `${headerHeight}px` : `calc(${layout.contentTop}px + ${safeTopInset})`),
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
+          <div
+            style={{
+              marginTop:
+                headerHeight
+                  ? (selectedSectionId ? headerHeight + 56 : headerHeight + 12)
+                  : (isMobile ? (selectedSectionId ? 166 : 110) : (selectedSectionId ? 176 : 120)),
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
             overflow: "hidden",
             position: "relative"
           }}>
