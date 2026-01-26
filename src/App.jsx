@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import NoteModal from "./modals/NoteModal";
+// import NoteModal from "./modals/NoteModal";
 import LoginModal from "./modals/LoginModal";
 import ConfirmModal from "./modals/ConfirmModal";
 import SearchModal from "./modals/SearchModal";
 import { sections, categories } from "./data.structure";
-// --- State pour la modale de note ---
+// --- State pour la modale de note --- (désactivé temporairement)
 // (À placer dans le composant App)
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
@@ -79,8 +79,7 @@ function Markdown({ content }) {
 }
 
 export default function App() {
-    // --- State pour la modale de note ---
-    const [showNoteModal, setShowNoteModal] = useState(false);
+    // const [showNoteModal, setShowNoteModal] = useState(false); // Désactivé temporairement
   const [data, setData] = useState({ sections, categories });
   const ydocRef = useRef(null);
   const yMapRef = useRef(null);
@@ -898,8 +897,8 @@ export default function App() {
       {accessMode !== "home" && (
       <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
-          {/* Bouton Ajouter une note */}
-          <button
+          {/* Bouton Ajouter une note désactivé temporairement */}
+          {/* <button
             onClick={() => setShowNoteModal(true)}
             style={{
               position: "fixed",
@@ -924,16 +923,16 @@ export default function App() {
             }}
           >
             📝{!isMobile && ' Ajouter une note'}
-          </button>
+          </button> */}
 
-          {/* Modale de prise de note personnelle */}
-          <NoteModal
+          {/* Modale de prise de note personnelle désactivée temporairement */}
+          {/* <NoteModal
             open={showNoteModal}
             onClose={() => setShowNoteModal(false)}
             sections={data.sections}
             categories={data.categories}
             onSave={() => setShowNoteModal(false)}
-          />
+          /> */}
           <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: `${layout.headerPad/2}px ${layout.headerPad}px`, paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: layout.headerRowGap, marginBottom: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, minWidth: 0 }}>
@@ -942,7 +941,16 @@ export default function App() {
                 <h1 style={{ margin: 0, fontSize: layout.headerTitle, fontWeight: 800, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "0.05px", lineHeight: 1.05, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>🛠️ Le Manuel</h1>
               </div>
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
+                <button
+                  onClick={() => {
+                    if (isAuthenticated) {
+                      askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout);
+                    } else {
+                      handleLogout();
+                    }
+                  }}
+                  style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}
+                >🏠</button>
                 <button onClick={() => setShowGallery(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: showGallery ? "#23202d" : `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
                 {isAuthenticated && (
                   <button
@@ -966,9 +974,12 @@ export default function App() {
                   </button>
                 )}
                 <button onClick={() => setShowSearchModal(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
-                <button onClick={() => setDarkMode((d) => !d)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
-                  {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
-                </button>
+                {/* Bouton darkmode retiré sur mobile pour admin/visiteur, affiché seulement sur desktop */}
+                {(!isMobile) && (
+                  <button onClick={() => setDarkMode((d) => !d)} style={{ padding: layout.headerButtonPad, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
+                    {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={layout.headerIconSize} /> : <Emoji symbol="🌙" label="Mode sombre" size={layout.headerIconSize} />}
+                  </button>
+                )}
               </div>
             </div>
 
