@@ -1,34 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-// --- Prise de note personnelle ---
-function NoteModal({ open, onClose, sections, categories, onSave }) {
-  const [note, setNote] = useState("");
-  const [sectionId, setSectionId] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-
-  if (!open) return null;
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(20,22,34,0.45)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#23202d", borderRadius: 16, padding: 20, minWidth: 280, maxWidth: 340, boxShadow: "0 8px 32px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", gap: 14, border: `1px solid #444` }}>
-        <h2 style={{ margin: 0, fontSize: 17, color: "#10b981", fontWeight: 700 }}>📝 Nouvelle note</h2>
-        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Votre note..." style={{ width: "100%", minHeight: 60, borderRadius: 8, border: "1px solid #444", background: "#181622", color: "#f3f3f3", padding: 8, fontSize: 14, resize: "vertical" }} />
-        <div style={{ display: "flex", gap: 8, width: "100%" }}>
-          <select value={sectionId} onChange={e => setSectionId(e.target.value)} style={{ flex: 1, borderRadius: 8, padding: 6, background: "#181622", color: "#f3f3f3", border: "1px solid #444", maxWidth: "50%", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
-            <option value="">Grande partie...</option>
-            {sections.map(s => <option key={s.id} value={s.id}>{s.emoji} {s.name}</option>)}
-          </select>
-          <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={{ flex: 1, borderRadius: 8, padding: 6, background: "#181622", color: "#f3f3f3", border: "1px solid #444", maxWidth: "50%", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
-            <option value="">Catégorie...</option>
-            {categories.filter(c => !sectionId || c.sectionId == sectionId).map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-          </select>
-        </div>
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ padding: "7px 14px", borderRadius: 8, background: "#35324a", color: "#eee", border: "none", fontWeight: 600, cursor: "pointer" }}>Annuler</button>
-          <button onClick={() => onSave({ note, sectionId, categoryId })} style={{ padding: "7px 14px", borderRadius: 8, background: "#10b981", color: "white", border: "none", fontWeight: 700, cursor: "pointer" }}>Enregistrer</button>
-        </div>
-      </div>
-    </div>
-  );
-}
+import NoteModal from "./modals/NoteModal";
+import LoginModal from "./modals/LoginModal";
+import ConfirmModal from "./modals/ConfirmModal";
+import SearchModal from "./modals/SearchModal";
 // --- State pour la modale de note ---
 // (À placer dans le composant App)
 import * as Y from "yjs";
@@ -2608,17 +2582,13 @@ export default function App() {
               </div>
             )}
 
-            {showSearchModal && (
-              <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.4)", zIndex: 150, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 20 }}>
-                <div style={{ backgroundColor: theme.panel, borderRadius: 12, padding: 16, width: "90%", maxWidth: 500 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <h3 style={{ margin: 0, color: theme.accent1 }}>🔍 Rechercher</h3>
-                    <button onClick={() => setShowSearchModal(false)} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>✖</button>
-                  </div>
-                  <input type="search" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') setShowSearchModal(false); }} autoFocus style={{ width: "100%", padding: 12, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }} />
-                </div>
-              </div>
-            )}
+            <SearchModal
+              open={showSearchModal}
+              onClose={() => setShowSearchModal(false)}
+              search={search}
+              setSearch={setSearch}
+              theme={theme}
+            />
 
             <section style={{ flex: 1, overflow: "auto", padding: layout.contentPad }} ref={sectionScrollRef}>
               {/* Bouton flottant Sauvegarder (emoji) */}
@@ -3010,39 +2980,25 @@ export default function App() {
       </div>
       )}
 
-      {showLoginModal && (
-        <>
-          <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)", zIndex: 600 }} onClick={() => { setShowLoginModal(false); setAdminPassword(""); setLoginError(""); }} />
-          <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 700 }}>
-            <div style={{ width: 360, backgroundColor: darkMode ? "rgba(15,17,30,0.95)" : "rgba(255,255,255,0.98)", border: `1px solid ${theme.border}`, borderRadius: 12, padding: 24, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 12 }}>
-              <h3 style={{ margin: 0, color: theme.accent1 }}>Accès Admin</h3>
-              <p style={{ margin: 0, color: theme.subtext, fontSize: 13 }}>Saisis le mot de passe pour activer l'édition.</p>
-              <input type="password" value={adminPassword} onChange={(e) => { setAdminPassword(e.target.value); setLoginError(""); }} onKeyDown={(e) => { if (e.key === "Enter") handleAdminLogin(); }} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.input, color: theme.text }} placeholder="Mot de passe" />
-              {loginError && <div style={{ color: "#ef4444", fontSize: 12 }}>{loginError}</div>}
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 4 }}>
-                <button onClick={() => { setShowLoginModal(false); setAdminPassword(""); setLoginError(""); }} style={{ padding: "10px 16px", borderRadius: 8, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "pointer" }}>Annuler</button>
-                <button onClick={handleAdminLogin} style={{ padding: "10px 16px", borderRadius: 8, backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>Valider</button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <LoginModal
+        open={showLoginModal}
+        onClose={() => { setShowLoginModal(false); setAdminPassword(""); setLoginError(""); }}
+        onLogin={handleAdminLogin}
+        adminPassword={adminPassword}
+        setAdminPassword={setAdminPassword}
+        loginError={loginError}
+        darkMode={darkMode}
+        theme={theme}
+      />
 
-      {confirmModal.open && (
-        <>
-          <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 750 }} onClick={closeConfirm} />
-          <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 800 }}>
-            <div style={{ width: 360, backgroundColor: darkMode ? "rgba(15,17,30,0.96)" : "rgba(255,255,255,0.98)", border: `1px solid ${theme.border}`, borderRadius: 12, padding: 20, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 12 }}>
-              <h3 style={{ margin: 0, color: theme.accent1 }}>Confirmation</h3>
-              <div style={{ color: theme.text }}>{confirmModal.message}</div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-                <button onClick={closeConfirm} style={{ padding: "10px 16px", borderRadius: 10, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "pointer" }}>Retour</button>
-                <button onClick={acceptConfirm} style={{ padding: "10px 16px", borderRadius: 10, backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>Continuer</button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <ConfirmModal
+        open={confirmModal.open}
+        onClose={closeConfirm}
+        onConfirm={acceptConfirm}
+        message={confirmModal.message}
+        darkMode={darkMode}
+        theme={theme}
+      />
 
       {lightboxImage && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.75)", zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setLightboxImage(null)}>
