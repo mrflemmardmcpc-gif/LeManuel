@@ -2150,33 +2150,66 @@ export default function App() {
       {accessMode !== "home" && (
       <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
-          {/* Bouton Ajouter une note */}
-          <button
-            onClick={() => setShowNoteModal(true)}
-            style={{
-              position: "fixed",
-              bottom: 18,
-              right: 18,
-              zIndex: 300,
-              padding: isMobile ? "7px" : "7px 14px",
-              borderRadius: 18,
-              background: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
-              color: "white",
-              border: "none",
-              boxShadow: "0 2px 8px rgba(16,185,129,0.13)",
-              fontWeight: 700,
-              fontSize: isMobile ? 20 : 14,
-              letterSpacing: 0.1,
-              cursor: "pointer",
-              minWidth: isMobile ? 36 : undefined,
-              minHeight: isMobile ? 36 : undefined,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
-          >
-            📝{!isMobile && ' Ajouter une note'}
-          </button>
+          {/* Bouton Ajouter une note : mobile = flottant, desktop = header */}
+          {isMobile && (
+            <button
+              onClick={() => setShowNoteModal(true)}
+              style={{
+                position: "fixed",
+                bottom: 18,
+                left: 18,
+                zIndex: 300,
+                padding: "2px",
+                borderRadius: 12,
+                background: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
+                color: "white",
+                border: "none",
+                boxShadow: "0 2px 8px rgba(16,185,129,0.13)",
+                fontWeight: 700,
+                fontSize: 15,
+                letterSpacing: 0.1,
+                cursor: "pointer",
+                minWidth: 20,
+                minHeight: 20,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              📝
+            </button>
+          )}
+
+          {/* Bouton Ajouter une note : visiteur PC = flottant en bas à droite */}
+          {!isMobile && !isAuthenticated && (
+            <button
+              onClick={() => setShowNoteModal(true)}
+              style={{
+                position: "fixed",
+                bottom: 18,
+                right: 18,
+                zIndex: 300,
+                padding: "10px 18px 10px 14px",
+                borderRadius: 22,
+                background: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
+                color: "white",
+                border: "none",
+                boxShadow: "0 2px 12px rgba(16,185,129,0.18)",
+                fontWeight: 700,
+                fontSize: 18,
+                letterSpacing: 0.1,
+                cursor: "pointer",
+                minWidth: 0,
+                minHeight: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8
+              }}
+            >
+              <span style={{fontSize:22,marginRight:6}}>📝</span> Ajouter une note
+            </button>
+          )}
 
           {/* Modale de prise de note personnelle */}
           <NoteModal
@@ -2193,7 +2226,73 @@ export default function App() {
                 <h1 style={{ margin: 0, fontSize: layout.headerTitle, fontWeight: 800, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "0.05px", lineHeight: 1.05, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>🛠️ Le Manuel</h1>
               </div>
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <button onClick={() => askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
+                {isAuthenticated && !isMobile && (
+                  <>
+                    <button
+                      onClick={() => setShowNoteModal(true)}
+                      style={{
+                        marginLeft: 0,
+                        marginRight: 410,
+                        padding: "7px 14px",
+                        borderRadius: 18,
+                        background: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
+                        color: "white",
+                        border: "none",
+                        boxShadow: "0 2px 8px rgba(16,185,129,0.13)",
+                        fontWeight: 700,
+                        fontSize: 16,
+                        letterSpacing: 0.1,
+                        cursor: "pointer",
+                        minWidth: 36,
+                        minHeight: 36,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}
+                    >
+                      📝
+                    </button>
+                    <button
+                      onClick={() => setEditMode((e) => !e)}
+                      style={{
+                        marginLeft: 2,
+                        marginRight: 2,
+                        padding: layout.headerButtonPad,
+                        borderRadius: 10,
+                        background: editMode ? "linear-gradient(120deg, #10b981, #22d3ee)" : theme.panel,
+                        color: editMode ? "white" : theme.text,
+                        border: `1px solid ${theme.border}`,
+                        cursor: "pointer",
+                        fontWeight: 700,
+                        boxShadow: editMode ? "0 8px 20px rgba(16,185,129,0.35)" : "none",
+                      }}
+                    >
+                      ✏️
+                    </button>
+                  </>
+                )}
+                <button onClick={() => { if (isAuthenticated) { askConfirm("Retour à l'accueil ? Pense à sauvegarder avant de quitter.", handleLogout); } else { handleLogout(); } }} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🏠</button>
+                {isAuthenticated && isMobile && (
+                  <button
+                    onClick={() => setEditMode((e) => !e)}
+                    style={{
+                      padding: '2px 2px',
+                      minWidth: 15,
+                      minHeight: 15,
+                      borderRadius: 10,
+                      background: editMode ? "linear-gradient(120deg, #10b981, #22d3ee)" : theme.panel,
+                      color: editMode ? "white" : theme.text,
+                      border: `1px solid ${theme.border}`,
+                      cursor: "pointer",
+                      fontWeight: 700,
+                      boxShadow: editMode ? "0 8px 20px rgba(16,185,129,0.35)" : "none",
+                      marginLeft: 2,
+                      marginRight: 2,
+                    }}
+                  >
+                    ✏️
+                  </button>
+                )}
                 <button onClick={() => setShowGallery(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: showGallery ? "#23202d" : `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
                 <button onClick={() => setShowSearchModal(true)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}>🔍</button>
                 <button onClick={() => setDarkMode((d) => !d)} style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
