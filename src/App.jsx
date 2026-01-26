@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 // --- Prise de note personnelle ---
-function NoteModal({ open, onClose, sections, categories, onSave }) {
-  const [note, setNote] = useState("");
-  const [sectionId, setSectionId] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-
+function NoteModal({ open, onClose, sections, categories, onSave, defaultSectionId, defaultCategoryId, defaultNote }) {
+  const [note, setNote] = useState(defaultNote || "");
+  const [sectionId, setSectionId] = useState(defaultSectionId || "");
+  const [categoryId, setCategoryId] = useState(defaultCategoryId || "");
+  useEffect(() => { setNote(defaultNote || ""); }, [defaultNote, open]);
+  useEffect(() => { setSectionId(defaultSectionId || ""); }, [defaultSectionId, open]);
+  useEffect(() => { setCategoryId(defaultCategoryId || ""); }, [defaultCategoryId, open]);
   if (!open) return null;
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(20,22,34,0.45)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -28,6 +30,23 @@ function NoteModal({ open, onClose, sections, categories, onSave }) {
       </div>
     </div>
   );
+}
+// Gestion des notes locales par catégorie
+function getLocalNotes() {
+  try {
+    return JSON.parse(localStorage.getItem("localNotesByCategory") || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+function setLocalNote(categoryId, note) {
+  const notes = getLocalNotes();
+  if (note && note.trim()) {
+    notes[categoryId] = note;
+  } else {
+    delete notes[categoryId];
+  }
+  localStorage.setItem("localNotesByCategory", JSON.stringify(notes));
 }
 // --- State pour la modale de note ---
 // (À placer dans le composant App)
@@ -1439,6 +1458,19 @@ function Markdown({ content }) {
 export default function App() {
     // --- State pour la modale de note ---
     const [showNoteModal, setShowNoteModal] = useState(false);
+    const [noteModalDefaults, setNoteModalDefaults] = useState({ sectionId: "", categoryId: "", note: "" });
+    const [localNotes, setLocalNotes] = useState(() => getLocalNotes());
+      // Synchronise localNotes avec le localStorage à chaque ouverture de l'app
+      useEffect(() => {
+        setLocalNotes(getLocalNotes());
+      }, []);
+
+      // Fonction d'ouverture de la modale de note
+      function openNoteModal(sectionId = "", categoryId = "") {
+        let note = (categoryId && localNotes[categoryId]) || "";
+        setNoteModalDefaults({ sectionId, categoryId, note });
+        setShowNoteModal(true);
+      }
   const [data, setData] = useState(DEFAULT_DATA);
   const ydocRef = useRef(null);
   const yMapRef = useRef(null);
@@ -2217,7 +2249,16 @@ export default function App() {
             onClose={() => setShowNoteModal(false)}
             sections={data.sections}
             categories={data.categories}
-            onSave={() => setShowNoteModal(false)}
+            defaultSectionId={noteModalDefaults.sectionId}
+            defaultCategoryId={noteModalDefaults.categoryId}
+            defaultNote={noteModalDefaults.note}
+            onSave={({ note, sectionId, categoryId }) => {
+              setShowNoteModal(false);
+              if (categoryId) {
+                setLocalNote(categoryId, note);
+                setLocalNotes(getLocalNotes());
+              }
+            }}
           />
           <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: `${layout.headerPad/2}px ${layout.headerPad}px`, paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: layout.headerRowGap, marginBottom: 0 }}>
@@ -2316,8 +2357,11 @@ export default function App() {
               <div className="chips-scroll" style={{ marginTop: 0, marginBottom: 0, padding: `6px 0 8px 0`, display: "flex", gap: 10, flexWrap: "nowrap", overflowX: "auto", backgroundColor: theme.panel, borderBottom: `1px solid ${theme.border}` }}>
                 <button onClick={() => { setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === null ? theme.accent1 : theme.panel, color: selectedCategoryId === null ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>◆ Toutes</button>
                 {data.categories.filter(cat => cat.sectionId === selectedSectionId).map((cat) => (
-                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" }}>
+                  <button key={cat.id} onClick={() => { setSelectedCategoryId(cat.id); setSearch(""); }} style={{ padding: "4px 10px", borderRadius: 14, backgroundColor: selectedCategoryId === cat.id ? cat.color || theme.accent1 : theme.panel, color: selectedCategoryId === cat.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontSize: 11, whiteSpace: "nowrap", position: "relative" }}>
                     {cat.icon} {cat.name}
+                    {localNotes[cat.id] && (
+                      <span style={{ position: "absolute", top: 2, right: 2, fontSize: 13, color: "#10b981" }} title="Note personnelle">📝</span>
+                    )}
                   </button>
                 ))}
               </div>
