@@ -1056,7 +1056,17 @@ export default function App() {
 
       {accessMode !== "home" && (
       <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            position: "relative",
+            transition: "padding-left 0.3s cubic-bezier(.4,2,.6,1)",
+            paddingLeft: showSectionPanel && !isMobile ? layout.sideWidth : 0
+          }}
+        >
           {/* Bouton Ajouter une note désactivé temporairement */}
           {/* <button
             onClick={() => setShowNoteModal(true)}
@@ -1093,14 +1103,48 @@ export default function App() {
             categories={data.categories}
             onSave={() => setShowNoteModal(false)}
           /> */}
-          <header ref={headerRef} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 120, backgroundColor: theme.panel, backdropFilter: "none", padding: `${layout.headerPad/2}px ${layout.headerPad}px`, paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`, borderBottom: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
+          <header
+            ref={headerRef}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 120,
+              backgroundColor: theme.panel,
+              backdropFilter: "none",
+              padding: isMobile ? `${layout.headerPad/2 + 4}px 0 ${layout.headerPad/2 + 4}px 0` : `${layout.headerPad/2}px 20px`,
+              paddingLeft: !isMobile ? (showSectionPanel ? layout.sideWidth : 0) + 32 : 0,
+              minWidth: isMobile ? "100vw" : undefined,
+              width: isMobile ? "100vw" : undefined,
+              boxSizing: "border-box",
+              paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`,
+              borderBottom: `1px solid ${theme.border}`,
+              boxShadow: theme.shadow,
+              transition: "padding-left 0.7s cubic-bezier(.68,-0.6,0.32,1.6), box-shadow 0.55s cubic-bezier(.68,-0.6,0.32,1.6)",
+              boxShadow: showSectionPanel && !isMobile
+                ? "0 12px 40px 0 rgba(59,130,246,0.18), 0 2px 8px 0 #FFB36622"
+                : theme.shadow,
+              boxShadow: theme.shadow,
+              background: theme.panel,
+              // paddingLeft déjà géré ci-dessus, donc on retire cette ligne redondante
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: layout.headerRowGap, marginBottom: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: layout.headerRowGap, minWidth: 0 }}>
                 <button onClick={() => setShowSectionPanel(true)} style={{ padding: layout.headerButtonPad, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, fontSize: layout.headerIconSize, cursor: "pointer", flexShrink: 0 }}>☰</button>
                 {/* Bouton édition supprimé ici */}
                 <h1 style={{ margin: 0, fontSize: layout.headerTitle, fontWeight: 800, background: `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: "0.05px", lineHeight: 1.05, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>🛠️ Le Manuel</h1>
               </div>
-              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "center",
+                  marginLeft: 0,
+                  justifyContent: isMobile ? "space-between" : "flex-end"
+                }}
+              >
                 <button
                   onClick={() => {
                     if (isAuthenticated) {
