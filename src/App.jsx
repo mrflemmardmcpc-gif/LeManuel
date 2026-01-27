@@ -132,7 +132,7 @@ const sectionSwatches = [
     // Ajout de tous les useState manquants pour les variables d'ID utilisées dans le code
     const [editingCategoryId, setEditingCategoryId] = useState(null);
     const [editingSectionId, setEditingSectionId] = useState(null);
-    const [addingSubToCatId, setAddingSubToCatId] = useState(null);
+    // const [addingSubToCatId, setAddingSubToCatId] = useState(null); // Géré dans EditorPanel
     const [newImageCatId, setNewImageCatId] = useState(null);
     const [newImageSubId, setNewImageSubId] = useState(null);
     const [newImageDesc, setNewImageDesc] = useState("");
@@ -165,8 +165,8 @@ const sectionSwatches = [
   const [toast, setToast] = useState({ message: "" });
   const [isMobile, setIsMobile] = useState(false);
   const [newCatSection, setNewCatSection] = useState(null);
-  const [newSubTitle, setNewSubTitle] = useState("");
-  const [newSubText, setNewSubText] = useState("");
+  // const [newSubTitle, setNewSubTitle] = useState("");
+  // const [newSubText, setNewSubText] = useState("");
   const tableTemplates = useMemo(() => ([
     {
       key: "simple",
@@ -644,40 +644,7 @@ function Markdown({ content }) {
       });
     };
 
-    // Ajout d'un module (sous-catégorie)
-    const startAddingSub = (catId) => {
-      setAddingSubToCatId(catId);
-      setNewSubTitle("");
-      setNewSubText("");
-      setNewSubColor("#e6eef8");
-    };
-
-    const saveNewSub = () => {
-      if (!newSubTitle.trim()) {
-        setToast({ message: "Le titre du module est requis." });
-        return;
-      }
-      setData((d) => ({
-        ...d,
-        categories: d.categories.map((cat) =>
-          cat.id === addingSubToCatId
-            ? { ...cat, subs: [...cat.subs, { id: Date.now(), title: newSubTitle, text: newSubText, color: newSubColor }] }
-            : cat
-        ),
-      }));
-      setAddingSubToCatId(null);
-      setNewSubTitle("");
-      setNewSubText("");
-      setNewSubColor("#e6eef8");
-      setToast({ message: "Module ajouté !" });
-    };
-
-    const cancelAddingSub = () => {
-      setAddingSubToCatId(null);
-      setNewSubTitle("");
-      setNewSubText("");
-      setNewSubColor("#e6eef8");
-    };
+    // Ajout d'un module (sous-catégorie) : logiques déplacées dans EditorPanel
 
     // Handler for gallery image file input
     const onFileChange = async (e) => {
@@ -740,7 +707,7 @@ function Markdown({ content }) {
     if (!isAuthenticated) {
       setEditMode(false);
       setShowEditSectionsPanel(false);
-      setAddingSubToCatId(null);
+      // setAddingSubToCatId(null); // supprimé, géré dans EditorPanel
       setEditingSectionId(null);
       setEditingCategoryId(null);
       setEditingSubId(null);
@@ -1365,6 +1332,30 @@ function Markdown({ content }) {
                 addCategory={addCategory}
                 sections={data.sections}
                 theme={theme}
+                // Props pour édition de module
+                editingSubId={editingSubId}
+                editTitle={editTitle}
+                setEditTitle={setEditTitle}
+                editText={editText}
+                setEditText={setEditText}
+                editColor={editColor}
+                setEditColor={setEditColor}
+                saveEditSub={saveEditSub}
+                cancelEdit={cancelEdit}
+                selectionInfo={selectionInfo}
+                setSelectionInfo={setSelectionInfo}
+                applyFormatting={applyFormatting}
+                applyColorToSelection={applyColorToSelection}
+                tableMenuOpen={tableMenuOpen}
+                setTableMenuOpen={setTableMenuOpen}
+                tableTemplates={tableTemplates}
+                quickColors={quickColors}
+                selectionCustomColor={selectionCustomColor}
+                setSelectionCustomColor={setSelectionCustomColor}
+                darkMode={darkMode}
+                // Props pour ajout de module gérés dans EditorPanel
+                handleTextSelect={handleTextSelect}
+                insertTableTemplate={insertTableTemplate}
               />
 
               {filteredCategories.map((cat) => {
@@ -1553,84 +1544,7 @@ function Markdown({ content }) {
                           );
                         })}
 
-                        {editMode && (
-                          <div style={{ backgroundColor: theme.bg, padding: 16, borderRadius: 8, border: `2px dashed ${theme.border}` }}>
-                            {addingSubToCatId === cat.id ? (
-                              <div>
-                                <h4 style={{ marginTop: 0, color: "#10b981" }}>➕ Module</h4>
-                                <input placeholder="Titre" value={newSubTitle} onChange={(e) => setNewSubTitle(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, marginBottom: 10 }} />
-                                <textarea
-                                  placeholder="Saisis ou colle ton texte (markdown)"
-                                  value={newSubText}
-                                  onChange={(e) => setNewSubText(e.target.value)}
-                                  onSelect={(e) => handleTextSelect(e, "newSub")}
-                                  style={{
-                                    width: "100%",
-                                    minHeight: 160,
-                                    padding: 14,
-                                    borderRadius: 12,
-                                    border: `1px solid ${theme.accent1}`,
-                                    background: darkMode ? "linear-gradient(135deg, rgba(26,32,44,0.92), rgba(17,24,39,0.92))" : "linear-gradient(135deg, #f8fafc, #eef2ff)",
-                                    color: theme.text,
-                                    fontFamily: "'Inter', 'SFMono-Regular', monospace",
-                                    lineHeight: 1.6,
-                                    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-                                    marginBottom: 12,
-                                    borderColor: darkMode ? "rgba(255,179,102,0.45)" : "rgba(255,179,102,0.65)",
-                                  }}
-                                />
-
-                                {selectionInfo.text && selectionInfo.target === "newSub" && (
-                                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: 10, borderRadius: 10, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, marginBottom: 10 }}>
-                                    <span style={{ fontSize: 12, color: theme.subtext }}>{`"${selectionInfo.text}"`}</span>
-                                    <div style={{ display: "flex", gap: 6 }}>
-                                      <button onClick={() => applyFormatting("bold")}
-                                        style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, fontWeight: 800, cursor: "pointer", fontSize: 12 }}>G</button>
-                                      <button onClick={() => applyFormatting("italic")}
-                                        style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, fontStyle: "italic", cursor: "pointer", fontSize: 12 }}>I</button>
-                                      <button onClick={() => applyFormatting("underline")}
-                                        style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, textDecoration: "underline", cursor: "pointer", fontSize: 12 }}>U</button>
-                                      {[14, 16, 18, 20].map((s) => (
-                                        <button key={s} onClick={() => applyFormatting("size", s)} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", fontSize: 12 }}>{s}px</button>
-                                      ))}
-                                      <div style={{ position: "relative" }}>
-                                        <button onClick={() => setTableMenuOpen(tableMenuOpen === "newSub" ? null : "newSub")}
-                                          style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                                          📊
-                                          <span style={{ fontWeight: 700 }}>Table</span>
-                                        </button>
-                                        {tableMenuOpen === "newSub" && (
-                                          <div style={{ position: "absolute", top: "110%", left: 0, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 10, boxShadow: theme.shadow, padding: 8, minWidth: 180, zIndex: 50 }}>
-                                            {tableTemplates.map((tpl) => (
-                                              <button key={tpl.key} onClick={() => insertTableTemplate("newSub", tpl.text)} style={{ width: "100%", textAlign: "left", padding: 8, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", marginBottom: 6, fontSize: 12 }}>
-                                                <div style={{ fontWeight: 700 }}>{tpl.label}</div>
-                                                <div style={{ fontFamily: "monospace", fontSize: 11, opacity: 0.8 }}>{tpl.preview}</div>
-                                              </button>
-                                            ))}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                    {quickColors.map((c) => (
-                                      <button key={c} onClick={() => applyColorToSelection(c)} style={{ width: 24, height: 24, borderRadius: 6, border: `1px solid ${theme.border}`, backgroundColor: c, cursor: "pointer" }} />
-                                    ))}
-                                    <input type="color" value={selectionCustomColor} onChange={(e) => setSelectionCustomColor(e.target.value)} style={{ width: 32, height: 32, padding: 2, borderRadius: 8, border: `1px solid ${theme.border}`, cursor: "pointer" }} />
-                                    <button onClick={() => applyColorToSelection(selectionCustomColor)} style={{ padding: "6px 10px", borderRadius: 8, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer", fontSize: 12 }}>OK</button>
-                                    <button onClick={() => { setSelectionInfo({ text: "", start: 0, end: 0, target: null }); setTableMenuOpen(null); }} style={{ padding: "6px 8px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontSize: 12 }}>✖</button>
-                                  </div>
-                                )}
-                                
-                                <input type="color" value={newSubColor} onChange={(e) => setNewSubColor(e.target.value)} style={{ width: "100%", padding: 8, borderRadius: 8, border: `1px solid ${theme.border}`, cursor: "pointer", marginBottom: 10 }} />
-                                <div style={{ display: "flex", gap: 8 }}>
-                                  <button onClick={saveNewSub} style={{ padding: "10px 16px", borderRadius: 8, backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer" }}>✅</button>
-                                  <button onClick={cancelAddingSub} style={{ padding: "10px 16px", borderRadius: 8, backgroundColor: "#6b7280", color: "white", border: "none", cursor: "pointer" }}>❌</button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button onClick={() => startAddingSub(cat.id)} style={{ width: "100%", padding: "12px", borderRadius: 8, backgroundColor: "transparent", color: theme.text, border: "none", cursor: "pointer", fontWeight: "bold", fontSize: 16 }}>➕</button>
-                            )}
-                          </div>
-                        )}
+                        {/* Ajout module déplacé dans EditorPanel */}
                       </div>
                     )}
                   </div>
