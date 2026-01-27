@@ -1,46 +1,39 @@
-    // Sauvegarde une image dans la galerie (catégorie/module)
-    const saveImage = async () => {
-      if (!newImageCatId || !newImageSubId || !newImageUrl) {
-        setToast({ message: "Remplis tous les champs et choisis une image." });
-        return;
-      }
-      setGalleryUploadBusy(true);
-      try {
-        setData((d) => ({
-          ...d,
-          categories: d.categories.map((cat) =>
-            cat.id === newImageCatId
-              ? {
-                  ...cat,
-                  subs: cat.subs.map((sub) =>
-                    sub.id === newImageSubId
-                      ? {
-                          ...sub,
-                          images: [
-                            ...(Array.isArray(sub.images) ? sub.images : sub.images ? [sub.images] : []),
-                            { url: newImageUrl, desc: newImageDesc },
-                          ],
-                        }
-                      : sub
-                  ),
-                }
-              : cat
-          ),
-        }));
-        setNewImageUrl("");
-        setNewImageDesc("");
-        setNewImageCatId(null);
-        setNewImageSubId(null);
-        setIsAddingImage(false);
-        setToast({ message: "Image ajoutée !" });
-      } catch (err) {
-        setToast({ message: "Erreur lors de l'ajout de l'image." });
-      } finally {
-        setGalleryUploadBusy(false);
-      }
-    };
-
 import React, { useState, useEffect, useMemo, useRef } from "react";
+  // Fonction pour enregistrer une image dans la galerie
+  function saveImage() {
+    if (!newImageCatId || !newImageSubId || !newImageUrl) {
+      setToast({ message: "Sélectionne une catégorie, un module et une image." });
+      return;
+    }
+    setGalleryUploadBusy(true);
+    setTimeout(() => {
+      setData((d) => ({
+        ...d,
+        categories: d.categories.map((cat) =>
+          cat.id === newImageCatId
+            ? {
+                ...cat,
+                subs: cat.subs.map((sub) =>
+                  sub.id === newImageSubId
+                    ? {
+                        ...sub,
+                        images: [
+                          ...(Array.isArray(sub.images) ? sub.images : sub.image ? [sub.image] : []),
+                          { url: newImageUrl, desc: newImageDesc },
+                        ],
+                      }
+                    : sub
+                ),
+              }
+            : cat
+        ),
+      }));
+      setNewImageUrl("");
+      setNewImageDesc("");
+      setGalleryUploadBusy(false);
+      setToast({ message: "Image ajoutée !" });
+    }, 500);
+  }
 import LoginModal from "./modals/LoginModal";
 import ConfirmModal from "./modals/ConfirmModal";
 import SearchModal from "./modals/SearchModal";
@@ -51,7 +44,20 @@ import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import Gallery from "./components/Gallery";
 
+
+
+import EditorPanel from "./components/EditorPanel";
+
 export default function App() {
+    const [newCatTitle, setNewCatTitle] = useState("");
+    const [inlineImageTarget, setInlineImageTarget] = useState(null);
+    const [inlineImageUrl, setInlineImageUrl] = useState("");
+    const [inlineImageDesc, setInlineImageDesc] = useState("");
+    const [inlineImageLoading, setInlineImageLoading] = useState(false);
+    const [inlineUploadBusy, setInlineUploadBusy] = useState(false);
+    const [selectionInfo, setSelectionInfo] = useState({ text: "", start: 0, end: 0, target: null });
+    const [quickColors] = useState(["#f59e42", "#10b981", "#3b82f6", "#ef4444", "#eab308", "#6366f1", "#64748b"]);
+    const [selectionCustomColor, setSelectionCustomColor] = useState("#f59e42");
   // Détection du dark mode système par défaut
   const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -1456,47 +1462,15 @@ function Markdown({ content }) {
                   }}
                 >💾</button>
               )}
-              {editMode && (
-                <div style={{ background: `linear-gradient(135deg, ${theme.panel} 0%, ${theme.bg} 100%)`, padding: 20, borderRadius: 16, border: `1px solid ${theme.border}`, marginBottom: 20, boxShadow: theme.shadow }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800 }}>+</div>
-                    <div>
-                      <h3 style={{ margin: 0, color: theme.text, fontSize: 16 }}>Nouvelle catégorie</h3>
-                      <div style={{ fontSize: 12, color: theme.subtext }}>Titre, grande partie, emoji et couleur en un coup d'oeil.</div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1.5fr 0.7fr", gap: 10, marginBottom: 10 }}>
-                    <div>
-                      <label style={{ display: "block", fontSize: 12, color: theme.subtext, marginBottom: 4 }}>Titre</label>
-                      <input placeholder="Titre" value={newCatTitle} onChange={(e) => setNewCatTitle(e.target.value)} style={{ width: "100%", padding: 12, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }} />
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: 12, color: theme.subtext, marginBottom: 4 }}>Emoji</label>
-                      <input placeholder="🧭" value={newCatEmoji} onChange={(e) => setNewCatEmoji(e.target.value)} style={{ width: "100%", padding: 12, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }} />
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 10, marginBottom: 12 }}>
-                    <div>
-                      <label style={{ display: "block", fontSize: 12, color: theme.subtext, marginBottom: 4 }}>Grande partie</label>
-                      <select value={newCatSection || ""} onChange={(e) => setNewCatSection(Number(e.target.value))} style={{ width: "100%", padding: 12, borderRadius: 10, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text }}>
-                        <option value="">Choisir...</option>
-                        {data.sections.map(section => (<option key={section.id} value={section.id}>{section.emoji} {section.name}</option>))}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: 12, color: theme.subtext, marginBottom: 4 }}>Couleur</label>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <input type="color" value={newCatColor} onChange={(e) => setNewCatColor(e.target.value)} style={{ flex: "0 0 46px", height: 46, padding: 4, borderRadius: 10, border: `1px solid ${theme.border}`, cursor: "pointer" }} />
-                        <div style={{ flex: 1, height: 46, borderRadius: 10, background: newCatColor, border: `1px solid ${theme.border}` }} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <button onClick={addCategory} style={{ width: "100%", padding: 12, borderRadius: 12, backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer", fontWeight: 700, letterSpacing: 0.2 }}>Enregistrer la catégorie</button>
-                </div>
-              )}
+              {/* Bloc édition centralisé */}
+              <EditorPanel
+                editMode={editMode}
+                setEditMode={setEditMode}
+                isAuthenticated={isAuthenticated}
+                data={data}
+                setData={setData}
+                /* TODO: Passer les autres props nécessaires */
+              />
 
               {filteredCategories.map((cat) => {
                 const expanded = expandedCategories[cat.id] ?? true;
