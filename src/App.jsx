@@ -1,39 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-  // Fonction pour enregistrer une image dans la galerie
-  function saveImage() {
-    if (!newImageCatId || !newImageSubId || !newImageUrl) {
-      setToast({ message: "Sélectionne une catégorie, un module et une image." });
-      return;
-    }
-    setGalleryUploadBusy(true);
-    setTimeout(() => {
-      setData((d) => ({
-        ...d,
-        categories: d.categories.map((cat) =>
-          cat.id === newImageCatId
-            ? {
-                ...cat,
-                subs: cat.subs.map((sub) =>
-                  sub.id === newImageSubId
-                    ? {
-                        ...sub,
-                        images: [
-                          ...(Array.isArray(sub.images) ? sub.images : sub.image ? [sub.image] : []),
-                          { url: newImageUrl, desc: newImageDesc },
-                        ],
-                      }
-                    : sub
-                ),
-              }
-            : cat
-        ),
-      }));
-      setNewImageUrl("");
-      setNewImageDesc("");
-      setGalleryUploadBusy(false);
-      setToast({ message: "Image ajoutée !" });
-    }, 500);
-  }
+// ...existing code...
 import LoginModal from "./modals/LoginModal";
 import ConfirmModal from "./modals/ConfirmModal";
 import SearchModal from "./modals/SearchModal";
@@ -47,6 +13,42 @@ import Gallery from "./components/Gallery";
 
 
 import EditorPanel from "./components/EditorPanel";
+
+   // Fonction pour enregistrer une image dans la galerie (doit être après les hooks)
+    function saveImage() {
+      if (!newImageCatId || !newImageSubId || !newImageUrl) {
+        setToast({ message: "Sélectionne une catégorie, un module et une image." });
+        return;
+      }
+      setGalleryUploadBusy(true);
+      setTimeout(() => {
+        setData((d) => ({
+          ...d,
+          categories: d.categories.map((cat) =>
+            cat.id === newImageCatId
+              ? {
+                  ...cat,
+                  subs: cat.subs.map((sub) =>
+                    sub.id === newImageSubId
+                      ? {
+                          ...sub,
+                          images: [
+                            ...(Array.isArray(sub.images) ? sub.images : sub.image ? [sub.image] : []),
+                            { url: newImageUrl, desc: newImageDesc },
+                          ],
+                        }
+                      : sub
+                  ),
+                }
+              : cat
+          ),
+        }));
+        setNewImageUrl("");
+        setNewImageDesc("");
+        setGalleryUploadBusy(false);
+        setToast({ message: "Image ajoutée !" });
+      }, 500);
+    }
 
 export default function App() {
     const [newCatTitle, setNewCatTitle] = useState("");
@@ -1221,6 +1223,7 @@ function Markdown({ content }) {
             data={data}
             showGallery={showGallery}
             setShowGallery={setShowGallery}
+            onHomeClick={() => setAccessMode('home')}
           />
           <div
             style={{

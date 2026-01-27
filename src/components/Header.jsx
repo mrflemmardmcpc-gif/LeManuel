@@ -21,6 +21,7 @@ export default function Header({
   data,
   showGallery,
   setShowGallery,
+  onHomeClick,
 }) {
   return (
     <header
@@ -59,6 +60,11 @@ export default function Header({
             justifyContent: isMobile ? "space-between" : "flex-end"
           }}
         >
+          {/* Bouton accueil */}
+          <button
+            onClick={onHomeClick}
+            style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", flexShrink: 0 }}
+          >🏠</button>
           <button
             onClick={() => setShowGallery(true)}
             style={{ padding: isMobile && isAuthenticated ? '2px 2px' : isMobile ? '4px 7px' : layout.headerButtonPad, minWidth: isMobile && isAuthenticated ? 15 : undefined, minHeight: isMobile && isAuthenticated ? 15 : undefined, borderRadius: 10, backgroundColor: showGallery ? "#23202d" : `linear-gradient(135deg, ${theme.accent1} 0%, ${theme.accent2} 100%)`, color: "white", border: "none", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>📷</button>
