@@ -1350,13 +1350,24 @@ function Markdown({ content }) {
                 >💾</button>
               )}
               {/* Bloc édition centralisé */}
+
               <EditorPanel
                 editMode={editMode}
                 setEditMode={setEditMode}
                 isAuthenticated={isAuthenticated}
                 data={data}
                 setData={setData}
-                /* TODO: Passer les autres props nécessaires */
+                newCatTitle={newCatTitle}
+                setNewCatTitle={setNewCatTitle}
+                newCatEmoji={newCatEmoji}
+                setNewCatEmoji={setNewCatEmoji}
+                newCatColor={newCatColor}
+                setNewCatColor={setNewCatColor}
+                newCatSection={newCatSection}
+                setNewCatSection={setNewCatSection}
+                addCategory={addCategory}
+                sections={data.sections}
+                theme={theme}
               />
 
               {filteredCategories.map((cat) => {
