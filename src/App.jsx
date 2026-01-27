@@ -1,120 +1,248 @@
-// Drag & drop pour les sections (grandes parties) avec feedback visuel
-// Drag & drop pour les sections (grandes parties) avec feedback visuel et ligne d'insertion
-function SectionDraggable({ section, index, moveSection, draggingIndex, setDraggingIndex, insertPosition, setInsertPosition }) {
-  const ref = useRef(null);
-  const [isOver, setIsOver] = useState(false);
-  // Gestion souris
-  const onDragStart = (e) => {
-    setDraggingIndex(index);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", index);
-    if (e.dataTransfer.setDragImage) {
-      e.dataTransfer.setDragImage(ref.current, 0, 0);
-    }
-  };
-  const onDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    const bounds = ref.current.getBoundingClientRect();
-    const y = e.clientY - bounds.top;
-    // Si la souris est dans la moitié supérieure, on insère avant, sinon après
-    const pos = y < bounds.height / 2 ? index : index + 1;
-    setInsertPosition(pos);
-    setIsOver(true);
-  };
-  const onDragLeave = () => { setIsOver(false); setInsertPosition(null); };
-  const onDrop = (e) => {
-    e.preventDefault();
-    setIsOver(false);
-    const from = parseInt(e.dataTransfer.getData("text/plain"), 10);
-    if (insertPosition !== null && from !== insertPosition && from + 1 !== insertPosition) {
-      moveSection(from, insertPosition > from ? insertPosition - 1 : insertPosition);
-    }
-    setDraggingIndex(null);
-    setInsertPosition(null);
-  };
-  const onDragEnd = () => { setDraggingIndex(null); setIsOver(false); setInsertPosition(null); };
-  // Gestion tactile (mobile)
-  let touchStartY = null;
-  const onTouchStart = (e) => {
-    setDraggingIndex(index);
-    touchStartY = e.touches[0].clientY;
-  };
-  const onTouchMove = (e) => {
-    if (touchStartY === null) return;
-    const deltaY = e.touches[0].clientY - touchStartY;
-    if (Math.abs(deltaY) > 30) {
-      moveSection(index, deltaY > 0 ? index + 1 : index - 1);
-      touchStartY = e.touches[0].clientY;
-    }
-  };
-  const onTouchEnd = () => { setDraggingIndex(null); setIsOver(false); setInsertPosition(null); };
-  const isDragging = draggingIndex === index;
-  // Ligne d'insertion visuelle
-  const showInsertLine = insertPosition === index;
-  const showInsertLineAfter = insertPosition === index + 1;
-  return (
-    <div ref={ref}
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-      onDragEnd={onDragEnd}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-      style={{
-        opacity: isDragging ? 0.4 : 1,
-        cursor: "grab",
-        background: isDragging ? "linear-gradient(90deg,#3b82f6 0%,#10b981 100%)"
-          : isOver ? "rgba(59,130,246,0.12)" : undefined,
-        color: isDragging ? "white" : undefined,
-        boxShadow: isDragging ? "0 0 12px 2px #10b98155" : isOver ? "0 0 0 2px #3b82f6" : undefined,
-        zIndex: isDragging ? 10 : isOver ? 5 : 1,
-        position: 'relative',
-        transition: "background 0.2s, opacity 0.2s, color 0.2s, box-shadow 0.2s"
-      }}
-    >
-      {showInsertLine && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 0,
-          borderTop: '3px solid #10b981',
-          zIndex: 20
-        }} />
-      )}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderRadius: 8, backgroundColor: "inherit", color: "inherit", border: `1px solid #ccc`, position: 'relative' }}>
-        <span style={{ fontSize: 14, fontWeight: "500" }}>{section.emoji} {section.name}</span>
-        <span style={{ fontSize: 18, opacity: 0.5 }}>☰</span>
-      </div>
-      {showInsertLineAfter && (
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 0,
-          borderTop: '3px solid #10b981',
-          zIndex: 20
-        }} />
-      )}
-    </div>
-  );
-}
+
 import React, { useState, useEffect, useMemo, useRef } from "react";
 // import NoteModal from "./modals/NoteModal";
 import LoginModal from "./modals/LoginModal";
 import ConfirmModal from "./modals/ConfirmModal";
 import SearchModal from "./modals/SearchModal";
 import { sections, categories } from "./data.structure";
-// --- State pour la modale de note --- (désactivé temporairement)
-// (À placer dans le composant App)
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
+
+export default function App() {
+  // Détection du dark mode système par défaut
+  const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  // Initialisation de l'état d'accès et du dark mode
+  useEffect(() => {
+    setAccessMode((prev) => (prev === null ? "home" : prev));
+    setDarkMode(prefersDark);
+    // Écoute les changements de préférence système
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e) => setDarkMode(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+                                    // Références d'éléments potentiellement utilisées
+                                    const subRefs = useRef({});
+                                    const sectionRefs = useRef({});
+                                    const toastTimeoutRef = useRef(null);
+                                  const [showEditSectionsPanel, setShowEditSectionsPanel] = useState(false);
+                                // Objets ou états de gestion de modaux potentiellement utilisés
+                                const [confirmModal, setConfirmModal] = useState({ open: false, message: "", onConfirm: null });
+                                const [noteModal, setNoteModal] = useState({ open: false, note: null });
+                                const [tableModal, setTableModal] = useState({ open: false, table: null });
+                              // Champs d'authentification/admin potentiellement utilisés
+                              const [adminPassword, setAdminPassword] = useState("");
+                              const [adminPasswordInput, setAdminPasswordInput] = useState("");
+                              const [loginError, setLoginError] = useState("");
+                              const [confirmText, setConfirmText] = useState("");
+                            // États de modaux et d'UI potentiellement utilisés
+                            const [showLoginModal, setShowLoginModal] = useState(false);
+                            const [showConfirmModal, setShowConfirmModal] = useState(false);
+                            const [showNoteModal, setShowNoteModal] = useState(false);
+                            const [showTableModal, setShowTableModal] = useState(false);
+                            const [showLightbox, setShowLightbox] = useState(false);
+                            const [lightboxImage, setLightboxImage] = useState(null);
+                          // États d'UI ou d'édition potentiellement utilisés
+                          const [expandedCategories, setExpandedCategories] = useState({});
+                          const [isEditingCat, setIsEditingCat] = useState(false);
+                          const [isAddingImage, setIsAddingImage] = useState(false);
+                          const [isEditing, setIsEditing] = useState(false);
+                          const [editCatName, setEditCatName] = useState("");
+                          const [editCatEmoji, setEditCatEmoji] = useState("");
+                          const [editCatSection, setEditCatSection] = useState(null);
+                          const [editCatColor, setEditCatColor] = useState("");
+                          const [newCatName, setNewCatName] = useState("");
+                          const [newCatEmoji, setNewCatEmoji] = useState("");
+                          const [newCatColor, setNewCatColor] = useState("");
+                          const [newSubColor, setNewSubColor] = useState("");
+                          const [editTitle, setEditTitle] = useState("");
+                          const [editText, setEditText] = useState("");
+                          const [editColor, setEditColor] = useState("");
+                        const [editMode, setEditMode] = useState(false);
+                      const sectionScrollRef = useRef(null);
+                    const [showSearchModal, setShowSearchModal] = useState(false);
+                  const [showGallery, setShowGallery] = useState(false);
+                const [showSectionPanel, setShowSectionPanel] = useState(true);
+              const [accessMode, setAccessMode] = useState(null); // "visitor" | "admin" | "home" | null
+     const inlineFileInputRef = useRef(null);
+     const fileInputRef = useRef(null);
+                                      const [darkMode, setDarkMode] = useState(prefersDark);
+    const [imageDrawerOpen, setImageDrawerOpen] = useState(false);
+    // Ajout de tous les useState manquants pour les variables d'ID utilisées dans le code
+    const [editingCategoryId, setEditingCategoryId] = useState(null);
+    const [editingSectionId, setEditingSectionId] = useState(null);
+    const [addingSubToCatId, setAddingSubToCatId] = useState(null);
+    const [newImageCatId, setNewImageCatId] = useState(null);
+    const [editingSubId, setEditingSubId] = useState(null);
+  const [galleryFilterCatId, setGalleryFilterCatId] = useState(null);
+  const [galleryFilterSectionId, setGalleryFilterSectionId] = useState(null);
+  const [drawerSectionId, setDrawerSectionId] = useState(null);
+  const [drawerCategoryId, setDrawerCategoryId] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Tous les hooks doivent être déclarés ici, hors de tout objet/tableau/fonction !
+  const [expandedSections, setExpandedSections] = useState({});
+  const [data, setData] = useState({ sections, categories });
+  const [draggingIndex, setDraggingIndex] = useState(null);
+  const [insertPosition, setInsertPosition] = useState(null);
+  const ydocRef = useRef(null);
+  const yMapRef = useRef(null);
+  const isApplyingRemoteRef = useRef(false);
+  const [syncStatus, setSyncStatus] = useState("connecting");
+  const kvReadyRef = useRef(false);
+  const [kvStatus, setKvStatus] = useState("idle");
+  const [kvLastSaved, setKvLastSaved] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [kvErrorMsg, setKvErrorMsg] = useState("");
+  const [tableMenuOpen, setTableMenuOpen] = useState(null); // "editSub" | "newSub" | null
+  const [selectedSectionId, setSelectedSectionId] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [search, setSearch] = useState("");
+  const [toast, setToast] = useState({ message: "" });
+  const [isMobile, setIsMobile] = useState(false);
+  const [newCatSection, setNewCatSection] = useState(null);
+  const [newSubTitle, setNewSubTitle] = useState("");
+  const [newSubText, setNewSubText] = useState("");
+  const tableTemplates = useMemo(() => ([
+    {
+      key: "simple",
+      label: "Table simple",
+      preview: "2 x 2",
+      text: `| Colonne 1 | Colonne 2 |\n|---|---|\n| Valeur A | Valeur B |\n| Valeur C | Valeur D |`,
+    },
+    {
+      key: "specs",
+      label: "Specs produit",
+      preview: "Caract. / Valeur",
+      text: `| Caractéristique | Valeur |\n|---|---|\n| Modèle | \n| Puissance | \n| Débit | \n| Notes | `,
+    },
+    {
+      key: "checklist",
+      label: "Checklist",
+      preview: "OK / A faire",
+      text: `| Étape | Statut |\n|---|---|\n| Vérifier alimentation | ✅ |\n| Purge circuit | ⏳ |\n| Contrôle étanchéité | ⏳ |`,
+    },
+  ]), []);
+  function SectionDraggable({ section, index, moveSection, draggingIndex, setDraggingIndex, insertPosition, setInsertPosition }) {
+    const ref = useRef(null);
+    const [isOver, setIsOver] = useState(false);
+    // Gestion souris
+    const isDragging = draggingIndex === index;
+    // Ligne d'insertion visuelle
+    const showInsertLine = insertPosition === index;
+    const showInsertLineAfter = insertPosition === index + 1;
+
+    // Fonctions manquantes
+    const onDragStart = (e) => {
+      setDraggingIndex(index);
+        setData((d) => ({
+          ...d,
+          categories: d.categories.map((cat) =>
+            cat.id === editingCategoryId
+              ? { ...cat, name: editCatName, icon: editCatEmoji, sectionId: editCatSection, color: editCatColor }
+              : cat
+          ),
+        }));
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", index);
+      if (e.dataTransfer.setDragImage) {
+        e.dataTransfer.setDragImage(ref.current, 0, 0);
+      }
+    };
+    const onDragOver = (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const bounds = ref.current.getBoundingClientRect();
+      const y = e.clientY - bounds.top;
+      // Si la souris est dans la moitié supérieure, on insère avant, sinon après
+      const pos = y < bounds.height / 2 ? index : index + 1;
+      setInsertPosition(pos);
+      setIsOver(true);
+    };
+    const onDragLeave = () => { setIsOver(false); setInsertPosition(null); };
+    const onDrop = (e) => {
+      e.preventDefault();
+      setIsOver(false);
+      const from = parseInt(e.dataTransfer.getData("text/plain"), 10);
+      if (insertPosition !== null && from !== insertPosition && from + 1 !== insertPosition) {
+        moveSection(from, insertPosition > from ? insertPosition - 1 : insertPosition);
+      }
+      setDraggingIndex(null);
+      setInsertPosition(null);
+    };
+    const onDragEnd = () => { setDraggingIndex(null); setIsOver(false); setInsertPosition(null); };
+    // Gestion tactile (mobile)
+    let touchStartY = null;
+    const onTouchStart = (e) => {
+      setDraggingIndex(index);
+      touchStartY = e.touches[0].clientY;
+    };
+    const onTouchMove = (e) => {
+      if (touchStartY === null) return;
+      const deltaY = e.touches[0].clientY - touchStartY;
+      if (Math.abs(deltaY) > 30) {
+        moveSection(index, deltaY > 0 ? index + 1 : index - 1);
+        touchStartY = e.touches[0].clientY;
+      }
+    };
+    const onTouchEnd = () => { setDraggingIndex(null); setIsOver(false); setInsertPosition(null); };
+
+    return (
+      <div ref={ref}
+        draggable
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        onDragEnd={onDragEnd}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        style={{
+          opacity: isDragging ? 0.4 : 1,
+          cursor: "grab",
+          background: isDragging ? "linear-gradient(90deg,#3b82f6 0%,#10b981 100%)"
+            : isOver ? "rgba(59,130,246,0.12)" : undefined,
+          color: isDragging ? "white" : undefined,
+          boxShadow: isDragging ? "0 0 12px 2px #10b98155" : isOver ? "0 0 0 2px #3b82f6" : undefined,
+          zIndex: isDragging ? 10 : isOver ? 5 : 1,
+          position: 'relative',
+          transition: "background 0.2s, opacity 0.2s, color 0.2s, box-shadow 0.2s"
+        }}
+      >
+        {showInsertLine && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 0,
+            borderTop: '3px solid #10b981',
+            zIndex: 20
+          }} />
+        )}
+        <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", borderRadius: 8, backgroundColor: "inherit", color: "inherit", border: `1px solid #ccc`, position: 'relative' }}>
+          <span style={{ display: "inline-flex", flexDirection: "column", justifyContent: "center", alignItems: "center", marginRight: 8, cursor: "grab", userSelect: "none" }}>
+            <span style={{ width: 16, height: 2, background: '#888', borderRadius: 2, margin: "1px 0" }}></span>
+            <span style={{ width: 16, height: 2, background: '#888', borderRadius: 2, margin: "1px 0" }}></span>
+            <span style={{ width: 16, height: 2, background: '#888', borderRadius: 2, margin: "1px 0" }}></span>
+          </span>
+          <span style={{ fontSize: 14, fontWeight: "500" }}>{section.emoji} {section.name}</span>
+        </div>
+        {showInsertLineAfter && (
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 0,
+            borderTop: '3px solid #10b981',
+            zIndex: 20
+          }} />
+        )}
+      </div>
+    );
+  }
 
 // Utility to read file as Data URL
 function readFileAsDataURL(file) {
@@ -185,41 +313,7 @@ function Markdown({ content }) {
   return <div style={{ wordBreak: "break-word", whiteSpace: "pre-line", overflowWrap: "anywhere" }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-export default function App() {
-  // const [showNoteModal, setShowNoteModal] = useState(false); // Désactivé temporairement
-  const [data, setData] = useState({ sections, categories });
-  const [draggingIndex, setDraggingIndex] = useState(null);
-  const [insertPosition, setInsertPosition] = useState(null);
-  const ydocRef = useRef(null);
-  const yMapRef = useRef(null);
-  const isApplyingRemoteRef = useRef(false);
-  const [syncStatus, setSyncStatus] = useState("connecting");
-  const kvReadyRef = useRef(false);
-  const [kvStatus, setKvStatus] = useState("idle");
-  const [kvLastSaved, setKvLastSaved] = useState(null);
-  const [isDirty, setIsDirty] = useState(false);
-  const [kvErrorMsg, setKvErrorMsg] = useState("");
-  const [tableMenuOpen, setTableMenuOpen] = useState(null); // "editSub" | "newSub" | null
-  const tableTemplates = useMemo(() => ([
-    {
-      key: "simple",
-      label: "Table simple",
-      preview: "2 x 2",
-      text: `| Colonne 1 | Colonne 2 |\n|---|---|\n| Valeur A | Valeur B |\n| Valeur C | Valeur D |`,
-    },
-    {
-      key: "specs",
-      label: "Specs produit",
-      preview: "Caract. / Valeur",
-      text: `| Caractéristique | Valeur |\n|---|---|\n| Modèle | \n| Puissance | \n| Débit | \n| Notes | `,
-    },
-    {
-      key: "checklist",
-      label: "Checklist",
-      preview: "OK / A faire",
-      text: `| Étape | Statut |\n|---|---|\n| Vérifier alimentation | ✅ |\n| Purge circuit | ⏳ |\n| Contrôle étanchéité | ⏳ |`,
-    },
-  ]), []);
+
 
   // Branch data on a shared Y.js document so edits are synchronized in real time across devices.
   useEffect(() => {
@@ -333,74 +427,7 @@ export default function App() {
     setIsDirty(true);
   }, [data]);
 
-  const [search, setSearch] = useState("");
-  const [selectedSectionId, setSelectedSectionId] = useState(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [expandedCategories, setExpandedCategories] = useState({});
-  const [editMode, setEditMode] = useState(false);
-  const [editingSubId, setEditingSubId] = useState(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editText, setEditText] = useState("");
-  const [editColor, setEditColor] = useState("#e6eef8");
-  const [selectionInfo, setSelectionInfo] = useState({ text: "", start: 0, end: 0, target: null });
-  const [selectionCustomColor, setSelectionCustomColor] = useState("#3b82f6");
-  const quickColors = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#0ea5e9"];
-  const sectionSwatches = ["#0ea5e9", "#22d3ee", "#3b82f6", "#10b981", "#f97316", "#e11d48", "#a855f7", "#f59e0b", "#14b8a6", "#ef4444"];
-  const [newCatTitle, setNewCatTitle] = useState("");
-  const [newCatEmoji, setNewCatEmoji] = useState("📌");
-  const [newCatSection, setNewCatSection] = useState(null);
-  const [newSubTitle, setNewSubTitle] = useState("");
-  const [newSubText, setNewSubText] = useState("");
-  const [newSubColor, setNewSubColor] = useState("#e6eef8");
-  const [addingSubToCatId, setAddingSubToCatId] = useState(null);
-  const [darkMode, setDarkMode] = useState(true);
-  const [showGallery, setShowGallery] = useState(false);
-  const [galleryFilterCatId, setGalleryFilterCatId] = useState(null);
-  const [galleryFilterSectionId, setGalleryFilterSectionId] = useState(null);
-  const [isAddingImage, setIsAddingImage] = useState(false);
-  const [galleryUploadBusy, setGalleryUploadBusy] = useState(false);
-  const [newImageUrl, setNewImageUrl] = useState("");
-  const [newImageCatId, setNewImageCatId] = useState(null);
-  const [newImageSubId, setNewImageSubId] = useState(null);
-  const [newImageDesc, setNewImageDesc] = useState("");
-  const [imageDrawerOpen, setImageDrawerOpen] = useState(false);
-  const [lightboxImage, setLightboxImage] = useState(null);
-  const [drawerSectionId, setDrawerSectionId] = useState(null);
-  const [drawerCategoryId, setDrawerCategoryId] = useState(null);
-  const [inlineImageTarget, setInlineImageTarget] = useState(null);
-  const [inlineImageUrl, setInlineImageUrl] = useState("");
-  const [inlineImageDesc, setInlineImageDesc] = useState("");
-  const [inlineImageLoading, setInlineImageLoading] = useState(false);
-  const [inlineUploadBusy, setInlineUploadBusy] = useState(false);
-  const [showSectionPanel, setShowSectionPanel] = useState(false);
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  const [showEditSectionsPanel, setShowEditSectionsPanel] = useState(false);
-  const [editingSectionId, setEditingSectionId] = useState(null);
-  const [editSectionName, setEditSectionName] = useState("");
-  const [editSectionEmoji, setEditSectionEmoji] = useState("");
-  const [editSectionColor, setEditSectionColor] = useState("");
-  const [newSectionName, setNewSectionName] = useState("");
-  const [newSectionEmoji, setNewSectionEmoji] = useState("📌");
-  const [newSectionColor, setNewSectionColor] = useState("#3b82f6");
-  const [editingCategoryId, setEditingCategoryId] = useState(null);
-  const [editCatName, setEditCatName] = useState("");
-  const [editCatEmoji, setEditCatEmoji] = useState("");
-  const [editCatSection, setEditCatSection] = useState(null);
-  const [editCatColor, setEditCatColor] = useState("#ffffff");
-  const [newCatColor, setNewCatColor] = useState("#ffffff");
-  const [accessMode, setAccessMode] = useState("home");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [confirmModal, setConfirmModal] = useState({ open: false, message: "", onConfirm: null });
-  const [toast, setToast] = useState({ message: "" });
-  const [isMobile, setIsMobile] = useState(false);
-  const sectionScrollRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const inlineFileInputRef = useRef(null);
-  const subRefs = useRef({});
-  const toastTimeoutRef = useRef(null);
+  // ...garde ici les autres hooks d'état et refs UNIQUEMENT si pas déjà déclarés plus haut...
 
   // SECTION EDIT/DELETE HANDLERS
   const startEditSection = (section) => {
@@ -910,6 +937,7 @@ export default function App() {
     setAdminPassword("");
     setLoginError("");
     setShowEditSectionsPanel(false);
+    setShowSectionPanel(false); // Ferme la barre latérale
   };
 
   const handleOpenAdminLogin = () => {
@@ -929,6 +957,7 @@ export default function App() {
       setShowLoginModal(false);
       setAdminPassword("");
       setLoginError("");
+      setShowSectionPanel(false); // Ferme la barre latérale
     } else {
       setLoginError("Mot de passe incorrect");
     }
@@ -1120,12 +1149,10 @@ export default function App() {
               boxSizing: "border-box",
               paddingTop: `calc(${layout.headerPad/2}px + ${safeTopInset})`,
               borderBottom: `1px solid ${theme.border}`,
-              boxShadow: theme.shadow,
-              transition: "padding-left 0.7s cubic-bezier(.68,-0.6,0.32,1.6), box-shadow 0.55s cubic-bezier(.68,-0.6,0.32,1.6)",
               boxShadow: showSectionPanel && !isMobile
                 ? "0 12px 40px 0 rgba(59,130,246,0.18), 0 2px 8px 0 #FFB36622"
                 : theme.shadow,
-              boxShadow: theme.shadow,
+              transition: "padding-left 0.7s cubic-bezier(.68,-0.6,0.32,1.6), box-shadow 0.55s cubic-bezier(.68,-0.6,0.32,1.6)",
               background: theme.panel,
               // paddingLeft déjà géré ci-dessus, donc on retire cette ligne redondante
             }}
@@ -1303,8 +1330,8 @@ export default function App() {
                       </div>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {isAuthenticated ? (
-                          data.sections.map((section, idx) => (
+                        {data.sections.map((section, idx) => (
+                          isAuthenticated ? (
                             <SectionDraggable
                               key={section.id}
                               section={section}
@@ -1320,15 +1347,18 @@ export default function App() {
                               setDraggingIndex={setDraggingIndex}
                               insertPosition={insertPosition}
                               setInsertPosition={setInsertPosition}
+                              handleOnly={true}
                             />
-                          ))
-                        ) : (
-                          data.sections.map((section) => (
-                            <button key={section.id} onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }} style={{ padding: "12px 16px", borderRadius: 8, backgroundColor: selectedSectionId === section.id ? section.color : theme.bg, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", textAlign: "left", fontSize: 14, fontWeight: "500" }}>
+                          ) : (
+                            <button
+                              key={section.id}
+                              onClick={() => { setSelectedSectionId(section.id); setSelectedCategoryId(null); setSearch(""); }}
+                              style={{ flex: 1, padding: "12px 16px", borderRadius: 8, backgroundColor: selectedSectionId === section.id ? section.color : theme.bg, color: selectedSectionId === section.id ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", textAlign: "left", fontSize: 14, fontWeight: "500", display: "flex", alignItems: "center" }}
+                            >
                               {section.emoji} {section.name}
                             </button>
-                          ))
-                        )}
+                          )
+                        ))}
                       </div>
                     )}
                   </div>
