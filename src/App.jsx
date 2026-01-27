@@ -61,17 +61,14 @@ export default function App() {
     const [quickColors] = useState(["#f59e42", "#10b981", "#3b82f6", "#ef4444", "#eab308", "#6366f1", "#64748b"]);
     const [selectionCustomColor, setSelectionCustomColor] = useState("#f59e42");
   // Détection du dark mode système par défaut
-  const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  // Thème par défaut : foncé (même si le système est en clair)
+  const prefersDark = true;
 
   // Initialisation de l'état d'accès et du dark mode
   useEffect(() => {
     setAccessMode((prev) => (prev === null ? "home" : prev));
-    setDarkMode(prefersDark);
-    // Écoute les changements de préférence système
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e) => setDarkMode(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    setDarkMode(true); // Toujours démarrer en mode foncé
+    // Désactive l'écoute du système pour forcer le dark
   }, []);
                                     // Références d'éléments potentiellement utilisées
                                     const subRefs = useRef({});
