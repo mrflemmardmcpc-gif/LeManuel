@@ -13,6 +13,7 @@ import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import Image from "@tiptap/extension-image";
+import { FaBold, FaItalic, FaUnderline, FaHighlighter, FaListUl, FaListOl, FaHeading, FaParagraph, FaUndo, FaRedo, FaTable, FaPlus, FaTrash, FaImage, FaPalette, FaTextHeight } from 'react-icons/fa';
 
 // Ce composant centralisera tout le mode édition (catégorie, module, formattage, etc.)
 // Les props attendues sont à ajuster selon les besoins réels
@@ -743,7 +744,6 @@ function TiptapEditor({ value, onChange, darkMode, theme }) {
         style: `background: ${darkMode ? '#181c24' : '#f8fafc'}; color: ${darkMode ? '#f3f4f6' : '#181c24'}; border-radius: 12px; min-height: 180px; font-size: 1.05rem; border: 1.5px solid ${theme?.accent1 || '#f59e42'}`,
       },
       handlePaste(view, event, slice) {
-        // On traite le collage pour forcer le rendu ligne à ligne
         const text = event.clipboardData?.getData('text/plain');
         if (text) {
           const html = forceParagraphsHtml(text);
@@ -760,7 +760,7 @@ function TiptapEditor({ value, onChange, darkMode, theme }) {
   const didInit = useRef(false);
   useEffect(() => {
     if (editor && value && !didInit.current) {
-      let cleanHtml = forceParagraphsHtml(value);
+      let cleanHtml = isProbablyHtml(value) ? value : forceParagraphsHtml(value);
       editor.commands.setContent(cleanHtml, false);
       didInit.current = true;
     }
@@ -776,30 +776,70 @@ function TiptapEditor({ value, onChange, darkMode, theme }) {
 
 function TiptapMenuBar({ editor, theme }) {
   if (!editor) return null;
+  const fontSizes = [12, 14, 16, 18, 20, 24, 28, 32];
+  const colors = ['#000000', '#e11d48', '#f59e42', '#10b981', '#3b82f6', '#8b5cf6', '#fbbf24', '#f3f4f6', '#ffffff'];
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10, background: theme?.panel || "#23202d", borderRadius: 8, padding: 8, border: `1.5px solid ${theme?.accent1 || '#f59e42'}` }}>
-      <button onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} style={{ fontWeight: 700 }}>B</button>
-      <button onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} style={{ fontStyle: "italic" }}>I</button>
-      <button onClick={() => editor.chain().focus().toggleUnderline().run()} disabled={!editor.can().chain().focus().toggleUnderline().run()} style={{ textDecoration: "underline" }}>U</button>
-      <button onClick={() => editor.chain().focus().toggleHighlight().run()}>Surligner</button>
-      <input type="color" onChange={e => editor.chain().focus().setColor(e.target.value).run()} title="Couleur texte" style={{ width: 28, height: 28, border: 'none', background: 'none', cursor: 'pointer' }} />
-      <button onClick={() => editor.chain().focus().toggleBulletList().run()}>• Liste</button>
-      <button onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. Liste</button>
-      <button onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>Titre</button>
-      <button onClick={() => editor.chain().focus().setParagraph().run()}>Paragraphe</button>
-      <button onClick={() => editor.chain().focus().setHorizontalRule().run()}>HR</button>
-      <button onClick={() => editor.chain().focus().undo().run()}>↺</button>
-      <button onClick={() => editor.chain().focus().redo().run()}>↻</button>
-      <button onClick={() => {
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10, background: theme?.panel || '#23202d', borderRadius: 10, padding: 8, border: `1.5px solid ${theme?.accent1 || '#f59e42'}`, alignItems: 'center' }}>
+      <button title="Gras" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} style={toolBtnStyle}><FaBold /></button>
+      <button title="Italique" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} style={toolBtnStyle}><FaItalic /></button>
+      <button title="Souligné" onClick={() => editor.chain().focus().toggleUnderline().run()} disabled={!editor.can().chain().focus().toggleUnderline().run()} style={toolBtnStyle}><FaUnderline /></button>
+      <button title="Surligner" onClick={() => editor.chain().focus().toggleHighlight().run()} style={toolBtnStyle}><FaHighlighter /></button>
+      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
+      <div title="Couleur texte" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <FaPalette style={{ fontSize: 16, marginRight: 2 }} />
+        {colors.map(c => (
+          <button key={c} onClick={() => editor.chain().focus().setColor(c).run()} style={{ width: 18, height: 18, borderRadius: '50%', background: c, border: '1.5px solid #888', margin: 1, cursor: 'pointer' }} />
+        ))}
+        <input type="color" onChange={e => editor.chain().focus().setColor(e.target.value).run()} title="Autre couleur" style={{ width: 22, height: 22, border: 'none', background: 'none', cursor: 'pointer', marginLeft: 2 }} />
+      </div>
+      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
+      <div title="Taille texte" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <FaTextHeight style={{ fontSize: 16, marginRight: 2 }} />
+        <select onChange={e => editor.chain().focus().setMark('textStyle', { fontSize: e.target.value + 'px' }).run()} defaultValue="" style={{ borderRadius: 6, padding: '2px 6px', fontSize: 13, marginLeft: 2 }}>
+          <option value="">Taille</option>
+          {fontSizes.map(s => <option key={s} value={s}>{s}px</option>)}
+        </select>
+      </div>
+      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
+      <button title="Liste à puces" onClick={() => editor.chain().focus().toggleBulletList().run()} style={toolBtnStyle}><FaListUl /></button>
+      <button title="Liste numérotée" onClick={() => editor.chain().focus().toggleOrderedList().run()} style={toolBtnStyle}><FaListOl /></button>
+      <button title="Titre" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} style={toolBtnStyle}><FaHeading /></button>
+      <button title="Paragraphe" onClick={() => editor.chain().focus().setParagraph().run()} style={toolBtnStyle}><FaParagraph /></button>
+      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
+      <button title="HR" onClick={() => editor.chain().focus().setHorizontalRule().run()} style={toolBtnStyle}>HR</button>
+      <button title="Annuler" onClick={() => editor.chain().focus().undo().run()} style={toolBtnStyle}><FaUndo /></button>
+      <button title="Rétablir" onClick={() => editor.chain().focus().redo().run()} style={toolBtnStyle}><FaRedo /></button>
+      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
+      <button title="Image" onClick={() => {
         const url = window.prompt('URL de l\'image');
         if (url) editor.chain().focus().setImage({ src: url }).run();
-      }}>🖼️</button>
-      <button onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>Tableau</button>
-      <button onClick={() => editor.chain().focus().addColumnAfter().run()}>+Col</button>
-      <button onClick={() => editor.chain().focus().addRowAfter().run()}>+Ligne</button>
-      <button onClick={() => editor.chain().focus().deleteTable().run()}>Suppr Table</button>
+      }} style={toolBtnStyle}><FaImage /></button>
+      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
+      <button title="Tableau" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} style={toolBtnStyle}><FaTable /></button>
+      <button title="+Colonne" onClick={() => editor.chain().focus().addColumnAfter().run()} style={toolBtnStyle}><FaPlus style={{ fontSize: 12 }} />Col</button>
+      <button title="+Ligne" onClick={() => editor.chain().focus().addRowAfter().run()} style={toolBtnStyle}><FaPlus style={{ fontSize: 12 }} />Ligne</button>
+      <button title="Supprimer Table" onClick={() => editor.chain().focus().deleteTable().run()} style={toolBtnStyle}><FaTrash /></button>
     </div>
   );
+}
+
+const toolBtnStyle = {
+  padding: '4px 7px',
+  borderRadius: 7,
+  border: 'none',
+  background: '#181c24',
+  color: '#f3f4f6',
+  fontSize: 15,
+  cursor: 'pointer',
+  margin: '0 1px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 2,
+  minWidth: 0,
+};
+
+function isProbablyHtml(str) {
+  return /<\s*(p|ul|ol|li|table|tr|td|th|h[1-6]|img|br)[^>]*>/i.test(str);
 }
 
 function forceParagraphsHtml(html) {
