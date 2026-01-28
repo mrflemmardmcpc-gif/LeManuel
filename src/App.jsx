@@ -1,7 +1,12 @@
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import imageCompression from 'browser-image-compression';
+import "./AppTiptap.css";
+import StaffPanelPage from "./StaffPanelPage";
+import StaffLoginModal from "./modals/StaffLoginModal.jsx";
+import StaffQRModal from "./modals/StaffQRModal.jsx";
 // Détection du thème sombre du système pour initialiser darkMode
 const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import "./AppTiptap.css";
+
 // ...existing code...
 import LoginModal from "./modals/LoginModal";
 import ConfirmModal from "./modals/ConfirmModal";
@@ -20,34 +25,54 @@ import Gallery from "./components/Gallery";
 import EditorPanel from "./components/EditorPanel";
 import TiptapViewer from "./components/TiptapViewer";
 
+
 export default function App() {
-            // Couleur personnalisée pour la sélection de texte
-            const [selectionCustomColor, setSelectionCustomColor] = useState("#3b82f6");
-          // Palette de couleurs rapides pour la mise en forme
-          const quickColors = [
-            "#f43f5e", // rouge
-            "#f59e42", // orange
-            "#eab308", // jaune
-            "#10b981", // vert
-            "#3b82f6", // bleu
-            "#6366f1", // violet
-            "#334155", // gris foncé
-            "#64748b", // gris
-            "#e5e7eb"  // gris clair
-          ];
-        // Hooks pour la gestion des images inline
-        const [inlineImageTarget, setInlineImageTarget] = useState(null);
-        const [inlineImageUrl, setInlineImageUrl] = useState("");
-        const [inlineImageDesc, setInlineImageDesc] = useState("");
-        const [inlineImageLoading, setInlineImageLoading] = useState(false);
-        const [inlineUploadBusy, setInlineUploadBusy] = useState(false);
-      // État pour la gestion de la sélection de texte (mise en forme, couleur, etc.)
-      const [selectionInfo, setSelectionInfo] = useState({ text: "", start: 0, end: 0, target: null });
-    // États pour la création d'une nouvelle catégorie
-    const [newCatTitle, setNewCatTitle] = useState("");
-    const [newCatEmoji, setNewCatEmoji] = useState("");
-    const [newCatColor, setNewCatColor] = useState("#ffffff");
-    const [newCatSection, setNewCatSection] = useState(null);
+  const [showQR, setShowQR] = useState(false);
+  const [showStaffLogin, setShowStaffLogin] = useState(false);
+  const [pendingStaffPanel, setPendingStaffPanel] = useState(false);
+  const [staffUser, setStaffUser] = useState(null);
+  // État pour le mode développeur caché
+  const [showDevMode, setShowDevMode] = useState(false);
+
+  // Handler pour le scroll sur le bouton dark mode
+  const handleDarkModeWheel = (e) => {
+    if (e.deltaY > 0) { // scroll vers le bas
+      setTimeout(() => {
+        const pwd = window.prompt("Mot de passe staff ?");
+        if (pwd === "DEV2026") {
+          setShowDevMode(true);
+        }
+      }, 100);
+    }
+  };
+
+  // Couleur personnalisée pour la sélection de texte
+  const [selectionCustomColor, setSelectionCustomColor] = useState("#3b82f6");
+  // Palette de couleurs rapides pour la mise en forme
+  const quickColors = [
+    "#f43f5e", // rouge
+    "#f59e42", // orange
+    "#eab308", // jaune
+    "#10b981", // vert
+    "#3b82f6", // bleu
+    "#6366f1", // violet
+    "#334155", // gris foncé
+    "#64748b", // gris
+    "#e5e7eb"  // gris clair
+  ];
+  // Hooks pour la gestion des images inline
+  const [inlineImageTarget, setInlineImageTarget] = useState(null);
+  const [inlineImageUrl, setInlineImageUrl] = useState("");
+  const [inlineImageDesc, setInlineImageDesc] = useState("");
+  const [inlineImageLoading, setInlineImageLoading] = useState(false);
+  const [inlineUploadBusy, setInlineUploadBusy] = useState(false);
+  // État pour la gestion de la sélection de texte (mise en forme, couleur, etc.)
+  const [selectionInfo, setSelectionInfo] = useState({ text: "", start: 0, end: 0, target: null });
+  // États pour la création d'une nouvelle catégorie
+  const [newCatTitle, setNewCatTitle] = useState("");
+  const [newCatEmoji, setNewCatEmoji] = useState("");
+  const [newCatColor, setNewCatColor] = useState("#ffffff");
+  const [newCatSection, setNewCatSection] = useState(null);
   // Enregistre une image dans la galerie (catégorie et sous-catégorie)
   const saveImage = () => {
     if (!newImageUrl) {
@@ -703,6 +728,7 @@ function Markdown({ content }) {
     // Ajout d'un module (sous-catégorie) : logiques déplacées dans EditorPanel
 
     // Handler for gallery image file input
+    // Nouvelle fonction d'upload : compression + upload ImgBB
     const onFileChange = async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
@@ -710,16 +736,31 @@ function Markdown({ content }) {
         setToast({ message: "Le fichier doit être une image." });
         return;
       }
-      if (file.size > 500 * 1024) {
-        setToast({ message: "Image trop lourde (>500KB)" });
-        return;
-      }
       try {
         setGalleryUploadBusy(true);
-        const dataUrl = await readFileAsDataURL(file);
-        setNewImageUrl(dataUrl);
+        // Compression
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        };
+        const compressedFile = await imageCompression(file, options);
+        // Upload ImgBB
+        const apiKey = "e6becf18c2ca24aef7f37411409d42ac";
+        const formData = new FormData();
+        formData.append("image", compressedFile);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.success) {
+          setNewImageUrl(data.data.url); // URL publique ImgBB
+        } else {
+          setToast({ message: "Erreur upload ImgBB" });
+        }
       } catch (err) {
-        setToast({ message: "Erreur lors de la lecture du fichier." });
+        setToast({ message: "Erreur upload image : " + err.message });
       } finally {
         setGalleryUploadBusy(false);
       }
@@ -1166,9 +1207,52 @@ function Markdown({ content }) {
           <div style={{ maxWidth: 760, width: "100%", padding: layout.homeCardPad, borderRadius: 16, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, boxShadow: theme.shadow, display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
               <h1 style={{ margin: 0, fontSize: 28, fontWeight: "bold", color: theme.accent1 }}>Choisis un mode</h1>
-              <button onClick={() => setDarkMode((d) => !d)} style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <button
+                onClick={() => setDarkMode((d) => !d)}
+                onWheel={(e) => {
+                  e.preventDefault();
+                  handleDarkModeWheel(e);
+                }}
+                draggable
+                onDragStart={e => {
+                  e.dataTransfer.setData("text/plain", "darkmode");
+                  e.dataTransfer.effectAllowed = "none";
+                  if (e.dataTransfer.setDragImage) {
+                    const img = document.createElement('img');
+                    img.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+                    img.width = img.height = 0;
+                    e.dataTransfer.setDragImage(img, 0, 0);
+                  }
+                  e.currentTarget._dragStartY = e.clientY;
+                }}
+                onDragEnd={e => {
+                  const startY = e.currentTarget._dragStartY;
+                  if (typeof startY === "number" && e.clientY - startY > 300) {
+                    setTimeout(() => {
+                      setShowStaffLogin(true);
+                      setPendingStaffPanel(true);
+                    }, 100);
+                  }
+                  e.currentTarget._dragStartY = undefined;
+                }}
+                style={{ padding: "10px 16px", borderRadius: 12, backgroundColor: theme.panel, color: theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, userSelect: "none" }}
+              >
                 {darkMode ? <Emoji symbol="☀️" label="Mode clair" size={18} /> : <Emoji symbol="🌙" label="Mode sombre" size={18} />}
               </button>
+              {/* Modale de connexion staff */}
+              <StaffLoginModal
+                open={showStaffLogin}
+                onClose={() => { setShowStaffLogin(false); setPendingStaffPanel(false); }}
+                onSuccess={({ prenom, code, mdp }) => {
+                  setShowStaffLogin(false);
+                  setPendingStaffPanel(false);
+                  setStaffUser({ prenom });
+                  setShowDevMode(true);
+                }}
+              />
+              {/* Affichage du staff panel sur une page dédiée */}
+              {showDevMode && <StaffPanelPage onClose={() => { setShowDevMode(false); setStaffUser(null); }} />}
+
             </div>
             <p style={{ margin: 0, color: theme.subtext, lineHeight: 1.6 }}>Visiteur : consultation uniquement. Admin : accès aux boutons d'édition (mot de passe requis).</p>
             <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fit, minmax(${layout.homeGridMin}px, 1fr))`, gap: layout.homeGridGap }}>
