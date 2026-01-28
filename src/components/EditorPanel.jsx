@@ -1,3 +1,4 @@
+import TableHeader from "@tiptap/extension-table-header";
 import React, { useEffect, useRef, useState } from "react";
 import "../AppTiptap.css";
 
@@ -16,8 +17,56 @@ import TextStyle from "@tiptap/extension-text-style";
 import Highlight from "@tiptap/extension-highlight";
 import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
+
 import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
+
+
+const CustomTableCell = TableCell.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      style: {
+        default: null,
+        parseHTML: element => element.getAttribute('style') || null,
+        renderHTML: attributes => ({}), // handled below
+      },
+      'data-ttcolor': {
+        default: null,
+        parseHTML: element => element.getAttribute('data-ttcolor') || null,
+        renderHTML: attributes => ({}), // handled below
+      },
+    };
+  },
+  renderHTML({ HTMLAttributes }) {
+    // Fusionne tous les attributs, y compris style/data-ttcolor/colspan/rowspan
+    const attrs = { ...HTMLAttributes };
+    return ['td', attrs, 0];
+  },
+});
+
+const CustomTableHeader = TableHeader.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      style: {
+        default: null,
+        parseHTML: element => element.getAttribute('style') || null,
+        renderHTML: attributes => ({}), // handled below
+      },
+      'data-ttcolor': {
+        default: null,
+        parseHTML: element => element.getAttribute('data-ttcolor') || null,
+        renderHTML: attributes => ({}), // handled below
+      },
+    };
+  },
+  renderHTML({ HTMLAttributes }) {
+    const attrs = { ...HTMLAttributes };
+    return ['th', attrs, 0];
+  },
+});
+
+
 import Image from "@tiptap/extension-image";
 import { FaBold, FaItalic, FaUnderline, FaHighlighter, FaListUl, FaListOl, FaHeading, FaParagraph, FaUndo, FaRedo, FaTable, FaPlus, FaTrash, FaImage, FaPalette, FaTextHeight } from 'react-icons/fa';
 
@@ -753,8 +802,8 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
       Highlight,
       Table.configure({ resizable: true }),
       TableRow,
-      TableHeader,
-      TableCell,
+      CustomTableHeader,
+      CustomTableCell,
       Image,
     ],
     content: '',
@@ -890,10 +939,91 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
     }
   }, [value, editor]);
 
+  // Menu contextuel pour cellule de tableau
+  const contextMenuRef = useRef();
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, cellPos: null });
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (contextMenu.visible && contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
+        setContextMenu({ ...contextMenu, visible: false });
+      }
+    };
+    window.addEventListener('mousedown', handler);
+    return () => window.removeEventListener('mousedown', handler);
+  }, [contextMenu]);
+
+  function handleContextMenu(event) {
+    if (!editor) return;
+    const pos = editor.view.posAtCoords({ left: event.clientX, top: event.clientY });
+    if (!pos) return;
+    let found = false;
+    let cellNodePos = null;
+    editor.state.doc.nodesBetween(pos.pos, pos.pos, (node, nodePos) => {
+      if ((node.type.name === 'tableCell' || node.type.name === 'tableHeader') && !found) {
+        cellNodePos = nodePos;
+        found = true;
+      }
+      // Si on clique sur le tableau mais pas sur une cellule, on prend la première cellule de la ligne
+      if (node.type.name === 'tableRow' && !found) {
+        if (node.childCount > 0) {
+          cellNodePos = nodePos + 1; // premier enfant
+          found = true;
+        }
+      }
+    });
+    if (found && cellNodePos != null) {
+      setContextMenu({ visible: true, x: event.clientX, y: event.clientY, cellPos: cellNodePos });
+      event.preventDefault();
+    }
+  }
+
+  function handleDeleteCell() {
+    if (!editor || contextMenu.cellPos == null) return;
+    const { state } = editor;
+    let tr = state.tr;
+    const node = state.doc.nodeAt(contextMenu.cellPos);
+    if (node && (node.type.name === 'tableCell' || node.type.name === 'tableHeader')) {
+      tr = tr.replaceWith(contextMenu.cellPos, contextMenu.cellPos + node.nodeSize, state.schema.nodes.tableCell.createAndFill());
+      if (tr.docChanged) editor.view.dispatch(tr);
+    }
+    setContextMenu({ ...contextMenu, visible: false });
+  }
+
+  function handleColorCell(color) {
+    if (!editor || contextMenu.cellPos == null) return;
+    const { state } = editor;
+    let tr = state.tr;
+    const node = state.doc.nodeAt(contextMenu.cellPos);
+    if (node && (node.type.name === 'tableCell' || node.type.name === 'tableHeader')) {
+      tr = tr.setNodeMarkup(
+        contextMenu.cellPos,
+        undefined,
+        { ...node.attrs, ['data-ttcolor']: color, style: `background:${color};${node.attrs.style||''}` }
+      );
+      if (tr.docChanged) editor.view.dispatch(tr);
+    }
+    setContextMenu({ ...contextMenu, visible: false });
+  }
+
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
       <TiptapMenuBar editor={editor} theme={theme} />
-      <EditorContent editor={editor} />
+      <div onContextMenu={handleContextMenu} style={{ minHeight: 180 }}>
+        <EditorContent editor={editor} />
+      </div>
+      {contextMenu.visible && (
+        <div ref={contextMenuRef} style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 9999, background: '#23202d', color: '#fff', borderRadius: 8, boxShadow: '0 2px 12px rgba(0,0,0,0.18)', padding: 8, minWidth: 120 }}>
+          <div style={{ padding: 8, cursor: 'pointer' }} onClick={handleDeleteCell}>Supprimer la cellule</div>
+          <div style={{ padding: 8, fontWeight: 600 }}>Couleur de la cellule :</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '0 8px 8px 8px' }}>
+            {["#f59e42", "#10b981", "#3b82f6", "#e11d48", "#fbbf24", "#23202d", "#fff"].map(c => (
+              <button key={c} onClick={() => handleColorCell(c)} style={{ width: 22, height: 22, borderRadius: 5, border: '1.5px solid #888', background: c, cursor: 'pointer' }} />
+            ))}
+            <input type="color" onChange={e => handleColorCell(e.target.value)} style={{ width: 26, height: 26, border: 'none', background: 'none', cursor: 'pointer' }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -903,63 +1033,54 @@ function TiptapMenuBar({ editor, theme }) {
   const fontSizes = [12, 14, 16, 18, 20, 24, 28, 32];
   const colors = ['#000000', '#e11d48', '#f59e42', '#10b981', '#3b82f6', '#8b5cf6', '#fbbf24', '#f3f4f6', '#ffffff'];
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10, background: theme?.panel || '#23202d', borderRadius: 10, padding: 8, border: `1.5px solid ${theme?.accent1 || '#f59e42'}`, alignItems: 'center' }}>
+    <div style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 14,
+      marginBottom: 18,
+      background: theme?.panel || '#23202d',
+      borderRadius: 14,
+      padding: '14px 18px',
+      border: `2.5px solid ${theme?.accent1 || '#f59e42'}`,
+      alignItems: 'center',
+      boxShadow: '0 4px 18px rgba(0,0,0,0.10)',
+      fontSize: 18,
+    }}>
       <button title="Gras" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} style={toolBtnStyle}><FaBold /></button>
       <button title="Italique" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} style={toolBtnStyle}><FaItalic /></button>
       <button title="Souligné" onClick={() => editor.chain().focus().toggleUnderline().run()} disabled={!editor.can().chain().focus().toggleUnderline().run()} style={toolBtnStyle}><FaUnderline /></button>
       <button title="Surligner" onClick={() => editor.chain().focus().toggleHighlight().run()} style={toolBtnStyle}><FaHighlighter /></button>
-      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
-      <div title="Couleur texte" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <FaPalette style={{ fontSize: 16, marginRight: 2 }} />
+      <div title="Couleur texte" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
+        <FaPalette style={{ fontSize: 18, marginRight: 2 }} />
         {colors.map(c => (
-          <button key={c} onClick={() => editor.chain().focus().setColor(c).run()} style={{ width: 18, height: 18, borderRadius: '50%', background: c, border: '1.5px solid #888', margin: 1, cursor: 'pointer' }} />
+          <button key={c} onClick={() => editor.chain().focus().setColor(c).run()} style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: '1.5px solid #888', margin: 1, cursor: 'pointer' }} />
         ))}
-        <input type="color" onChange={e => editor.chain().focus().setColor(e.target.value).run()} title="Autre couleur" style={{ width: 22, height: 22, border: 'none', background: 'none', cursor: 'pointer', marginLeft: 2 }} />
+        <input type="color" onChange={e => editor.chain().focus().setColor(e.target.value).run()} title="Autre couleur" style={{ width: 28, height: 28, border: 'none', background: 'none', cursor: 'pointer', marginLeft: 2 }} />
       </div>
-      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
-      <div title="Taille texte" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <FaTextHeight style={{ fontSize: 16, marginRight: 2 }} />
-        <select onChange={e => editor.chain().focus().setMark('textStyle', { fontSize: e.target.value + 'px' }).run()} defaultValue="" style={{ borderRadius: 6, padding: '2px 6px', fontSize: 13, marginLeft: 2 }}>
+      <div title="Taille texte" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
+        <FaTextHeight style={{ fontSize: 18, marginRight: 2 }} />
+        <select value={editor.getAttributes('textStyle').fontSize?.replace('px','') || ''} onChange={e => editor.chain().focus().setMark('textStyle', { fontSize: e.target.value + 'px' }).run()} style={{ borderRadius: 8, padding: '4px 10px', fontSize: 16, marginLeft: 2 }}>
           <option value="">Taille</option>
           {fontSizes.map(s => <option key={s} value={s}>{s}px</option>)}
         </select>
       </div>
-      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
       <button title="Liste à puces" onClick={() => editor.chain().focus().toggleBulletList().run()} style={toolBtnStyle}><FaListUl /></button>
       <button title="Liste numérotée" onClick={() => editor.chain().focus().toggleOrderedList().run()} style={toolBtnStyle}><FaListOl /></button>
       <button title="Titre" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} style={toolBtnStyle}><FaHeading /></button>
       <button title="Paragraphe" onClick={() => editor.chain().focus().setParagraph().run()} style={toolBtnStyle}><FaParagraph /></button>
-      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
       <button title="HR" onClick={() => editor.chain().focus().setHorizontalRule().run()} style={toolBtnStyle}>HR</button>
       <button title="Annuler" onClick={() => editor.chain().focus().undo().run()} style={toolBtnStyle}><FaUndo /></button>
       <button title="Rétablir" onClick={() => editor.chain().focus().redo().run()} style={toolBtnStyle}><FaRedo /></button>
-      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
       <button title="Image" onClick={() => {
         const url = window.prompt('URL de l\'image');
         if (url) editor.chain().focus().setImage({ src: url }).run();
       }} style={toolBtnStyle}><FaImage /></button>
-      <span style={{ width: 1, height: 24, background: '#888', margin: '0 6px' }} />
       <button title="Tableau" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} style={toolBtnStyle}><FaTable /></button>
-      <button title="+Colonne" onClick={() => editor.chain().focus().addColumnAfter().run()} style={toolBtnStyle}><FaPlus style={{ fontSize: 12 }} />Col</button>
-      <button title="+Ligne" onClick={() => editor.chain().focus().addRowAfter().run()} style={toolBtnStyle}><FaPlus style={{ fontSize: 12 }} />Ligne</button>
+      <button title="+Colonne" onClick={() => editor.chain().focus().addColumnAfter().run()} style={toolBtnStyle}><FaPlus style={{ fontSize: 14 }} />Col</button>
+      <button title="+Ligne" onClick={() => editor.chain().focus().addRowAfter().run()} style={toolBtnStyle}><FaPlus style={{ fontSize: 14 }} />Ligne</button>
       <button title="Supprimer Table" onClick={() => editor.chain().focus().deleteTable().run()} style={toolBtnStyle}><FaTrash /></button>
       <button title="Supprimer colonne" onClick={() => editor.chain().focus().deleteColumn().run()} style={toolBtnStyle}>-Col</button>
       <button title="Supprimer ligne" onClick={() => editor.chain().focus().deleteRow().run()} style={toolBtnStyle}>-Ligne</button>
-      <button title="Couleur fond tableau" onClick={() => {
-        const color = window.prompt('Couleur de fond du tableau (ex: #10b981 ou red)');
-        if (color) {
-          // Applique la couleur sur le tableau sélectionné
-          const { state, view } = editor;
-          const { selection } = state;
-          let tr = state.tr;
-          state.doc.descendants((node, pos) => {
-            if (node.type.name === 'table' && selection.from >= pos && selection.to <= pos + node.nodeSize) {
-              tr = tr.setNodeMarkup(pos, undefined, { ...node.attrs, style: `background:${color};` });
-            }
-          });
-          if (tr.docChanged) editor.view.dispatch(tr);
-        }
-      }} style={toolBtnStyle}>🎨Table</button>
     </div>
   );
 }
