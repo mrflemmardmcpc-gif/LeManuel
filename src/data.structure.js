@@ -262,14 +262,14 @@ export default {
           {
             "id": 704,
             "title": "Raccords et Coudes - Symboles",
-            "text": "**Raccords courants :**\n\n**Té (T)** = Trois raccordements 90°\n✔️ Alimentation distributeur\n✔️ Création branche circuit\n\n**Coude 90°** = Changement direction\n✔️ Contournement obstacle\n✔️ Descente/montée\n\n**Croix (X)** = Quatre raccordements\n✔️ Distribution double\n✔️ Croisement réseaux\n\n**Raccord (R)** = Jonction deux tubes\n✔️ Même diamètre\n✔️ Continuation ligne\n\n**Raccord réduction** = Changement diamètre\n✔️ De gros à fin\n✔️ De fin à gros\n\n⚠️ **Toujours respecter orientation plan**\nRotation/inversion peut changer sens écoulement",
+            "text": "<p>**Raccords courants :**</p><p></p><p>**Té (T)** = Trois raccordements 90°</p><p>✔️ Alimentation distributeur</p><p>✔️ Création branche circuit</p><p></p><p>**Coude 90°** = Changement direction</p><p>✔️ Contournement obstacle</p><p>✔️ Descente/montée  </p><p></p><p>**Croix (X)** = Quatre raccordements</p><p>✔️ Distribution double</p><p>✔️ Croisement réseaux</p><p></p><p>**Raccord (R)** = Jonction deux tubes</p><p>✔️ Même diamètre</p><p>✔️ Continuation ligne</p><p></p><p>**Raccord réduction** = Changement diamètre</p><p>✔️ De gros à fin</p><p>✔️ De fin à gros</p><p></p><p>⚠️ **Toujours respecter orientation plan**</p><p>Rotation/inversion peut changer sens écoulement</p>",
             "color": "#d1fae5",
             "image": null
           },
           {
             "id": 705,
             "title": "Lecture Cotes & Mesures",
-            "text": "**Types de cotes :**\n\n📏 **Cotes de niveau (hauteur finie)**\n✔️ Sol fini = 0,00m\n✔️ Éviers : +0,90m\n✔️ Robinets douche : +2,00m\n✔️ Radiateurs : +0,15m min\n\n📏 **Cotes d'axes**\n✔️ Entre colonnes\n✔️ Positionnement raccords\n✔️ Axe détermination\n\n📏 **Cotes pentes (évacuation)**\n✔️ Eaux usées : 2-3 cm/m (2-3%)\n✔️ Eaux pluviales : 0,5-1 cm/m (0,5-1%)\n✔️ Collecteurs : 1-2 cm/m (1-2%)\n\n🧠 **Astuce lecture rapide**\n➡️ Toujours lire plan de gauche à droite\n➡️ Du sol vers le haut\n➡️ Vérifier légende d'abord\n➡️ Noter toutes cotes d'eau",
+            "text": "<p>**Types de cotes :**</p><p></p><p>📏 **Cotes de niveau (hauteur finie)**</p><p>✔️ Sol fini = 0,00m</p><p>✔️ Éviers : +0,90m</p><p>✔️ Robinets douche : +2,00m  </p><p>✔️ Radiateurs : +0,15m min</p><p></p><p>📏 **Cotes d'axes**</p><p>✔️ Entre colonnes</p><p>✔️ Positionnement raccords</p><p>✔️ Axe détermination</p><p></p><p>📏 **Cotes pentes (évacuation)**</p><p>✔️ Eaux usées : 2-3 cm/m (2-3%)</p><p>✔️ Eaux pluviales : 0,5-1 cm/m (0,5-1%)</p><p>✔️ Collecteurs : 1-2 cm/m (1-2%)</p><p></p><p>🧠 **Astuce lecture rapide**</p><p>➡️ Toujours lire plan de gauche à droite</p><p>➡️ Du sol vers le haut</p><p>➡️ Vérifier légende d'abord</p><p>➡️ Noter toutes cotes d'eau</p>",
             "color": "#d1fae5",
             "image": null
           },
@@ -485,7 +485,7 @@ export default {
           {
             "id": 95001,
             "title": "Composition & raccordement",
-            "text": "<p>### Poste mobile complet\n🧯 Bouteille O₂ + bouteille C₂H₂ (dissous) sur chariot stable\n📈 Mano-détendeurs double mano (HP/BP) sur chaque bouteille\n🧵 Flexibles caoutchouc toilé (O₂ bleu, C₂H₂ rouge) Ø adaptés\n🔗 Raccords rapides LOR : femelle en attente, mâle côté chalumeau</p><table style=\"min-width: 75px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\">Élément</th><th colspan=\"1\" rowspan=\"1\">Détail</th><th colspan=\"1\" rowspan=\"1\">Emoji</th></tr><tr><td colspan=\"1\" rowspan=\"1\">O₂</td><td colspan=\"1\" rowspan=\"1\">Comburant, ogive blanche</td><td colspan=\"1\" rowspan=\"1\">🟦</td></tr><tr><td colspan=\"1\" rowspan=\"1\">C₂H₂</td><td colspan=\"1\" rowspan=\"1\">Carburant, ogive havane</td><td colspan=\"1\" rowspan=\"1\">🟥</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Clapets</td><td colspan=\"1\" rowspan=\"1\">Anti-retour + pare-flamme</td><td colspan=\"1\" rowspan=\"1\">🛡️</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Flexibles</td><td colspan=\"1\" rowspan=\"1\">6x11 (petit), 9x16 (n°1)</td><td colspan=\"1\" rowspan=\"1\">🧵</td></tr></tbody></table><p>Important : clapets anti-retour OBLIGATOIRES. Si &gt;20 m de flexibles : un au détendeur + un au chalumeau.<br>Attention :toujours chaîner les bouteilles et garder les capuchons en transport ; pas de chocs.</p>",
+            "text": "<p>### Poste mobile complet </p><p>🧯 Bouteille O₂ + bouteille C₂H₂ (dissous) sur chariot stable </p><p>📈 Mano-détendeurs double mano (HP/BP) sur chaque bouteille </p><p>🧵 Flexibles caoutchouc toilé (O₂ bleu, C₂H₂ rouge) Ø adaptés </p><p>🔗 Raccords rapides LOR : femelle en attente, mâle côté chalumeau</p><table style=\"min-width: 75px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p>Élément</p></th><th colspan=\"1\" rowspan=\"1\"><p>Détail</p></th><th colspan=\"1\" rowspan=\"1\"><p>Emoji</p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>O₂</p></td><td colspan=\"1\" rowspan=\"1\"><p>Comburant, ogive blanche</p></td><td colspan=\"1\" rowspan=\"1\"><p>🟦</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>C₂H₂</p></td><td colspan=\"1\" rowspan=\"1\"><p>Carburant, ogive havane</p></td><td colspan=\"1\" rowspan=\"1\"><p>🟥</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Clapets</p></td><td colspan=\"1\" rowspan=\"1\"><p>Anti-retour + pare-flamme</p></td><td colspan=\"1\" rowspan=\"1\"><p>🛡️</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Flexibles</p></td><td colspan=\"1\" rowspan=\"1\"><p>6x11 (petit), 9x16 (n°1)</p></td><td colspan=\"1\" rowspan=\"1\"><p>🧵</p></td></tr></tbody></table><p>Important : clapets anti-retour OBLIGATOIRES.</p><p> Si &gt;20 m de flexibles : un au détendeur + un au chalumeau.<br>Attention :toujours chaîner les bouteilles et garder les capuchons en transport ; pas de chocs.</p>",
             "color": "#ffedd5",
             "image": null
           },
@@ -591,7 +591,7 @@ export default {
           {
             "id": 95402,
             "title": "Mise en œuvre",
-            "text": "✅ Ouvrir très progressivement (évite coup de bélier)\n✅ Souffler la sortie avant montage détendeur\n✅ Ventiler la zone, éloigner solvants/huiles\n[color=#ef4444]Pas de flamme nue[/color] lors des essais de fuite (bombe/eau savonneuse uniquement).",
+            "text": "<p>✅ Ouvrir très progressivement (évite coup de bélier)</p><p>✅ Souffler la sortie avant montage détendeur</p><p>✅ Ventiler la zone, éloigner solvants/huiles</p><p>Pas de flamme nue lors des essais de fuite (bombe/eau savonneuse uniquement).</p>",
             "color": "#ffedd5",
             "image": null
           }
@@ -699,7 +699,7 @@ export default {
           {
             "id": 98102,
             "title": "Saignées & protections",
-            "text": "Tracer axes (robinetterie ~1,10 m du receveur), saignée en Y.\nMettre fourreau sur tubes, recuit sur longueur.\nScellement plâtre/ciment prompt, prévoir trappe de visite si encastré.\nFixations adaptées support (voir bâti-support ou chevilles adéquates).",
+            "text": "<p>Tracer axes (robinetterie ~1,10 m du receveur), saignée en Y.</p><p>Mettre fourreau sur tubes, recuit sur longueur.</p><p>Scellement plâtre/ciment prompt, prévoir trappe de visite si encastré.</p><p>Fixations adaptées support (voir bâti-support ou chevilles adéquates).  </p>",
             "color": "#d1fae5",
             "image": null
           }
@@ -722,7 +722,7 @@ export default {
           {
             "id": 98202,
             "title": "Percements & robinetterie",
-            "text": "Pas de sens de pose → perçage selon côté souhaité.\nMono Ø35 mm ; bi/tri Ø25 mm.\nPerçage : marteau (grès), emporte-pièce Ø32 (inox), scie cloche (résine).\nRaccordement cuivre 14×1, joint sous robinetterie.",
+            "text": "<p>Pas de sens de pose → perçage selon côté souhaité.</p><p>Mono Ø35 mm ; bi/tri Ø25 mm.</p><p>Perçage : marteau (grès), emporte-pièce Ø32 (inox), scie cloche (résine).</p><p>Raccordement cuivre 14×1, joint sous robinetterie.  </p>",
             "color": "#dcfce7",
             "image": null
           },
