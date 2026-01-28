@@ -14,8 +14,8 @@ import Gallery from "./components/Gallery";
 
 import EditorPanel from "./components/EditorPanel";
 
-   // Fonction pour enregistrer une image dans la galerie (doit être après les hooks)
-    function saveImage() {
+  // Fonction pour enregistrer une image dans la galerie (doit être après les hooks)
+   function saveImage() {
       if (!newImageCatId || !newImageSubId || !newImageUrl) {
         setToast({ message: "Sélectionne une catégorie, un module et une image." });
         return;
@@ -324,9 +324,22 @@ const Emoji = ({ symbol, label, size = 18 }) => (
   </span>
 );
 
+// Ajoute deux espaces à la fin de chaque ligne pour forcer le saut de ligne Markdown
+function addMarkdownLineBreaks(text) {
+  return typeof text === 'string' ? text.replace(/([^\s])\n/g, '$1  \n') : text;
+}
+
 function Markdown({ content }) {
+  // Conversion Markdown :
+  // 1. Les doubles retours à la ligne (\n\n) deviennent des paragraphes
+  // 2. Les retours à la ligne simples (\n) deviennent des <br>
+  let html = typeof content === 'string'
+    ? content
+        .replace(/\n{2,}/g, '<p></p>') // paragraphes
+        .replace(/\n/g, '<br>')        // sauts de ligne
+    : content;
   // Amélioration du parsing Markdown pour gérer tous les cas imbriqués
-  let html = content;
+  // ...existing code...
 
   // D'abord, traiter les balises imbriquées (color, size, underline)
   html = html.replace(/\[color=(#[0-9a-fA-F]{3,6})\]([\s\S]+?)\[\/color\]/g, '<span style="color:$1;font-weight:bold;">$2</span>');

@@ -1,4 +1,9 @@
 import React, { useEffect, useRef } from "react";
+
+// Normalise les retours à la ligne en <br> pour la sauvegarde
+function normalizeLineBreaks(text) {
+  return text.replace(/\n/g, '<br>');
+}
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Bold from "@tiptap/extension-bold";
@@ -69,6 +74,17 @@ export default function EditorPanel({
   handleTextSelect,
   insertTableTemplate
 }) {
+  // Convertit <br> en retour à la ligne pour édition
+  function normalizeForEditor(text) {
+    return typeof text === 'string' ? text.replace(/<br\s*\/?>(\n)?/g, '\n') : text;
+  }
+  // Normalisation à l'ouverture de l'éditeur
+  React.useEffect(() => {
+    if (editText && typeof editText === 'string' && editText.includes('<br')) {
+      setEditText(normalizeForEditor(editText));
+    }
+    // eslint-disable-next-line
+  }, []);
   if (!editMode || !isAuthenticated) return null;
   return (
     <div style={{
@@ -423,7 +439,10 @@ export default function EditorPanel({
             }}
           />
           <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-            <button onClick={saveEditSub} style={{
+            <button onClick={() => {
+              setEditText(prev => normalizeLineBreaks(prev));
+              saveEditSub();
+            }} style={{
               flex: 1,
               padding: "12px 0",
               borderRadius: 10,
