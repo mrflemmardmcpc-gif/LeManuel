@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../AppTiptap.css";
 
 // Normalise les retours à la ligne en <br> pour la sauvegarde
@@ -72,6 +72,9 @@ export default function EditorPanel({
 }) {
   // Ref pour scroller en haut lors de l'édition
   const editPanelRef = useRef(null);
+
+  // Ajoute ce state juste après les autres useState ou hooks principaux
+  const [editorInstance, setEditorInstance] = useState(null);
 
   // Scroll automatique en haut lors de l'édition d'un module ou d'une catégorie
   useEffect(() => {
@@ -274,6 +277,7 @@ export default function EditorPanel({
               onChange={setEditText}
               darkMode={darkMode}
               theme={theme}
+              setEditorInstance={setEditorInstance}
             />
           </div>
           {/* Outils de formattage */}
@@ -361,7 +365,15 @@ export default function EditorPanel({
                   {tableMenuOpen === "editSub" && (
                     <div style={{ position: "absolute", top: "110%", left: 0, backgroundColor: theme?.panel, border: `1px solid ${theme?.border}`, borderRadius: 10, boxShadow: theme?.shadow, padding: 8, minWidth: 180, zIndex: 50 }}>
                       {tableTemplates.map((tpl) => (
-                        <button key={tpl.key} onClick={() => insertTableTemplate("editSub", tpl.text)} style={{
+                        <button key={tpl.key} onClick={() => {
+                          if (editorInstance) {
+                            editorInstance.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run();
+                            setTableMenuOpen(null);
+                            setSelectionInfo({ text: "", start: 0, end: 0, target: null });
+                          } else {
+                            insertTableTemplate("editSub", tpl.text);
+                          }
+                        }} style={{
                           width: "100%",
                           textAlign: "left",
                           padding: 8,
@@ -587,7 +599,15 @@ export default function EditorPanel({
                   {tableMenuOpen === "newSub" && (
                     <div style={{ position: "absolute", top: "110%", left: 0, backgroundColor: theme?.panel, border: `1px solid ${theme?.border}`, borderRadius: 10, boxShadow: theme?.shadow, padding: 8, minWidth: 180, zIndex: 50 }}>
                       {tableTemplates.map((tpl) => (
-                        <button key={tpl.key} onClick={() => insertTableTemplate("newSub", tpl.text)} style={{
+                        <button key={tpl.key} onClick={() => {
+                          if (editorInstance) {
+                            editorInstance.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run();
+                            setTableMenuOpen(null);
+                            setSelectionInfo({ text: "", start: 0, end: 0, target: null });
+                          } else {
+                            insertTableTemplate("newSub", tpl.text);
+                          }
+                        }} style={{
                           width: "100%",
                           textAlign: "left",
                           padding: 8,
@@ -720,7 +740,7 @@ export default function EditorPanel({
 }
 
 // TipTap Editor Component
-function TiptapEditor({ value, onChange, darkMode, theme }) {
+function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -763,7 +783,109 @@ function TiptapEditor({ value, onChange, darkMode, theme }) {
   useEffect(() => {
     if (editor && value && !didInit.current) {
       let cleanHtml = isProbablyHtml(value) ? value : forceParagraphsHtml(value);
-      editor.commands.setContent(cleanHtml, false);
+      // Conversion automatique des tableaux markdown en tables Tiptap
+      const tableMdRegex = /((?:^\|.+\|$\n?)+)/gm;
+      let docJson = null;
+      if (!isProbablyHtml(value) && tableMdRegex.test(value)) {
+        // On parse le markdown et on remplace chaque bloc par un vrai tableau
+        let replaced = value;
+        let match;
+        let tables = [];
+        tableMdRegex.lastIndex = 0;
+        while ((match = tableMdRegex.exec(value)) !== null) {
+          const tableNode = markdownTableToTiptapTable(match[1]);
+          if (tableNode) tables.push({ node: tableNode, raw: match[1] });
+        }
+        // On construit un doc Tiptap JSON
+        docJson = {
+          type: 'doc',
+          content: []
+        };
+        let lastIndex = 0;
+        tables.forEach(({ node, raw }) => {
+          // Ajoute le texte avant le tableau
+          const before = value.slice(lastIndex, value.indexOf(raw, lastIndex));
+          if (before.trim()) docJson.content.push({ type: 'paragraph', content: [{ type: 'text', text: before.trim() }] });
+          docJson.content.push(node);
+          lastIndex = value.indexOf(raw, lastIndex) + raw.length;
+        });
+        // Ajoute le texte après le dernier tableau
+        const after = value.slice(lastIndex);
+        if (after.trim()) docJson.content.push({ type: 'paragraph', content: [{ type: 'text', text: after.trim() }] });
+      }
+      if (docJson) {
+        editor.commands.setContent(docJson, false);
+      } else {
+        editor.commands.setContent(cleanHtml, false);
+      }
+      didInit.current = true;
+    }
+  }, [value, editor]);
+
+  useEffect(() => {
+    if (editor && setEditorInstance) setEditorInstance(editor);
+  }, [editor, setEditorInstance]);
+
+  // Conversion automatique markdown-table -> table Tiptap
+  function markdownTableToTiptapTable(md) {
+    const lines = md.trim().split('\n').filter(l => l.trim().startsWith('|') && l.trim().endsWith('|'));
+    if (lines.length < 2) return null;
+    const header = lines[0].split('|').slice(1, -1).map(cell => cell.trim());
+    const rows = lines.slice(2).map(row => row.split('|').slice(1, -1).map(cell => cell.trim()));
+    return {
+      type: 'table',
+      attrs: {},
+      content: [
+        {
+          type: 'tableRow',
+          content: header.map(cell => ({ type: 'tableHeader', content: [{ type: 'text', text: cell }] }))
+        },
+        ...rows.map(row => ({
+          type: 'tableRow',
+          content: row.map(cell => ({ type: 'tableCell', content: [{ type: 'text', text: cell }] }))
+        }))
+      ]
+    };
+  }
+
+  useEffect(() => {
+    if (editor && value && !didInit.current) {
+      let cleanHtml = isProbablyHtml(value) ? value : forceParagraphsHtml(value);
+      // Conversion automatique des tableaux markdown en tables Tiptap
+      const tableMdRegex = /((?:^\|.+\|$\n?)+)/gm;
+      let docJson = null;
+      if (!isProbablyHtml(value) && tableMdRegex.test(value)) {
+        // On parse le markdown et on remplace chaque bloc par un vrai tableau
+        let replaced = value;
+        let match;
+        let tables = [];
+        tableMdRegex.lastIndex = 0;
+        while ((match = tableMdRegex.exec(value)) !== null) {
+          const tableNode = markdownTableToTiptapTable(match[1]);
+          if (tableNode) tables.push({ node: tableNode, raw: match[1] });
+        }
+        // On construit un doc Tiptap JSON
+        docJson = {
+          type: 'doc',
+          content: []
+        };
+        let lastIndex = 0;
+        tables.forEach(({ node, raw }) => {
+          // Ajoute le texte avant le tableau
+          const before = value.slice(lastIndex, value.indexOf(raw, lastIndex));
+          if (before.trim()) docJson.content.push({ type: 'paragraph', content: [{ type: 'text', text: before.trim() }] });
+          docJson.content.push(node);
+          lastIndex = value.indexOf(raw, lastIndex) + raw.length;
+        });
+        // Ajoute le texte après le dernier tableau
+        const after = value.slice(lastIndex);
+        if (after.trim()) docJson.content.push({ type: 'paragraph', content: [{ type: 'text', text: after.trim() }] });
+      }
+      if (docJson) {
+        editor.commands.setContent(docJson, false);
+      } else {
+        editor.commands.setContent(cleanHtml, false);
+      }
       didInit.current = true;
     }
   }, [value, editor]);
@@ -821,6 +943,23 @@ function TiptapMenuBar({ editor, theme }) {
       <button title="+Colonne" onClick={() => editor.chain().focus().addColumnAfter().run()} style={toolBtnStyle}><FaPlus style={{ fontSize: 12 }} />Col</button>
       <button title="+Ligne" onClick={() => editor.chain().focus().addRowAfter().run()} style={toolBtnStyle}><FaPlus style={{ fontSize: 12 }} />Ligne</button>
       <button title="Supprimer Table" onClick={() => editor.chain().focus().deleteTable().run()} style={toolBtnStyle}><FaTrash /></button>
+      <button title="Supprimer colonne" onClick={() => editor.chain().focus().deleteColumn().run()} style={toolBtnStyle}>-Col</button>
+      <button title="Supprimer ligne" onClick={() => editor.chain().focus().deleteRow().run()} style={toolBtnStyle}>-Ligne</button>
+      <button title="Couleur fond tableau" onClick={() => {
+        const color = window.prompt('Couleur de fond du tableau (ex: #10b981 ou red)');
+        if (color) {
+          // Applique la couleur sur le tableau sélectionné
+          const { state, view } = editor;
+          const { selection } = state;
+          let tr = state.tr;
+          state.doc.descendants((node, pos) => {
+            if (node.type.name === 'table' && selection.from >= pos && selection.to <= pos + node.nodeSize) {
+              tr = tr.setNodeMarkup(pos, undefined, { ...node.attrs, style: `background:${color};` });
+            }
+          });
+          if (tr.docChanged) editor.view.dispatch(tr);
+        }
+      }} style={toolBtnStyle}>🎨Table</button>
     </div>
   );
 }

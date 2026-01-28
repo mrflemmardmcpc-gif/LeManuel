@@ -896,7 +896,8 @@ function Markdown({ content }) {
   };
 
   const startEditSub = (catId, sub) => {
-    setSelectedCategoryId(catId);
+    // Ne change le filtre que si on était déjà sur une catégorie
+    if (selectedCategoryId !== null) setSelectedCategoryId(catId);
     setEditingSubId(sub.id);
     setEditTitle(sub.title);
     setEditText(sub.text);
@@ -907,12 +908,23 @@ function Markdown({ content }) {
     if (!editTitle.trim()) { showToast("Le titre ne peut pas être vide"); return; }
     setData((d) => ({
       ...d,
-      categories: d.categories.map((cat) =>
-        cat.id === selectedCategoryId
-          ? { ...cat, subs: cat.subs.map((s) => s.id === editingSubId ? { ...s, title: editTitle, text: editText, color: editColor } : s) }
-          : cat
-      )
+      categories: d.categories.map((cat) => {
+        // Si on est filtré, on ne touche qu'à la catégorie sélectionnée
+        if (selectedCategoryId !== null) {
+          return cat.id === selectedCategoryId
+            ? { ...cat, subs: cat.subs.map((s) => s.id === editingSubId ? { ...s, title: editTitle, text: editText, color: editColor } : s) }
+            : cat;
+        } else {
+          // Sinon, on cherche la catégorie qui contient le module à éditer
+          if (cat.subs.some((s) => s.id === editingSubId)) {
+            return { ...cat, subs: cat.subs.map((s) => s.id === editingSubId ? { ...s, title: editTitle, text: editText, color: editColor } : s) };
+          } else {
+            return cat;
+          }
+        }
+      })
     }));
+    // Ne touche pas au filtre, laisse l'affichage comme il était
     cancelEdit();
   };
 
