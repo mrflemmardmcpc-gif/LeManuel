@@ -1,3 +1,5 @@
+@import url('https://cdn.jsdelivr.net/npm/@tiptap/extension-table@2.0.0-beta.212/style.css');
+
 .note-viewer {
   background: none;
   border-radius: 0;
@@ -21,14 +23,7 @@
   line-height: 1.2;
 }
 
-/* Optionnel: pour éviter les espaces visuels dans les lignes vides */
-.ProseMirror p:empty::before {
-  content: '';
-}
-
-@import url('https://cdn.jsdelivr.net/npm/@tiptap/extension-table@2.0.0-beta.212/style.css');
-
-/* Fluidité du resize colonne (curseur et transition) */
+/* ...rest of existing code... */
 .tableWrapper .tableResizeHandle {
   width: 10px !important;
   background: #f59e42 !important;
@@ -46,52 +41,65 @@
 }
 /* Tableaux Tiptap visibles et stylés */
 /* TABLEAU STYLE WORD/EXCEL */
+/* Respect table width from editor, do not force full width in viewer */
 .ProseMirror table {
   border-collapse: separate;
   border-spacing: 0;
-  width: auto;
-  min-width: 100%;
+  width: auto !important;
+  min-width: unset !important;
+  max-width: 100%;
   margin: 1.2em 0;
-  background: #fff;
-  color: #23202d;
-  border-radius: 14px;
+  background: rgba(30, 34, 54, 0.98); /* fond sombre, légèrement transparent */
+  color: #e0e6ed;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(30,41,59,0.10);
-  border: 1.5px solid #e5e7eb;
+  box-shadow: 0 4px 24px rgba(30,41,59,0.18);
+  border: 2px solid #3b82f6;
 }
 .ProseMirror th, .ProseMirror td {
-  border: 1.5px solid #e5e7eb;
+  background: rgba(23, 25, 40, 0.92);
+  color: #e0e6ed;
+  border: 1.5px solid #3b82f6;
+  font-size: 1.08rem;
   padding: 13px 18px;
   min-width: 48px;
   text-align: left;
-  font-size: 1.08rem;
   transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-  background: #f8fafc;
   position: relative;
 }
+
+/* Si une couleur de fond est appliquée en inline, elle doit primer sur le fond du thème */
+.ProseMirror th[style*="background-color"],
+.ProseMirror td[style*="background-color"] {
+  background: inherit !important;
+}
+.ProseMirror th[style*="background-color"],
+.ProseMirror td[style*="background-color"] {
+  background-color: unset !important;
+}
 .ProseMirror th {
-  background: #f1f5f9;
+  background: #172554;
   font-weight: bold;
-  color: #3b82f6;
+  color: #60a5fa;
   border-bottom: 2.5px solid #3b82f6;
 }
 .ProseMirror td {
-  background: #f8fafc;
+  background: rgba(23, 25, 40, 0.92);
 }
-.ProseMirror tr:nth-child(even) td {
+/* .ProseMirror tr:nth-child(even) td {
   background: #f3f4f6;
-}
+} */
 .ProseMirror td.selectedCell, .ProseMirror th.selectedCell {
   outline: 2.5px solid #f59e42;
   outline-offset: -2px;
   box-shadow: 0 0 0 2px #fbbf24;
   z-index: 2;
 }
-.ProseMirror td:hover, .ProseMirror th:hover {
+/* .ProseMirror td:hover, .ProseMirror th:hover {
   background: #e0e7ef !important;
   box-shadow: 0 2px 8px #3b82f633;
   z-index: 2;
-}
+} */
 /* Sélection visuelle */
 .ProseMirror td.selectedCell, .ProseMirror th.selectedCell {
   outline: 2px solid #f59e42;

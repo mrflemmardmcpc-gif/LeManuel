@@ -1,3 +1,5 @@
+// FontSize extension is not official; use custom extension below
+import { Extension } from '@tiptap/core';
 import TableHeader from "@tiptap/extension-table-header";
 import React, { useEffect, useRef, useState } from "react";
 import "../AppTiptap.css";
@@ -38,8 +40,11 @@ const CustomTableCell = TableCell.extend({
     };
   },
   renderHTML({ HTMLAttributes }) {
-    // Fusionne tous les attributs, y compris style/data-ttcolor/colspan/rowspan
+    // DEBUG: log le style généré
+    console.log('CustomTableCell renderHTML', HTMLAttributes);
     const attrs = { ...HTMLAttributes };
+    if (HTMLAttributes.style) attrs.style = HTMLAttributes.style;
+    if (HTMLAttributes['data-ttcolor']) attrs['data-ttcolor'] = HTMLAttributes['data-ttcolor'];
     return ['td', attrs, 0];
   },
 });
@@ -61,7 +66,11 @@ const CustomTableHeader = TableHeader.extend({
     };
   },
   renderHTML({ HTMLAttributes }) {
+    // DEBUG: log le style généré
+    console.log('CustomTableHeader renderHTML', HTMLAttributes);
     const attrs = { ...HTMLAttributes };
+    if (HTMLAttributes.style) attrs.style = HTMLAttributes.style;
+    if (HTMLAttributes['data-ttcolor']) attrs['data-ttcolor'] = HTMLAttributes['data-ttcolor'];
     return ['th', attrs, 0];
   },
 });
@@ -793,12 +802,50 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Bold,
-      Italic,
       Underline,
       Link,
       Color,
       TextStyle,
+      // Custom FontSize extension using TextStyle
+      Extension.create({
+        name: 'fontSize',
+        addOptions() {
+          return {
+            types: ['textStyle'],
+          }
+        },
+        addGlobalAttributes() {
+          return [
+            {
+              types: ['textStyle'],
+              attributes: {
+                fontSize: {
+                  default: null,
+                  parseHTML: element => element.style.fontSize?.replace(/['\"]+/g, ''),
+                  renderHTML: attributes => {
+                    if (!attributes.fontSize) {
+                      return {};
+                    }
+                    return {
+                      style: `font-size: ${attributes.fontSize}`,
+                    };
+                  },
+                },
+              },
+            },
+          ];
+        },
+        addCommands() {
+          return {
+            setFontSize: size => ({ chain }) => {
+              return chain().setMark('textStyle', { fontSize: size }).run();
+            },
+            unsetFontSize: () => ({ chain }) => {
+              return chain().setMark('textStyle', { fontSize: null }).run();
+            },
+          };
+        },
+      }),
       Highlight,
       Table.configure({ resizable: true }),
       TableRow,
@@ -821,6 +868,49 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
           editor.commands.insertContent(html);
           event.preventDefault();
           return true;
+        }
+        return false;
+      },
+      handleKeyDown(view, event) {
+        // Suppr/Backspace : ne supprime la cellule/tableau que si toute la cellule/tableau est sélectionnée
+        if ((event.key === 'Backspace' || event.key === 'Delete')) {
+          const { state, dispatch } = view;
+          const { selection } = state;
+          // Si la sélection couvre tout un tableau, supprime le tableau entier
+          let tablePos = null;
+          state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+            if (node.type.name === 'table' && tablePos === null) {
+              // On ne supprime que si toute la table est sélectionnée
+              if (selection.from <= pos && selection.to >= pos + node.nodeSize - 1) {
+                tablePos = pos;
+              }
+            }
+          });
+          if (tablePos !== null) {
+            const node = state.doc.nodeAt(tablePos);
+            if (node) {
+              dispatch(state.tr.delete(tablePos, tablePos + node.nodeSize));
+              event.preventDefault();
+              return true;
+            }
+          }
+          // Sinon, si la sélection couvre toute une cellule, supprime la cellule
+          let cellPos = null;
+          state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+            if ((node.type.name === 'tableCell' || node.type.name === 'tableHeader') && cellPos === null) {
+              if (selection.from <= pos && selection.to >= pos + node.nodeSize - 1) {
+                cellPos = pos;
+              }
+            }
+          });
+          if (cellPos !== null) {
+            const node = state.doc.nodeAt(cellPos);
+            if (node) {
+              dispatch(state.tr.delete(cellPos, cellPos + node.nodeSize));
+              event.preventDefault();
+              return true;
+            }
+          }
         }
         return false;
       },
@@ -996,18 +1086,53 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
     let tr = state.tr;
     const node = state.doc.nodeAt(contextMenu.cellPos);
     if (node && (node.type.name === 'tableCell' || node.type.name === 'tableHeader')) {
-      tr = tr.setNodeMarkup(
-        contextMenu.cellPos,
-        undefined,
-        { ...node.attrs, ['data-ttcolor']: color, style: `background:${color};${node.attrs.style||''}` }
-      );
+      console.debug('[handleColorCell] Appliquer couleur', color, 'à la cellule', node, 'pos', contextMenu.cellPos);
+      // Nettoie tout background-color existant dans le style
+      let style = node.attrs.style || '';
+      style = style.replace(/background-color:[^;]+;?/gi, '');
+      style = `background-color:${color} !important;${style}`.trim();
+      style = style.replace(/;\s*$/, '');
+      const newAttrs = { ...node.attrs, style, ['data-ttcolor']: color };
+      let newNode;
+      if (node.content.size === 0) {
+        // Si la cellule est vide, crée explicitement un paragraphe vide
+        const paragraph = node.type.schema.nodes.paragraph.create();
+        newNode = node.type.create(newAttrs, paragraph, node.marks);
+      } else {
+        newNode = node.type.create(newAttrs, node.content, node.marks);
+      }
+      tr = tr.replaceWith(contextMenu.cellPos, contextMenu.cellPos + node.nodeSize, newNode);
       if (tr.docChanged) editor.view.dispatch(tr);
+    } else {
+      console.debug('[handleColorCell] Pas de cellule trouvée à la position', contextMenu.cellPos, node);
     }
     setContextMenu({ ...contextMenu, visible: false });
   }
 
+  // --- BOUTON DE REPARATION DES TABLEAUX ---
+  function repairAllTableCells() {
+    if (!editor) return;
+    const { state, view } = editor;
+    let tr = state.tr;
+    let changed = false;
+    state.doc.descendants((node, pos) => {
+      if (
+        (node.type.name === 'tableCell' || node.type.name === 'tableHeader') &&
+        node.content.size === 0
+      ) {
+        const paragraph = node.type.schema.nodes.paragraph.create();
+        const newNode = node.type.create(node.attrs, paragraph, node.marks);
+        tr = tr.replaceWith(pos, pos + node.nodeSize, newNode);
+        changed = true;
+      }
+    });
+    if (changed) view.dispatch(tr);
+    alert('Réparation des cellules vides terminée.');
+  }
+
   return (
     <div style={{ position: 'relative' }}>
+      <button onClick={repairAllTableCells} style={{position:'absolute',top:2,right:2,zIndex:1000,padding:6,borderRadius:8,background:'#3b82f6',color:'#fff',border:'none',fontWeight:700,cursor:'pointer'}}>Réparer tableaux</button>
       <TiptapMenuBar editor={editor} theme={theme} />
       <div onContextMenu={handleContextMenu} style={{ minHeight: 180 }}>
         <EditorContent editor={editor} />
@@ -1032,6 +1157,8 @@ function TiptapMenuBar({ editor, theme }) {
   if (!editor) return null;
   const fontSizes = [12, 14, 16, 18, 20, 24, 28, 32];
   const colors = ['#000000', '#e11d48', '#f59e42', '#10b981', '#3b82f6', '#8b5cf6', '#fbbf24', '#f3f4f6', '#ffffff'];
+  // Couleurs pour les cellules
+  const cellColors = ['#fff', '#f59e42', '#10b981', '#3b82f6', '#e11d48', '#fbbf24', '#23202d'];
   return (
     <div style={{
       display: 'flex',
@@ -1046,6 +1173,78 @@ function TiptapMenuBar({ editor, theme }) {
       boxShadow: '0 4px 18px rgba(0,0,0,0.10)',
       fontSize: 18,
     }}>
+            {/* Couleur de cellule de tableau */}
+            <div title="Couleur cellule" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
+              <span style={{ fontSize: 18, marginRight: 2 }}>🟩</span>
+              {cellColors.map(c => (
+                <button
+                  key={c}
+                  onClick={() => {
+                    const { state, view } = editor;
+                    const { selection } = state;
+                    // Trouve la cellule contenant le curseur
+                    let cellPos = null;
+                    state.doc.nodesBetween(selection.from, selection.to, (node, pos, parent, index) => {
+                      if ((['tableCell', 'customTableCell', 'tableHeader', 'customTableHeader'].includes(node.type.name))) {
+                        // On prend la cellule la plus profonde (la plus proche du curseur)
+                        cellPos = pos;
+                      }
+                    });
+                    if (cellPos !== null) {
+                      const node = state.doc.nodeAt(cellPos);
+                      if (node) {
+                        const attrs = {
+                          ...node.attrs,
+                          style: `background-color:${c} !important;${node.attrs.style ? node.attrs.style : ''}`,
+                          ['data-ttcolor']: c,
+                        };
+                        const tr = state.tr.setNodeMarkup(cellPos, node.type, attrs);
+                        if (tr.docChanged) view.dispatch(tr);
+                      }
+                    }
+                  }}
+                  style={{ width: 22, height: 22, borderRadius: 5, border: '1.5px solid #888', background: c, cursor: 'pointer' }}
+                />
+              ))}
+              <input
+                type="color"
+                onChange={e => {
+                  const c = e.target.value;
+                  const { state, view } = editor;
+                  const { selection } = state;
+                  let cellPos = null;
+                  state.doc.nodesBetween(selection.from, selection.to, (node, pos, parent, index) => {
+                    if ((['tableCell', 'customTableCell', 'tableHeader', 'customTableHeader'].includes(node.type.name))) {
+                      cellPos = pos;
+                    }
+                  });
+                  if (cellPos !== null) {
+                    const node = state.doc.nodeAt(cellPos);
+                    if (node) {
+                      let style = node.attrs.style || '';
+                      style = style.replace(/background-color:[^;]+;?/gi, '');
+                      style = `background-color:${c} !important;${style}`.trim();
+                      style = style.replace(/;\s*$/, '');
+                      const attrs = {
+                        ...node.attrs,
+                        style,
+                        ['data-ttcolor']: c,
+                      };
+                      let newNode;
+                      if (node.content.size === 0) {
+                        const paragraph = node.type.schema.nodes.paragraph.create();
+                        newNode = node.type.create(attrs, paragraph, node.marks);
+                      } else {
+                        newNode = node.type.create(attrs, node.content, node.marks);
+                      }
+                      const tr = state.tr.replaceWith(cellPos, cellPos + node.nodeSize, newNode);
+                      if (tr.docChanged) view.dispatch(tr);
+                    }
+                  }
+                }}
+                style={{ width: 28, height: 28, border: 'none', background: 'none', cursor: 'pointer', marginLeft: 2 }}
+              />
+            </div>
       <button title="Gras" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} style={toolBtnStyle}><FaBold /></button>
       <button title="Italique" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} style={toolBtnStyle}><FaItalic /></button>
       <button title="Souligné" onClick={() => editor.chain().focus().toggleUnderline().run()} disabled={!editor.can().chain().focus().toggleUnderline().run()} style={toolBtnStyle}><FaUnderline /></button>
@@ -1059,7 +1258,19 @@ function TiptapMenuBar({ editor, theme }) {
       </div>
       <div title="Taille texte" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
         <FaTextHeight style={{ fontSize: 18, marginRight: 2 }} />
-        <select value={editor.getAttributes('textStyle').fontSize?.replace('px','') || ''} onChange={e => editor.chain().focus().setMark('textStyle', { fontSize: e.target.value + 'px' }).run()} style={{ borderRadius: 8, padding: '4px 10px', fontSize: 16, marginLeft: 2 }}>
+        <select
+          value={
+            (() => {
+              const attr = editor.getAttributes('fontSize');
+              if (!attr) return '';
+              if (typeof attr === 'string') return attr.replace('px', '');
+              if (typeof attr === 'object' && attr.fontSize) return String(attr.fontSize).replace('px', '');
+              return '';
+            })()
+          }
+          onChange={e => editor.chain().focus().setFontSize(e.target.value + 'px').run()}
+          style={{ borderRadius: 8, padding: '4px 10px', fontSize: 16, marginLeft: 2 }}
+        >
           <option value="">Taille</option>
           {fontSizes.map(s => <option key={s} value={s}>{s}px</option>)}
         </select>

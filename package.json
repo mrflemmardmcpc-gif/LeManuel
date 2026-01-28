@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@handsontable/react": "^16.2.0",
     "@tiptap/extension-collaboration": "^2.6.6",
     "@tiptap/extension-collaboration-cursor": "^2.6.6",
     "@tiptap/extension-color": "^2.0.0",
@@ -27,6 +28,7 @@
     "@tiptap/starter-kit": "^2.0.0",
     "@vercel/blob": "^2.0.1",
     "@vercel/speed-insights": "^1.3.1",
+    "handsontable": "^16.2.0",
     "marked": "^17.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
