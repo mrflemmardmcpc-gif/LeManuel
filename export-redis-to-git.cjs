@@ -47,9 +47,14 @@ async function main() {
   try {
     console.log('Fetching Redis key...');
     const value = await fetchRedisKey();
-    // On suppose que la valeur est déjà du JSON stringifié
-    // On la sauvegarde telle quelle dans le fichier
-    fs.writeFileSync(OUTPUT_FILE, value, 'utf8');
+    // Parse le JSON reçu et écrit un export JS valide
+    let dataObj;
+    try {
+      dataObj = JSON.parse(value);
+    } catch (e) {
+      throw new Error('La valeur Redis n\'est pas un JSON valide');
+    }
+    fs.writeFileSync(OUTPUT_FILE, `export default ${JSON.stringify(dataObj, null, 2)};\n`, 'utf8');
     console.log('Data saved to', OUTPUT_FILE);
 
     // Git add/commit/push
