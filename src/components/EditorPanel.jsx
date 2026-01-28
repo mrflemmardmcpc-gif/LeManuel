@@ -128,6 +128,10 @@ export default function EditorPanel({
   handleTextSelect,
   insertTableTemplate
 }) {
+
+  // State global pour la couleur du surligneur (doit être tout en haut !)
+  const [highlightColor, setHighlightColor] = React.useState('#fbbf24');
+
   // Ref pour scroller en haut lors de l'édition
   const editPanelRef = useRef(null);
 
@@ -155,7 +159,9 @@ export default function EditorPanel({
     }
     // eslint-disable-next-line
   }, []);
+
   if (!editMode || !isAuthenticated) return null;
+
   return (
     <div ref={editPanelRef} style={{
       background: theme?.bg || "#f8fafc",
@@ -336,6 +342,8 @@ export default function EditorPanel({
               darkMode={darkMode}
               theme={theme}
               setEditorInstance={setEditorInstance}
+              highlightColor={highlightColor}
+              setHighlightColor={setHighlightColor}
             />
           </div>
           {/* Outils de formattage */}
@@ -798,7 +806,52 @@ export default function EditorPanel({
 }
 
 // TipTap Editor Component
-function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
+function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance, highlightColor, setHighlightColor }) {
+    // Supprimer la ligne courante de la cellule sélectionnée
+    function handleDeleteRow() {
+      if (!editor || contextMenu.cellPos == null) return;
+      const { state } = editor;
+      let rowPos = null;
+      state.doc.nodesBetween(contextMenu.cellPos, contextMenu.cellPos, (node, pos) => {
+        if (node.type.name === 'tableRow' && rowPos === null) {
+          rowPos = pos;
+        }
+      });
+      if (rowPos !== null && editor.chain) {
+        editor.chain().focus().setNodeSelection(rowPos).deleteRow().run();
+      }
+      setContextMenu({ ...contextMenu, visible: false });
+    }
+
+    // Supprimer la colonne courante de la cellule sélectionnée
+    function handleDeleteColumn() {
+      if (!editor || contextMenu.cellPos == null) return;
+      if (editor.chain) {
+        editor.chain().focus().setNodeSelection(contextMenu.cellPos).deleteColumn().run();
+      }
+      setContextMenu({ ...contextMenu, visible: false });
+    }
+
+    // Transformer la cellule sélectionnée en header (th)
+    function handleCellToHeader() {
+      if (!editor || contextMenu.cellPos == null) return;
+      const { state } = editor;
+      const node = state.doc.nodeAt(contextMenu.cellPos);
+      if (node && node.type.name === 'tableCell') {
+        // Remplacer par un tableHeader
+        const tableHeaderType = state.schema.nodes.tableHeader;
+        const newNode = tableHeaderType.create(node.attrs, node.content, node.marks);
+        const tr = state.tr.replaceWith(contextMenu.cellPos, contextMenu.cellPos + node.nodeSize, newNode);
+        editor.view.dispatch(tr);
+      }
+      setContextMenu({ ...contextMenu, visible: false });
+    }
+  // Affichage des boutons +Col/+Ligne discrets au-dessus du tableau si le curseur est dans un tableau
+  const [showTableHandles, setShowTableHandles] = useState(false);
+  const [tablePos, setTablePos] = useState(null);
+  const editorContentRef = useRef();
+  const [tableCoords, setTableCoords] = useState(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -821,7 +874,7 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
               attributes: {
                 fontSize: {
                   default: null,
-                  parseHTML: element => element.style.fontSize?.replace(/['\"]+/g, ''),
+                  parseHTML: element => element.style.fontSize?.replace(/['"]+/g, ''),
                   renderHTML: attributes => {
                     if (!attributes.fontSize) {
                       return {};
@@ -846,7 +899,7 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
           };
         },
       }),
-      Highlight,
+      Highlight.configure({ multicolor: true }),
       Table.configure({ resizable: true }),
       TableRow,
       CustomTableHeader,
@@ -872,15 +925,14 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
         return false;
       },
       handleKeyDown(view, event) {
-        // Suppr/Backspace : ne supprime la cellule/tableau que si toute la cellule/tableau est sélectionnée
+        // Suppr/Backspace : suppression intelligente dans les tableaux
         if ((event.key === 'Backspace' || event.key === 'Delete')) {
           const { state, dispatch } = view;
           const { selection } = state;
-          // Si la sélection couvre tout un tableau, supprime le tableau entier
+          // Supprimer le tableau entier si tout est sélectionné
           let tablePos = null;
           state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
             if (node.type.name === 'table' && tablePos === null) {
-              // On ne supprime que si toute la table est sélectionnée
               if (selection.from <= pos && selection.to >= pos + node.nodeSize - 1) {
                 tablePos = pos;
               }
@@ -892,6 +944,68 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
               dispatch(state.tr.delete(tablePos, tablePos + node.nodeSize));
               event.preventDefault();
               return true;
+            }
+          }
+          // Supprimer la ligne entière si toute la ligne est sélectionnée
+          let rowPos = null;
+          let fullRowSelected = false;
+          state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+            if (node.type.name === 'tableRow' && rowPos === null) {
+              if (selection.from <= pos && selection.to >= pos + node.nodeSize - 1) {
+                rowPos = pos;
+                fullRowSelected = true;
+              }
+            }
+          });
+          if (fullRowSelected && view.props.editor && view.props.editor.chain) {
+            view.props.editor.chain().focus().deleteRow().run();
+            event.preventDefault();
+            return true;
+          }
+          // Supprimer la colonne entière si toute la colonne est sélectionnée (simplifié)
+          let colToDelete = null;
+          let tableNode = null;
+          let tableStart = null;
+          const table = state.schema.nodes.table;
+          state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+            if (node.type === table && tableNode === null) {
+              tableNode = node;
+              tableStart = pos;
+            }
+          });
+          if (tableNode && tableStart !== null && view.props.editor && view.props.editor.chain) {
+            // On vérifie si la sélection couvre toutes les cellules d'une colonne (même index sur chaque ligne)
+            const firstRow = tableNode.child(0);
+            if (firstRow) {
+              for (let colIdx = 0; colIdx < firstRow.childCount; colIdx++) {
+                let fullColSelected = true;
+                for (let rowIdx = 0; rowIdx < tableNode.childCount; rowIdx++) {
+                  const row = tableNode.child(rowIdx);
+                  if (colIdx >= row.childCount) {
+                    fullColSelected = false;
+                    break;
+                  }
+                  let cellPos = tableStart + 1;
+                  for (let i = 0; i < rowIdx; i++) {
+                    cellPos += tableNode.child(i).nodeSize;
+                  }
+                  for (let j = 0; j < colIdx; j++) {
+                    cellPos += row.child(j).nodeSize;
+                  }
+                  const cell = row.child(colIdx);
+                  const from = cellPos;
+                  const to = cellPos + cell.nodeSize - 1;
+                  if (!(selection.from <= from && selection.to >= to)) {
+                    fullColSelected = false;
+                    break;
+                  }
+                }
+                if (fullColSelected) {
+                  view.props.editor.chain().focus().deleteColumn().run();
+                  event.preventDefault();
+                  return true;
+                }
+              }
             }
           }
           // Sinon, si la sélection couvre toute une cellule, supprime la cellule
@@ -916,6 +1030,51 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
       },
     },
   });
+
+  // Affichage dynamique des boutons contextuels pour tableau (doit être en dehors de l'array extensions)
+  useEffect(() => {
+    if (!editor) return;
+    const { state } = editor;
+    const { selection } = state;
+    let found = false;
+    let tPos = null;
+    state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+      if (node.type && node.type.name === 'table' && !found) {
+        found = true;
+        tPos = pos;
+      }
+    });
+    setShowTableHandles(found);
+    setTablePos(tPos);
+  }, [editor && editor.state && editor.state.selection, editor]);
+
+  useEffect(() => {
+    if (!showTableHandles || tablePos == null || !editorContentRef.current || !editor) {
+      setTableCoords(null);
+      return;
+    }
+    // Cherche le DOM node du tableau
+    const dom = editor.view.domAtPos ? editor.view.domAtPos(tablePos) : null;
+    let tableEl = null;
+    if (dom && dom.node) {
+      if (dom.node.nodeType === 1 && dom.node.tagName === 'TABLE') {
+        tableEl = dom.node;
+      } else if (dom.node.nodeType === 1) {
+        tableEl = dom.node.querySelector('table');
+      }
+    }
+    if (tableEl) {
+      const rect = tableEl.getBoundingClientRect();
+      setTableCoords({
+        left: rect.left + window.scrollX,
+        top: rect.top + window.scrollY,
+        width: rect.width,
+        height: rect.height
+      });
+    } else {
+      setTableCoords(null);
+    }
+  }, [showTableHandles, tablePos, editor && editor.view && editor.view.state]);
 
   // Import initial seulement (pas à chaque modif)
   const didInit = useRef(false);
@@ -1130,16 +1289,118 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
     alert('Réparation des cellules vides terminée.');
   }
 
+
+  // Supprimer la ligne courante de la cellule sélectionnée
+  function handleDeleteRow() {
+    if (!editor || contextMenu.cellPos == null) return;
+    const { state } = editor;
+    let rowPos = null;
+    state.doc.nodesBetween(contextMenu.cellPos, contextMenu.cellPos, (node, pos) => {
+      if (node.type.name === 'tableRow' && rowPos === null) {
+        rowPos = pos;
+      }
+    });
+    if (rowPos !== null && editor.chain) {
+      editor.chain().focus().setNodeSelection(rowPos).deleteRow().run();
+    }
+    setContextMenu({ ...contextMenu, visible: false });
+  }
+
+  // Supprimer la colonne courante de la cellule sélectionnée
+  function handleDeleteColumn() {
+    if (!editor || contextMenu.cellPos == null) return;
+    if (editor.chain) {
+      editor.chain().focus().setNodeSelection(contextMenu.cellPos).deleteColumn().run();
+    }
+    setContextMenu({ ...contextMenu, visible: false });
+  }
+
+  // Transformer la cellule sélectionnée en header (th)
+  function handleCellToHeader() {
+    if (!editor || contextMenu.cellPos == null) return;
+    const { state } = editor;
+    const node = state.doc.nodeAt(contextMenu.cellPos);
+    if (node && node.type.name === 'tableCell') {
+      // Remplacer par un tableHeader
+      const tableHeaderType = state.schema.nodes.tableHeader;
+      const newNode = tableHeaderType.create(node.attrs, node.content, node.marks);
+      const tr = state.tr.replaceWith(contextMenu.cellPos, contextMenu.cellPos + node.nodeSize, newNode);
+      editor.view.dispatch(tr);
+    }
+    setContextMenu({ ...contextMenu, visible: false });
+  }
+
   return (
     <div style={{ position: 'relative' }}>
-      <button onClick={repairAllTableCells} style={{position:'absolute',top:2,right:2,zIndex:1000,padding:6,borderRadius:8,background:'#3b82f6',color:'#fff',border:'none',fontWeight:700,cursor:'pointer'}}>Réparer tableaux</button>
-      <TiptapMenuBar editor={editor} theme={theme} />
-      <div onContextMenu={handleContextMenu} style={{ minHeight: 180 }}>
+      <TiptapMenuBar editor={editor} theme={theme} highlightColor={highlightColor} setHighlightColor={setHighlightColor} />
+      <div onContextMenu={handleContextMenu} style={{ minHeight: 180, position: 'relative' }} ref={editorContentRef}>
         <EditorContent editor={editor} />
+        {/* Boutons +Col/+Ligne contextuels, petits et discrets */}
+        {showTableHandles && tableCoords && (
+          <div style={{
+            position: 'absolute',
+            left: tableCoords.left - editorContentRef.current.getBoundingClientRect().left + tableCoords.width / 2 - 44,
+            top: tableCoords.top - editorContentRef.current.getBoundingClientRect().top - 32,
+            display: 'flex',
+            gap: 8,
+            zIndex: 100,
+            pointerEvents: 'auto',
+          }}>
+            <button
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              style={{
+                background: '#23202d',
+                color: '#f59e42',
+                border: 'none',
+                borderRadius: 12,
+                fontSize: 13,
+                opacity: 0.7,
+                padding: '2px 8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+                transition: 'opacity 0.2s',
+                cursor: 'pointer',
+                minWidth: 0,
+                height: 22,
+                lineHeight: 1,
+                fontWeight: 700,
+                position: 'relative',
+              }}
+              title="Ajouter une colonne"
+            >
+              <FaPlus style={{ fontSize: 12, marginRight: 2 }} />Col
+            </button>
+            <button
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              style={{
+                background: '#23202d',
+                color: '#10b981',
+                border: 'none',
+                borderRadius: 12,
+                fontSize: 13,
+                opacity: 0.7,
+                padding: '2px 8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+                transition: 'opacity 0.2s',
+                cursor: 'pointer',
+                minWidth: 0,
+                height: 22,
+                lineHeight: 1,
+                fontWeight: 700,
+                position: 'relative',
+              }}
+              title="Ajouter une ligne"
+            >
+              <FaPlus style={{ fontSize: 12, marginRight: 2 }} />Ligne
+            </button>
+          </div>
+        )}
       </div>
       {contextMenu.visible && (
-        <div ref={contextMenuRef} style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 9999, background: '#23202d', color: '#fff', borderRadius: 8, boxShadow: '0 2px 12px rgba(0,0,0,0.18)', padding: 8, minWidth: 120 }}>
+        <div ref={contextMenuRef} style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 9999, background: '#23202d', color: '#fff', borderRadius: 8, boxShadow: '0 2px 12px rgba(0,0,0,0.18)', padding: 8, minWidth: 160 }}>
           <div style={{ padding: 8, cursor: 'pointer' }} onClick={handleDeleteCell}>Supprimer la cellule</div>
+          <div style={{ padding: 8, cursor: 'pointer' }} onClick={handleDeleteRow}>Supprimer la ligne</div>
+          <div style={{ padding: 8, cursor: 'pointer' }} onClick={handleDeleteColumn}>Supprimer la colonne</div>
+          <div style={{ padding: 8, cursor: 'pointer' }} onClick={handleCellToHeader}>Transformer en titre (th)</div>
           <div style={{ padding: 8, fontWeight: 600 }}>Couleur de la cellule :</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '0 8px 8px 8px' }}>
             {["#f59e42", "#10b981", "#3b82f6", "#e11d48", "#fbbf24", "#23202d", "#fff"].map(c => (
@@ -1153,7 +1414,7 @@ function TiptapEditor({ value, onChange, darkMode, theme, setEditorInstance }) {
   );
 }
 
-function TiptapMenuBar({ editor, theme }) {
+function TiptapMenuBar({ editor, theme, highlightColor, setHighlightColor }) {
   if (!editor) return null;
   const fontSizes = [12, 14, 16, 18, 20, 24, 28, 32];
   const colors = ['#000000', '#e11d48', '#f59e42', '#10b981', '#3b82f6', '#8b5cf6', '#fbbf24', '#f3f4f6', '#ffffff'];
@@ -1173,82 +1434,51 @@ function TiptapMenuBar({ editor, theme }) {
       boxShadow: '0 4px 18px rgba(0,0,0,0.10)',
       fontSize: 18,
     }}>
-            {/* Couleur de cellule de tableau */}
-            <div title="Couleur cellule" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
-              <span style={{ fontSize: 18, marginRight: 2 }}>🟩</span>
-              {cellColors.map(c => (
-                <button
-                  key={c}
-                  onClick={() => {
-                    const { state, view } = editor;
-                    const { selection } = state;
-                    // Trouve la cellule contenant le curseur
-                    let cellPos = null;
-                    state.doc.nodesBetween(selection.from, selection.to, (node, pos, parent, index) => {
-                      if ((['tableCell', 'customTableCell', 'tableHeader', 'customTableHeader'].includes(node.type.name))) {
-                        // On prend la cellule la plus profonde (la plus proche du curseur)
-                        cellPos = pos;
-                      }
-                    });
-                    if (cellPos !== null) {
-                      const node = state.doc.nodeAt(cellPos);
-                      if (node) {
-                        const attrs = {
-                          ...node.attrs,
-                          style: `background-color:${c} !important;${node.attrs.style ? node.attrs.style : ''}`,
-                          ['data-ttcolor']: c,
-                        };
-                        const tr = state.tr.setNodeMarkup(cellPos, node.type, attrs);
-                        if (tr.docChanged) view.dispatch(tr);
-                      }
-                    }
-                  }}
-                  style={{ width: 22, height: 22, borderRadius: 5, border: '1.5px solid #888', background: c, cursor: 'pointer' }}
-                />
-              ))}
-              <input
-                type="color"
-                onChange={e => {
-                  const c = e.target.value;
-                  const { state, view } = editor;
-                  const { selection } = state;
-                  let cellPos = null;
-                  state.doc.nodesBetween(selection.from, selection.to, (node, pos, parent, index) => {
-                    if ((['tableCell', 'customTableCell', 'tableHeader', 'customTableHeader'].includes(node.type.name))) {
-                      cellPos = pos;
-                    }
-                  });
-                  if (cellPos !== null) {
-                    const node = state.doc.nodeAt(cellPos);
-                    if (node) {
-                      let style = node.attrs.style || '';
-                      style = style.replace(/background-color:[^;]+;?/gi, '');
-                      style = `background-color:${c} !important;${style}`.trim();
-                      style = style.replace(/;\s*$/, '');
-                      const attrs = {
-                        ...node.attrs,
-                        style,
-                        ['data-ttcolor']: c,
-                      };
-                      let newNode;
-                      if (node.content.size === 0) {
-                        const paragraph = node.type.schema.nodes.paragraph.create();
-                        newNode = node.type.create(attrs, paragraph, node.marks);
-                      } else {
-                        newNode = node.type.create(attrs, node.content, node.marks);
-                      }
-                      const tr = state.tr.replaceWith(cellPos, cellPos + node.nodeSize, newNode);
-                      if (tr.docChanged) view.dispatch(tr);
-                    }
-                  }
-                }}
-                style={{ width: 28, height: 28, border: 'none', background: 'none', cursor: 'pointer', marginLeft: 2 }}
-              />
-            </div>
       <button title="Gras" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} style={toolBtnStyle}><FaBold /></button>
       <button title="Italique" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} style={toolBtnStyle}><FaItalic /></button>
       <button title="Souligné" onClick={() => editor.chain().focus().toggleUnderline().run()} disabled={!editor.can().chain().focus().toggleUnderline().run()} style={toolBtnStyle}><FaUnderline /></button>
-      <button title="Surligner" onClick={() => editor.chain().focus().toggleHighlight().run()} style={toolBtnStyle}><FaHighlighter /></button>
+      {/* Surligneur interactif synchronisé */}
+      {/* Surligneur custom avec palette de couleurs */}
+      <div title="Surligner" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
+        {["#fbbf24", "#10b981", "#3b82f6", "#e11d48", "#f59e42", "#a78bfa", "#fff200", "#23202d"].map(c => (
+          <button
+            key={c}
+            onClick={() => {
+              setHighlightColor(c);
+              editor.chain().focus().unsetHighlight().setHighlight({ color: c }).run();
+            }}
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 6,
+              border: highlightColor === c ? '2.5px solid #f59e42' : '1.5px solid #888',
+              background: c,
+              margin: 1,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: highlightColor === c ? '0 0 0 2px #fff, 0 0 8px #f59e42' : 'none',
+            }}
+            title={`Surligner en ${c}`}
+          >
+            {/* Icône maison : un petit rectangle */}
+            <svg width="16" height="16" viewBox="0 0 16 16">
+              <rect x="2" y="7" width="12" height="5" rx="2" fill={c} stroke="#23202d" strokeWidth="1.2" />
+            </svg>
+          </button>
+        ))}
+        <input
+          type="color"
+          value={highlightColor}
+          title="Autre couleur surligneur"
+          style={{ width: 28, height: 28, border: 'none', background: 'none', cursor: 'pointer', marginLeft: 2 }}
+          onChange={e => {
+            setHighlightColor(e.target.value);
+            editor.chain().focus().unsetHighlight().setHighlight({ color: e.target.value }).run();
+          }}
+        />
+      </div>
       <div title="Couleur texte" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
         <FaPalette style={{ fontSize: 18, marginRight: 2 }} />
         {colors.map(c => (
@@ -1282,16 +1512,15 @@ function TiptapMenuBar({ editor, theme }) {
       <button title="HR" onClick={() => editor.chain().focus().setHorizontalRule().run()} style={toolBtnStyle}>HR</button>
       <button title="Annuler" onClick={() => editor.chain().focus().undo().run()} style={toolBtnStyle}><FaUndo /></button>
       <button title="Rétablir" onClick={() => editor.chain().focus().redo().run()} style={toolBtnStyle}><FaRedo /></button>
-      <button title="Image" onClick={() => {
+      {/* <button title="Image" onClick={() => {
         const url = window.prompt('URL de l\'image');
         if (url) editor.chain().focus().setImage({ src: url }).run();
-      }} style={toolBtnStyle}><FaImage /></button>
+      }} style={toolBtnStyle}><FaImage /></button> */}
       <button title="Tableau" onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} style={toolBtnStyle}><FaTable /></button>
-      <button title="+Colonne" onClick={() => editor.chain().focus().addColumnAfter().run()} style={toolBtnStyle}><FaPlus style={{ fontSize: 14 }} />Col</button>
-      <button title="+Ligne" onClick={() => editor.chain().focus().addRowAfter().run()} style={toolBtnStyle}><FaPlus style={{ fontSize: 14 }} />Ligne</button>
+      {/* Les boutons +Colonne/+Ligne sont maintenant contextuels et discrets, plus dans la barre d'outils */}
       <button title="Supprimer Table" onClick={() => editor.chain().focus().deleteTable().run()} style={toolBtnStyle}><FaTrash /></button>
-      <button title="Supprimer colonne" onClick={() => editor.chain().focus().deleteColumn().run()} style={toolBtnStyle}>-Col</button>
-      <button title="Supprimer ligne" onClick={() => editor.chain().focus().deleteRow().run()} style={toolBtnStyle}>-Ligne</button>
+      {/* <button title="Supprimer colonne" onClick={() => editor.chain().focus().deleteColumn().run()} style={toolBtnStyle}>-Col</button> */}
+      {/* <button title="Supprimer ligne" onClick={() => editor.chain().focus().deleteRow().run()} style={toolBtnStyle}>-Ligne</button> */}
     </div>
   );
 }

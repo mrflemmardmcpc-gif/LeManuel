@@ -458,11 +458,25 @@ function Markdown({ content }) {
     };
   }, []);
 
-  // Push local changes to the shared Y.js map when they originate locally.
+  // Sauvegarde automatique sur Redis à chaque modification de data (temps réel)
   useEffect(() => {
-    // Désactive la sauvegarde automatique sur modification locale
-    // La sauvegarde se fait uniquement via le bouton principal
-    // (ne rien faire ici)
+    if (!data) return;
+    const save = async () => {
+      try {
+        await fetch("/api/state", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data }),
+        });
+        setKvStatus("saved");
+        setKvLastSaved(Date.now());
+        setIsDirty(false);
+      } catch (err) {
+        setKvStatus("error");
+        setKvErrorMsg(err?.message || "Échec sauvegarde");
+      }
+    };
+    save();
   }, [data]);
   // Bouton principal Sauvegarder
   const handleMainSave = async () => {
@@ -485,9 +499,10 @@ function Markdown({ content }) {
     }
   };
 
-  // Hydrate from KV persistence (single snapshot) so fresh deployments reuse saved content.
+  // Hydrate from KV persistence (single snapshot) + polling pour synchro temps réel
   useEffect(() => {
     let cancelled = false;
+    let intervalId;
     const load = async () => {
       setKvStatus("loading");
       setKvErrorMsg("");
@@ -499,7 +514,6 @@ function Markdown({ content }) {
           if (body?.data && typeof body.data === "object") {
             setData(body.data);
           } else {
-            // Seed KV with defaults if empty
             setData({ sections, categories });
           }
           setKvStatus("loaded");
@@ -517,7 +531,8 @@ function Markdown({ content }) {
       }
     };
     load();
-    return () => { cancelled = true; };
+    intervalId = setInterval(load, 2000); // Polling toutes les 2 secondes
+    return () => { cancelled = true; clearInterval(intervalId); };
   }, []);
 
   // Marque les changements locaux comme non sauvegardés une fois la KV chargée.

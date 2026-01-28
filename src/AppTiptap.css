@@ -1,3 +1,7 @@
+/* Correction surligneur multicolore Tiptap : laisse la couleur inline primer */
+.ProseMirror mark[style], .ProseMirror mark[data-color] {
+  background-color: inherit !important;
+}
 @import url('https://cdn.jsdelivr.net/npm/@tiptap/extension-table@2.0.0-beta.212/style.css');
 
 .note-viewer {
@@ -69,14 +73,6 @@
 }
 
 /* Si une couleur de fond est appliquée en inline, elle doit primer sur le fond du thème */
-.ProseMirror th[style*="background-color"],
-.ProseMirror td[style*="background-color"] {
-  background: inherit !important;
-}
-.ProseMirror th[style*="background-color"],
-.ProseMirror td[style*="background-color"] {
-  background-color: unset !important;
-}
 .ProseMirror th {
   background: #172554;
   font-weight: bold;
