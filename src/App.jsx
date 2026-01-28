@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import "./AppTiptap.css";
 // ...existing code...
 import LoginModal from "./modals/LoginModal";
 import ConfirmModal from "./modals/ConfirmModal";
@@ -13,6 +14,7 @@ import Gallery from "./components/Gallery";
 
 
 import EditorPanel from "./components/EditorPanel";
+import TiptapViewer from "./components/TiptapViewer";
 
   // Fonction pour enregistrer une image dans la galerie (doit être après les hooks)
    function saveImage() {
@@ -1533,7 +1535,9 @@ function Markdown({ content }) {
                                   </div>
                                 </div>
                               ) : (
-                                <Markdown content={sub.text} />
+                                <div className="note-viewer">
+                                  <TiptapViewer html={sub.text} darkMode={darkMode} theme={theme} />
+                                </div>
                               )}
 
                               {isAuthenticated && editMode && !isEditing && (

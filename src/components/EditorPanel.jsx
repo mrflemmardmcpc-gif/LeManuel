@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import "../AppTiptap.css";
 
 // Normalise les retours à la ligne en <br> pour la sauvegarde
 function normalizeLineBreaks(text) {

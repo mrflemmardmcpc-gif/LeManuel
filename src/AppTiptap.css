@@ -1,0 +1,28 @@
+
+.note-viewer {
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  color: inherit;
+}
+
+.ProseMirror p:empty {
+  min-height: 0.7em;
+  margin: 0.2em 0;
+  padding: 0;
+}
+
+.ProseMirror p {
+  margin: 0 0 0.5em 0;
+}
+
+.ProseMirror br {
+  line-height: 1.2;
+}
+
+/* Optionnel: pour éviter les espaces visuels dans les lignes vides */
+.ProseMirror p:empty::before {
+  content: '';
+}
