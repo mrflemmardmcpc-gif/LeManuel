@@ -85,7 +85,7 @@ export default {
           {
             "id": 304,
             "title": "Li-ion / Li-Po",
-            "text": "**Plus grande densité énergétique que NiMH**, usage courant sur outils modernes.\n\nAvantages : Meilleure puissance, recharge plus rapide\nDurée de vie : 1000+ cycles",
+            "text": "<p>Plus grande densité énergétique que NiMH, usage courant sur outils modernes.</p><p></p><p>Avantages : Meilleure puissance, recharge plus rapide </p><p>Durée de vie : 1000+ cycles</p>",
             "color": "#cffafe",
             "image": null
           }
@@ -108,21 +108,21 @@ export default {
           {
             "id": 352,
             "title": "Bouteilles - Stockage & manipulation",
-            "text": "**Acétylène**\n✔️ Dissous dans acétone\n✔️ Toujours stockée debout\n✔️ Très inflammable\n✔️ Distance min 10m source feu\n✔️ Ventilation obligatoire\n\n**Oxygène**\n✔️ Gaz comburant\n✔️ Favorise violemment la combustion\n✔️ Peut être stockée horizontalement\n✔️ Distance min murs\n\n**Règles communes**\n⚠️ Chaînes d'attache obligatoires\n⚠️ Pas de secousses / chocs\n⚠️ Capuchons de protection\n⚠️ Fiches de sécurité consultées",
+            "text": "<p>**Acétylène**</p><p>✔️ Dissous dans acétone</p><p>✔️ Toujours stockée debout</p><p>✔️ Très inflammable</p><p>✔️ Distance min 10m source feu</p><p>✔️ Ventilation obligatoire</p><p>  </p><p>Oxygène</p><p>✔️ Gaz comburant</p><p>✔️ Favorise violemment la combustion</p><p>✔️ Peut être stockée horizontalement</p><p>✔️ Distance min murs</p><p></p><p>**Règles communes**</p><p>⚠️ Chaînes d'attache obligatoires</p><p>⚠️ Pas de secousses / chocs</p><p>⚠️ Capuchons de protection</p><p>⚠️ Fiches de sécurité consultées</p>",
             "color": "#fed7aa",
             "image": null
           },
           {
             "id": 353,
             "title": "Mano-détendeurs & Débitmètres",
-            "text": "**Fonction des mano-détendeurs**\n🔹 Réduction pression\n🔹 Réglage précis du débit\n🔹 Protection équipement aval\n\n**Caractéristiques**\n📊 Manomètre HP (haute pression)\n📊 Manomètre BP (basse pression)\n🔧 Robinet de réglage fin\n\n**Oxygène**\n- Pression sortie : 1-8 bar selon travail\n- Débit : Réglé par débitmètre\n\n**Acétylène**\n- Pression sortie : MAX 1 bar\n- Débit : Réglé par débitmètre\n- JAMAIS dépasser 1 bar\n\n⚠️ **SÉCURITÉ PRIMORDIALE**\nVérifier pression avant chaque utilisation",
+            "text": "<p>**Fonction des mano-détendeurs**</p><p>🔹 Réduction pression</p><p>🔹 Réglage précis du débit</p><p>🔹 Protection équipement aval</p><p>  </p><p>**Caractéristiques**</p><p>📊 Manomètre HP (haute pression) </p><p>📊 Manomètre BP (basse pression)</p><p>🔧 Robinet de réglage fin</p><p></p><p>**Oxygène**</p><p>- Pression sortie : 1-8 bar selon travail</p><p>- Débit : Réglé par débitmètre</p><p></p><p>**Acétylène**</p><p>- Pression sortie : MAX 1 bar</p><p>- Débit : Réglé par débitmètre</p><p>- JAMAIS dépasser 1 bar</p><p></p><p>⚠️ **SÉCURITÉ PRIMORDIALE**</p><p>Vérifier pression avant chaque utilisation</p>",
             "color": "#fed7aa",
             "image": null
           },
           {
             "id": 354,
             "title": "Chalumeau - Types et utilisation",
-            "text": "**Chalumeau soudeur**\n✔️ Soudure de tubes en cuivre\n✔️ Température flamme : 3200°C\n✔️ Joint métal d'apport\n✔️ Technique : Chauffer + fondre apport\n\n**Chalumeau réchauffeur**\n✔️ Déglaçage\n✔️ Dilatation contrôlée\n✔️ Température plus basse\n✔️ Plus gros débit O2\n\n**Buses adaptées au travail**\n🔹 N°1, 2 : Tubes fins (6-10 mm)\n🔹 N°3, 4 : Tubes courants (13-20 mm)\n🔹 N°5+ : Gros tubes (25+ mm)\n\n**Technique soudure**\n1️⃣ Chauffer tube 2-3 secondes\n2️⃣ Fondre apport progressivement\n3️⃣ Laisser refroidir naturellement\n⚠️ Pas de trempage!",
+            "text": "<p>**Chalumeau soudeur**</p><p>✔️ Soudure de tubes en cuivre</p><p>✔️ Température flamme : 3200°C</p><p>✔️ Joint métal d'apport</p><p>✔️ Technique : Chauffer + fondre apport</p><p>  </p><p>**Chalumeau réchauffeur**</p><p>✔️ Déglaçage</p><p>✔️ Dilatation contrôlée</p><p>✔️ Température plus basse</p><p>✔️ Plus gros débit O2</p><p></p><p>**Buses adaptées au travail**</p><p>🔹 N°1, 2 : Tubes fins (6-10 mm)</p><p>🔹 N°3, 4 : Tubes courants (13-20 mm)</p><p>🔹 N°5+ : Gros tubes (25+ mm)</p><p></p><p>**Technique soudure**</p><p>1️⃣ Chauffer tube 2-3 secondes</p><p>2️⃣ Fondre apport progressivement</p><p>3️⃣ Laisser refroidir naturellement</p><p>⚠️ Pas de trempage!</p>",
             "color": "#fed7aa",
             "image": null
           }
@@ -137,14 +137,14 @@ export default {
           {
             "id": 401,
             "title": "PVC, PP, Cuivre",
-            "text": "**Choisir le matériau selon type d'eau, pression et norme**.\n\n🔹 **PVC** : Économique, usage courant\n🔹 **PP** : Meilleure résistance chimique\n🔹 **Cuivre** : Durabilité maximale, haut de gamme",
+            "text": "<p>Choisir le matériau selon type d'eau, pression et norme.</p><p></p><p>🔹 **PVC** : Économique, usage courant</p><p>🔹 **PP** : Meilleure résistance chimique</p><p>🔹 **Cuivre** : Durabilité maximale, haut de gamme </p>",
             "color": "#ddd6fe",
             "image": null
           },
           {
             "id": 402,
             "title": "Pentes et diamètres",
-            "text": "💡 **Maintenir pente correcte pour écoulement naturel et éviter bouchons**.\n\nPentes recommandées :\n- Eaux usées : 2-3% minimum\n- Eaux pluviales : 0,5-1%\n- Collecteurs : 1-2%\n\nDiamètres courants :\n- Lavabo : 32 mm\n- Douche/Baignoire : 40 mm\n- WC : 100 mm",
+            "text": "<p>💡 **Maintenir pente correcte pour écoulement naturel et éviter bouchons**.</p><p></p><p>Pentes recommandées :</p><p>- Eaux usées : 2-3% minimum</p><p>- Eaux pluviales : 0,5-1%</p><p>- Collecteurs : 1-2% </p><p></p><p>Diamètres courants :</p><p>- Lavabo : 32 mm</p><p>- Douche/Baignoire : 40 mm</p><p>- WC : 100 mm</p>",
             "color": "#ddd6fe",
             "image": null
           }
@@ -160,42 +160,42 @@ export default {
           {
             "id": 501,
             "title": "Sécurité électrique - Appareils électroportatifs",
-            "text": "⚠️ **DANGER ÉLECTRIQUE MAJEUR**\n\n**Risques mortels en milieu humide :**\n⚡ 50V en milieu sec = peut être létal\n⚡ 25V en milieu humide = LÉTAL\n⚡ Plus de 1 000 accidents électriques/an en France (~20 mortels)\n\n**Solutions de sécurité :**\n✔️ Disjoncteur différentiel 30mA obligatoire\n✔️ Rallonges équipées GFCI\n✔️ Appareils sur batterie ≤ 24V recommandé\n✔️ Gants/bottes isolants en milieu humide\n\n**En vide sanitaire ou extérieur :**\n👉 Utiliser obligatoirement batterie ≤ 24V\n👉 Jamais d'appareil 230V en milieu humide",
+            "text": "<p>⚠️ **DANGER ÉLECTRIQUE MAJEUR**</p><p></p><p>**Risques mortels en milieu humide :** </p><p>⚡ 50V en milieu sec = peut être létal</p><p>⚡ 25V en milieu humide = LÉTAL</p><p>⚡ Plus de 1 000 accidents électriques/an en France (~20 mortels)</p><p></p><p>**Solutions de sécurité :**</p><p>✔️ Disjoncteur différentiel 30mA obligatoire</p><p>✔️ Rallonges équipées GFCI</p><p>✔️ Appareils sur batterie ≤ 24V recommandé</p><p>✔️ Gants/bottes isolants en milieu humide</p><p></p><p>**En vide sanitaire ou extérieur :**</p><p>👉 Utiliser obligatoirement batterie ≤ 24V</p><p>👉 Jamais d'appareil 230V en milieu humide</p>",
             "color": "#fed7aa",
             "image": null
           },
           {
             "id": 502,
             "title": "Perforateur SDS+ 2 modes 18V - Complet",
-            "text": "<p>🔧 **Perçages bois, métal, céramique, béton.**<br><br>**Fiche technique complète :** </p><table style=\"min-width: 50px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\">Caractéristique</th><th colspan=\"1\" rowspan=\"1\">Valeur</th></tr><tr><td colspan=\"1\" rowspan=\"1\">Voltage</td><td colspan=\"1\" rowspan=\"1\">18 V</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Batterie</td><td colspan=\"1\" rowspan=\"1\">3.0 Ah NiMH</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Puissance utile</td><td colspan=\"1\" rowspan=\"1\">300 W</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Vitesse à vide</td><td colspan=\"1\" rowspan=\"1\">0-1100 tr/min</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Coups/min</td><td colspan=\"1\" rowspan=\"1\">0-4200 cps/min</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Capacité perçage Bois</td><td colspan=\"1\" rowspan=\"1\">30 mm</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Capacité perçage Métal</td><td colspan=\"1\" rowspan=\"1\">13 mm</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Capacité perçage Béton</td><td colspan=\"1\" rowspan=\"1\">20 mm</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Poids</td><td colspan=\"1\" rowspan=\"1\">3,1 kg</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Longueur</td><td colspan=\"1\" rowspan=\"1\">295 mm</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Hauteur</td><td colspan=\"1\" rowspan=\"1\">195 mm</td></tr></tbody></table><p>**Équipements de confort :**\n✔️ Poignée caoutchoutée limite vibrations\n✔️ Moteur avec frein électronique\n✔️ Anti-vibration active\n✔️ Équilibrage arrière\n✔️ Changement rapide outil SDS+\n\n**Avant utilisation :**\n⚠️ Vérifier batterie chargée\n⚠️ Vérifier foret bien fixé\n⚠️ Porter EPI (lunettes, gants)\n⚠️ Utiliser poignée latérale en percussion</p>",
+            "text": "<p>🔧 **Perçages bois, métal, céramique, béton.**<br><br>**Fiche technique complète :**</p><table style=\"min-width: 50px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p>Caractéristique</p></th><th colspan=\"1\" rowspan=\"1\"><p>Valeur</p></th></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Voltage</p></td><td colspan=\"1\" rowspan=\"1\"><p>18 V</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Batterie</p></td><td colspan=\"1\" rowspan=\"1\"><p>3.0 Ah NiMH</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Puissance utile</p></td><td colspan=\"1\" rowspan=\"1\"><p>300 W</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Vitesse à vide</p></td><td colspan=\"1\" rowspan=\"1\"><p>0-1100 tr/min</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Coups/min</p></td><td colspan=\"1\" rowspan=\"1\"><p>0-4200 cps/min</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Capacité perçage Bois</p></td><td colspan=\"1\" rowspan=\"1\"><p>30 mm</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Capacité perçage Métal</p></td><td colspan=\"1\" rowspan=\"1\"><p>13 mm</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Capacité perçage Béton</p></td><td colspan=\"1\" rowspan=\"1\"><p>20 mm</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Poids</p></td><td colspan=\"1\" rowspan=\"1\"><p>3,1 kg</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Longueur</p></td><td colspan=\"1\" rowspan=\"1\"><p>295 mm</p></td></tr><tr><td colspan=\"1\" rowspan=\"1\"><p>Hauteur</p></td><td colspan=\"1\" rowspan=\"1\"><p>195 mm</p></td></tr></tbody></table><p>**Équipements de confort :** </p><p>✔️ Poignée caoutchoutée limite vibrations </p><p>*✔️ Moteur avec frein électronique </p><p>✔️ Anti-vibration active </p><p>✔️ Équilibrage arrière </p><p>✔️ Changement rapide outil SDS+ </p><p>Avant utilisation : </p><p>⚠️ Vérifier batterie chargée </p><p>⚠️ Vérifier foret bien fixé </p><p>⚠️ Porter EPI (lunettes, gants) </p><p>⚠️ Utiliser poignée latérale en percussion</p>",
             "color": "#fed7aa",
             "image": null
           },
           {
             "id": 503,
             "title": "Forets Béton - Carbure de Tungstène",
-            "text": "**Composition : Pointe carbure tungstène**\n\n**Caractéristiques :**\n✔️ Dureté maximale\n✔️ Résiste aux vibrations percussion\n✔️ Usure réduite\n✔️ Longue durée de vie\n\n**Fixations disponibles :**\n🔹 Queue SDS : Ø6-8 mm\n🔹 Queue SDS+ : Ø6-20 mm\n🔹 Queue SDS Max : Ø18-32 mm\n\n**Utilisation :**\n- Béton armé / non armé\n- Brique / Pierre\n- Carrelage\n- Rotation lente obligatoire\n- Mode percussion actif\n\n**Règle vitesse :**\n🧠 Plus le Ø est grand → plus la vitesse doit être lente\n🧠 Ø20mm = vitesse 1 (min)\n🧠 Ø8mm = vitesse 3 (moyen)",
+            "text": "<p>**Composition : Pointe carbure tungstène**</p><p></p><p>**Caractéristiques :**</p><p>✔️ Dureté maximale</p><p>✔️ Résiste aux vibrations percussion</p><p>✔️ Usure réduite</p><p>✔️ Longue durée de vie</p><p></p><p>**Fixations disponibles :**</p><p>🔹 Queue SDS : Ø6-8 mm</p><p>🔹 Queue SDS+ : Ø6-20 mm</p><p>🔹 Queue SDS Max : Ø18-32 mm  </p><p></p><p>**Utilisation :**</p><p>- Béton armé / non armé</p><p>- Brique / Pierre</p><p>- Carrelage</p><p>- Rotation lente obligatoire</p><p>- Mode percussion actif</p><p></p><p>**Règle vitesse :**</p><p>🧠 Plus le Ø est grand → plus la vitesse doit être lente</p><p>🧠 Ø20mm = vitesse 1 (min)</p><p>🧠 Ø8mm = vitesse 3 (moyen)</p>",
             "color": "#fed7aa",
             "image": null
           },
           {
             "id": 504,
             "title": "Forets Métal - Acier & Alliages",
-            "text": "**Composition : Acier ordinaire ou haute vitesse**\n\n**Diamètres disponibles :**\nØ 1 à 13 mm : Queue cylindrique\nØ 14 à 16 mm : Queue réduite\nØ 20+ mm : Queue réduite spéciale\n\n**Applications :**\n✔️ Acier / Inox\n✔️ Aluminium\n✔️ Alliages légers\n✔️ Fonte (attention cassant)\n\n**Technique :**\n- Vitesse élevée (1200+ tr/min)\n- Lubrification recommandée (WD40)\n- Pression progressive\n- Pas de percussion\n\n**Mandrin :**\n🔧 Mandrin auto-serrant 1-13mm\n🔧 Pour forets cylindriques",
+            "text": "<p>**Composition : Acier ordinaire ou haute vitesse**</p><p></p><p>**Diamètres disponibles :**</p><p>Ø 1 à 13 mm : Queue cylindrique</p><p>Ø 14 à 16 mm : Queue réduite</p><p>Ø 20+ mm : Queue réduite spéciale</p><p></p><p>**Applications :**</p><p>✔️ Acier / Inox</p><p>✔️ Aluminium</p><p>✔️ Alliages légers </p><p>✔️ Fonte (attention cassant)</p><p></p><p>**Technique :**</p><p>- Vitesse élevée (1200+ tr/min)</p><p>- Lubrification recommandée (WD40)</p><p>- Pression progressive</p><p>- Pas de percussion</p><p></p><p>**Mandrin :**</p><p>🔧 Mandrin auto-serrant 1-13mm</p><p>🔧 Pour forets cylindriques</p>",
             "color": "#fed7aa",
             "image": null
           },
           {
             "id": 505,
             "title": "Forets Bois - Vrille & Hélice",
-            "text": "**Types courants :**\n🔹 Foret hélicoïdal : Usage général bois\n🔹 Foret vrille : Trous nets sans éclat\n🔹 Foret plat : Gros diamètres rapide\n\n**Utilisation :**\n✔️ Bois tendre (pin, sapin)\n✔️ Bois dur (chêne, hêtre)\n✔️ Panneaux contreplaqué\n✔️ Aggloméré\n\n**Vitesse selon diamètre :**\nØ 3-8 mm : 1200-1500 tr/min\nØ 10-16 mm : 600-900 tr/min\nØ 18+ mm : 300-600 tr/min\n\n**Technique :**\n- Pas de percussion\n- Appui régulier\n- Enlever régulièrement foret",
+            "text": "<p>**Types courants :**</p><p>🔹 Foret hélicoïdal : Usage général bois</p><p>🔹 Foret vrille : Trous nets sans éclat</p><p>🔹 Foret plat : Gros diamètres rapide</p><p></p><p>**Utilisation :**</p><p>✔️ Bois tendre (pin, sapin)</p><p>✔️ Bois dur (chêne, hêtre) </p><p>✔️ Panneaux contreplaqué</p><p>✔️ Aggloméré</p><p></p><p>**Vitesse selon diamètre :**</p><p>Ø 3-8 mm : 1200-1500 tr/min</p><p>Ø 10-16 mm : 600-900 tr/min</p><p>Ø 18+ mm : 300-600 tr/min</p><p></p><p>**Technique :**</p><p>- Pas de percussion</p><p>- Appui régulier</p><p>- Enlever régulièrement foret</p>",
             "color": "#fed7aa",
             "image": null
           },
           {
             "id": 506,
             "title": "Scie cloche & accessoires",
-            "text": "**Scie cloche (trépan)**\n✔️ Trous nets et précis\n✔️ Diamètres : 20-150 mm\n✔️ Passage de tuyaux\n✔️ Trous d'évacuation\n\n**Vitesse adaptée :**\n- Ø 30mm : 400 tr/min\n- Ø 50mm : 250 tr/min\n- Ø 100mm : 100 tr/min\n\n**Foret pilote :**\n💡 Guide pour perçage exact\n💡 Évite déviation scie\n💡 Sécurité en perçage\n\n**Utilisations courantes :**\n✔️ Passage tuyaux plomberie\n✔️ Trous robinetterie\n✔️ Saignées gaines électriques\n✔️ Trous d'évacuation sanitaire",
+            "text": "<p>**Scie cloche (trépan)**</p><p>✔️ Trous nets et précis</p><p>✔️ Diamètres : 20-150 mm</p><p>✔️ Passage de tuyaux</p><p>✔️ Trous d'évacuation</p><p></p><p>**Vitesse adaptée :**</p><p>- Ø 30mm : 400 tr/min</p><p>- Ø 50mm : 250 tr/min</p><p>- Ø 100mm : 100 tr/min</p><p></p><p>**Foret pilote :**</p><p>💡 Guide pour perçage exact</p><p>💡 Évite déviation scie</p><p>💡 Sécurité en perçage</p><p></p><p>**Utilisations courantes :** </p><p>✔️ Passage tuyaux plomberie</p><p>✔️ Trous robinetterie</p><p>✔️ Saignées gaines électriques</p><p>✔️ Trous d'évacuation sanitaire</p>",
             "color": "#fed7aa",
             "image": null
           }
@@ -211,21 +211,21 @@ export default {
           {
             "id": 601,
             "title": "Modes perçage simple",
-            "text": "**Stop de frappe pour perçage bois, métal, céramique.**\n\nUtilisation : Fixations légères, travail précis\nSécurité : Bien positionner la mèche avant de percer",
+            "text": "<p>**Stop de frappe pour perçage bois, métal, céramique.**</p><p></p><p>Utilisation : Fixations légères, travail précis</p><p>Sécurité : Bien positionner la mèche avant de percer </p>",
             "color": "#fbcfe8",
             "image": null
           },
           {
             "id": 602,
             "title": "Modes perçage béton",
-            "text": "**Utilisation du marteau et SDS-Plus**, coups par minute élevés pour efficacité.\n\nTechnique : Appliquer pression progressive\nProtection : EPI obligatoire (lunettes, masque)",
+            "text": "<p>**Utilisation du marteau et SDS-Plus**, coups par minute élevés pour efficacité.</p><p></p><p>Technique : Appliquer pression progressive</p><p>Protection : EPI obligatoire (lunettes, masque) </p>",
             "color": "#fbcfe8",
             "image": null
           },
           {
             "id": 603,
             "title": "Batteries NiMH 2.6Ah",
-            "text": "**Livrée avec chargeur rapide 1h**, poignée latérale réglable.\n\nAvantages : Rapidité, autonomie, faible effet mémoire\nEntretien : Stocker en lieu frais et sec",
+            "text": "<p>**Livrée avec chargeur rapide 1h**, poignée latérale réglable.</p><p></p><p>Avantages : Rapidité, autonomie, faible effet mémoire</p><p>Entretien : Stocker en lieu frais et sec </p>",
             "color": "#fbcfe8",
             "image": null
           }
@@ -241,21 +241,21 @@ export default {
           {
             "id": 701,
             "title": "Types de plans - Classifications",
-            "text": "**Plan d'implantation**\n🗺️ Vue générale bâtiment\n🗺️ Localisation réseaux\n🗺️ Échelle : 1:100 à 1:200\n🗺️ Usage : Positionnement global\n\n**Plan d'exécution**\n🗺️ Détails constructifs\n🗺️ Cotes précises\n🗺️ Échelle : 1:50\n🗺️ Usage : Chantier terrain\n\n**Schéma isométrique**\n🗺️ Représentation 3D\n🗺️ Vue perspective\n🗺️ Cheminement réseaux\n🗺️ Usage : Clarification trajets\n\n**Schéma de principe**\n🗺️ Fonctionnement circuit\n🗺️ Symboles simplifiés\n🗺️ Pas à l'échelle\n🗺️ Usage : Comprendre système",
+            "text": "<p>**Plan d'implantation**</p><p>🗺️ Vue générale bâtiment</p><p>🗺️ Localisation réseaux</p><p>🗺️ Échelle : 1:100 à 1:200</p><p>🗺️ Usage : Positionnement global</p><p></p><p>**Plan d'exécution**  </p><p>🗺️ Détails constructifs</p><p>🗺️ Cotes précises</p><p>🗺️ Échelle : 1:50</p><p>🗺️ Usage : Chantier terrain</p><p></p><p>**Schéma isométrique**</p><p>🗺️ Représentation 3D</p><p>🗺️ Vue perspective</p><p>🗺️ Cheminement réseaux</p><p>🗺️ Usage : Clarification trajets</p><p></p><p>**Schéma de principe**</p><p>🗺️ Fonctionnement circuit</p><p>🗺️ Symboles simplifiés</p><p>🗺️ Pas à l'échelle</p><p>🗺️ Usage : Comprendre système</p>",
             "color": "#d1fae5",
             "image": null
           },
           {
             "id": 702,
             "title": "Symboles essentiels - Tuyauteries",
-            "text": "**Représentation tuyaux :**\n\n**Lignes pleines** = Eau froide (EF)\n**Lignes pointillées** = Eaux usées (EU)\n\n**Codes couleur standards :**\n- 🔵 Bleu : Eau froide\n- 🔴 Rouge : Eau chaude sanitaire (ECS)\n- 🟤 Marron : Eaux usées / Eaux vannes (EU)\n- ⚫ Noir : Eaux de pluie (EP)\n- 🟢 Vert : Gaz\n\n💡 **Important :** Vérifier légende chaque plan\nCertains plans peuvent avoir codes différents",
+            "text": "<p>**Représentation tuyaux :**</p><p></p><p>**Lignes pleines** = Eau froide (EF)</p><p>**Lignes pointillées** = Eaux usées (EU)</p><p></p><p>**Codes couleur standards :**</p><p>- 🔵 Bleu : Eau froide</p><p>- 🔴 Rouge : Eau chaude sanitaire (ECS)</p><p>- 🟤 Marron : Eaux usées / Eaux vannes (EU) </p><p>- ⚫ Noir : Eaux de pluie (EP)</p><p>- 🟢 Vert : Gaz</p><p></p><p>💡 **Important :** Vérifier légende chaque plan</p><p>Certains plans peuvent avoir codes différents</p>",
             "color": "#d1fae5",
             "image": null
           },
           {
             "id": 703,
             "title": "Symboles essentiels - Appareils & Robinetterie",
-            "text": "**Appareils sanitaires :**\n\n🚽 **WC** : Cuvette vue de dessus\n🚰 **Lavabo** : Rectangle avec robinet\n🚿 **Douche** : Carré avec pommeau/tête\n🛁 **Baignoire** : Rectangle allongé\n🪣 **Évier** : Rectangle avec rebord\n🚲 **Bidet** : Forme spécifique\n\n**Robinetterie :**\n\n🔧 **Robinet 1/4 tour** : Boule avec levier\n🔧 **Robinet thermostatique** : Cercle T\n🔧 **Clapet anti-retour** : Triangle direction\n🔧 **Soupape sécurité** : Carré avec S\n\n**Appareils chauffage :**\n🔥 **Radiateur** : Série rectangles parallèles\n🔥 **Ballon ECS** : Cercle + flèches UP/DOWN",
+            "text": "<p>**Appareils sanitaires :**</p><p></p><p>🚽 **WC** : Cuvette vue de dessus</p><p>🚰 **Lavabo** : Rectangle avec robinet</p><p>🚿 **Douche** : Carré avec pommeau/tête</p><p>🛁 **Baignoire** : Rectangle allongé </p><p>🪣 **Évier** : Rectangle avec rebord</p><p>🚲 **Bidet** : Forme spécifique</p><p></p><p>**Robinetterie :**</p><p></p><p>🔧 **Robinet 1/4 tour** : Boule avec levier</p><p>🔧 **Robinet thermostatique** : Cercle T</p><p>🔧 **Clapet anti-retour** : Triangle direction</p><p>🔧 **Soupape sécurité** : Carré avec S</p><p></p><p>**Appareils chauffage :**</p><p>🔥 **Radiateur** : Série rectangles parallèles</p><p>🔥 **Ballon ECS** : Cercle + flèches UP/DOWN</p>",
             "color": "#d1fae5",
             "image": null
           },
@@ -276,14 +276,14 @@ export default {
           {
             "id": 706,
             "title": "Orientation & Repérage - Entrée/Sortie",
-            "text": "**Points essentiels repérage :**\n\n🧭 **Nord indiqué**\n✔️ Orientation plan\n✔️ Aide positionnement géographique\n\n💧 **Entrée eau**\n✔️ Généralement gauche plan\n✔️ Source d'alimentation générale\n✔️ Vérifier diamètre arrivée\n\n🚱 **Sortie eaux usées**\n✔️ Clairement indiquée\n✔️ Vers réseau collectif\n✔️ Vérifier pente vers sortie\n\n🔗 **Zones de raccordement**\n✔️ Repères appar eil par appareil\n✔️ Entrée/ sortie distinctes\n✔️ Pas d'erreur sens circulation\n\n⚠️ **À ne JAMAIS confondre**\n❌ Entrée EF avec sortie EU\n❌ ECS avec gaz\n❌ Sens écoulement",
+            "text": "<p>**Points essentiels repérage :**</p><p></p><p>🧭 **Nord indiqué**</p><p>✔️ Orientation plan</p><p>✔️ Aide positionnement géographique</p><p></p><p>💧 **Entrée eau**  </p><p>✔️ Généralement gauche plan</p><p>✔️ Source d'alimentation générale</p><p>✔️ Vérifier diamètre arrivée</p><p></p><p>🚱 **Sortie eaux usées**</p><p>✔️ Clairement indiquée</p><p>✔️ Vers réseau collectif</p><p>✔️ Vérifier pente vers sortie</p><p></p><p>🔗 **Zones de raccordement**</p><p>✔️ Repères appar eil par appareil</p><p>✔️ Entrée/ sortie distinctes</p><p>✔️ Pas d'erreur sens circulation</p><p></p><p>⚠️ **À ne JAMAIS confondre**</p><p>❌ Entrée EF avec sortie EU</p><p>❌ ECS avec gaz</p><p>❌ Sens écoulement</p>",
             "color": "#d1fae5",
             "image": null
           },
           {
             "id": 707,
             "title": "Notes complémentaires & Détails constructifs",
-            "text": "**Informations à relever systématiquement :**\n\n📝 **Dimension tuyauterie**\n🔹 EF : Généralement 12-16 mm\n🔹 ECS : 12-16 mm\n🔹 EU : 32-40 mm (lavabos)\n🔹 EU : 100 mm (WC)\n\n📝 **Isolation tuyaux**\n🔹 ECS : Toujours isolée\n🔹 EF : Rarement isolée\n🔹 Épaisseur isolation : 25-50 mm\n\n📝 **Matériaux**\n🔹 Cuivre : Traditionnel, cher\n🔹 PER : Flexible, rapide\n🔹 Multicouche : Polyvalent\n🔹 PVC/PP : Évacuation\n\n📝 **Protection / Passage**\n🔹 Gaines de protection\n🔹 Traversée plancher\n🔹 Distance murs (cm)\n🔹 Accessibilité robinets\n\n💡 **Astuces professionnelles**\n✔️ Relever toutes mesures\n✔️ Vérifier compatibilité matériel\n✔️ Prévoir points de puisage\n✔️ Marquer cheminement réel vs plan\n✔️ Photos chantier avant fermeture",
+            "text": "<p>**Informations à relever systématiquement :**</p><p></p><p>📝 **Dimension tuyauterie**</p><p>🔹 EF : Généralement 12-16 mm</p><p>🔹 ECS : 12-16 mm</p><p>🔹 EU : 32-40 mm (lavabos)</p><p>🔹 EU : 100 mm (WC)  </p><p></p><p>📝 **Isolation tuyaux**</p><p>🔹 ECS : Toujours isolée</p><p>🔹 EF : Rarement isolée</p><p>🔹 Épaisseur isolation : 25-50 mm</p><p></p><p>📝 **Matériaux**</p><p>🔹 Cuivre : Traditionnel, cher</p><p>🔹 PER : Flexible, rapide</p><p>🔹 Multicouche : Polyvalent</p><p>🔹 PVC/PP : Évacuation</p><p></p><p>📝 **Protection / Passage**</p><p>🔹 Gaines de protection</p><p>🔹 Traversée plancher</p><p>🔹 Distance murs (cm)</p><p>🔹 Accessibilité robinets</p><p></p><p>💡 **Astuces professionnelles**</p><p>✔️ Relever toutes mesures</p><p>✔️ Vérifier compatibilité matériel</p><p>✔️ Prévoir points de puisage</p><p>✔️ Marquer cheminement réel vs plan</p><p>✔️ Photos chantier avant fermeture</p>",
             "color": "#d1fae5",
             "image": null
           }
@@ -299,7 +299,7 @@ export default {
           {
             "id": 801,
             "title": "Définitions et principes",
-            "text": "**EF (Eau Froide):** Eau potable du réseau public, 2,5-4 bars, 10-15°C\n**ECS (Eau Chaude):** Eau chauffée, distribution 50-60°C, stockage 55-60°C\n\nInstallation conforme aux normes NF pour sécurité et qualité.",
+            "text": "<p>**EF (Eau Froide):** Eau potable du réseau public, 2,5-4 bars, 10-15°C</p><p>**ECS (Eau Chaude):** Eau chauffée, distribution 50-60°C, stockage 55-60°C</p><p>  </p><p>Installation conforme aux normes NF pour sécurité et qualité.</p>",
             "color": "#dbeafe",
             "image": null
           }
@@ -315,7 +315,7 @@ export default {
           {
             "id": 90001,
             "title": "Panorama",
-            "text": "🔥 Instantané • ⚡ Micro-accumulation • 🛢️ Accumulation • 🌀 Semi (tampon)\n[color=#00c853]Clé terrain :[/color] choisir selon simultanéité des puisages, énergie dispo, pertes acceptables.",
+            "text": "<p>🔥 Instantané • ⚡ Micro-accumulation • 🛢️ Accumulation • 🌀 Semi (tampon)</p><p>Clé terrain : choisir selon simultanéité des puisages, énergie dispo, pertes acceptables. </p>",
             "color": "#e0f2fe",
             "image": null
           }
@@ -331,14 +331,14 @@ export default {
           {
             "id": 90101,
             "title": "Indépendants élec/gaz",
-            "text": "Instantané élec <2 L : 1,5-7 kW, 1 point proche\nMicro-accum 5-30 L : 1,5-2 kW, 1-2 points\nInstantané gaz : échangeur plaques/tubulaire, débit = f(puissance)\n[color=#ef4444]Vigilance :[/color] câble/abonnement élec, longueur tirage, ΔT = (kW×860)/L/h.",
+            "text": "<p>Instantané élec &lt;2 L : 1,5-7 kW, 1 point proche</p><p></p><p>Micro-accum 5-30 L : 1,5-2 kW, 1-2 points</p><p></p><p>Instantané gaz : échangeur plaques/tubulaire, débit = f(puissance)</p><p></p><p>Vigilance :câble/abonnement élec, longueur tirage, ΔT = (kW×860)/L/h.</p>",
             "color": "#e0f2fe",
             "image": null
           },
           {
             "id": 90102,
             "title": "Principe de fonctionnement",
-            "text": "Eau traverse échangeur → chauffe directe → zéro stockage.\n✔️ Pas de pertes statiques\n✔️ Démarrage rapide\n⚠️ Débit/T° dépend de la puissance instantanée.",
+            "text": "<p>Eau traverse échangeur → chauffe directe → zéro stockage.</p><p>✔️ Pas de pertes statiques</p><p>✔️ Démarrage rapide</p><p>⚠️ Débit/T° dépend de la puissance instantanée.  </p>",
             "color": "#e0f2fe",
             "image": null
           }
@@ -354,7 +354,7 @@ export default {
           {
             "id": 90201,
             "title": "Chaudière murale + échangeur",
-            "text": "Priorité ECS : vanne 3 voies ou aquastat détourne la puissance chauffage.\nÉchangeur à plaques (compact) ou serpentin cuivre.\n[color=#00c853]Avantage :[/color] compacité, pas de ballon.\n[color=#ef4444]Limite :[/color] douche simultanée + évier = chute débit/ΔT.",
+            "text": "<p>Priorité ECS : vanne 3 voies ou aquastat détourne la puissance chauffage.</p><p>Échangeur à plaques (compact) ou serpentin cuivre.</p><p>Avantage : compacité, pas de ballon.</p><p>Limite :douche simultanée + évier = chute débit/ΔT.</p>",
             "color": "#ffe4d5",
             "image": null
           }
@@ -370,42 +370,42 @@ export default {
           {
             "id": 90301,
             "title": "Principe de fonctionnement",
-            "text": "Ballon stocke l'énergie, chauffe décorrélée du puisage.\n[color=#ef4444]Pertes statiques[/color] à surveiller (isolation, volume).",
+            "text": "<p>Ballon stocke l'énergie, chauffe décorrélée du puisage.</p><p>Pertes statiques à surveiller (isolation, volume).</p>",
             "color": "#dbeafe",
             "image": null
           },
           {
             "id": 90302,
             "title": "Le phénomène de stratification",
-            "text": "Chaud en haut, froid en bas → confort + anti-légionelles si 60°C.\nÉviter brassage inutile, placer départ ECS haut du ballon.",
+            "text": "<p>Chaud en haut, froid en bas → confort + anti-légionelles si 60°C.</p><p>Éviter brassage inutile, placer départ ECS haut du ballon. </p>",
             "color": "#dbeafe",
             "image": null
           },
           {
             "id": 90303,
             "title": "Accumulation électricité",
-            "text": "Résistance stéatite/blindée, volume 50-300 L.\nPilotage HC/HP, anode à contrôler.\n[color=#00c853]Astuce :[/color] stéatite = moins de calcaire sur la résistance.",
+            "text": "<p>Résistance stéatite/blindée, volume 50-300 L.</p><p>Pilotage HC/HP, anode à contrôler.</p><p>Astuce : stéatite = moins de calcaire sur la résistance.</p>",
             "color": "#dbeafe",
             "image": null
           },
           {
             "id": 90304,
             "title": "Accumulation gaz",
-            "text": "Brûleur atmos. + ballon intégré.\nVentilation/évac conformes.\n[color=#ef4444]Rappel :[/color] contrôle CO, tirage naturel.",
+            "text": "<p>Brûleur atmos. + ballon intégré.</p><p>Ventilation/évac conformes.</p><p>Rappel :=contrôle CO, tirage naturel.</p>",
             "color": "#dbeafe",
             "image": null
           },
           {
             "id": 90305,
             "title": "Accumulation solaire",
-            "text": "CESI thermosiphon ou forcé.\nBallon bi-échangeur/combiné, appoint élec/gaz.\n[color=#00c853]Gain :[/color] kWh gratuits, vérifier antigel, vase, soupapes.",
+            "text": "<p>CESI thermosiphon ou forcé.</p><p>Ballon bi-échangeur/combiné, appoint élec/gaz.</p><p>Gain :kWh gratuits, vérifier antigel, vase, soupapes.</p>",
             "color": "#dbeafe",
             "image": null
           },
           {
             "id": 90306,
             "title": "Accumulation thermodynamique",
-            "text": "PAC air extrait/ambiant + ballon.\nCOP élevé, bruit et refroidissement du local à considérer.\n[color=#ef4444]Éviter[/color] les petits volumes d'air fermés.",
+            "text": "<p>PAC air extrait/ambiant + ballon.</p><p>COP élevé, bruit et refroidissement du local à considérer.</p><p>Éviter les petits volumes d'air fermés.</p>",
             "color": "#dbeafe",
             "image": null
           }
@@ -421,7 +421,7 @@ export default {
           {
             "id": 90401,
             "title": "Ballon combiné",
-            "text": "Un ballon pour ECS + chauffage via serpentin.\nPriorité ECS à paramétrer pour éviter douches tièdes.\n[color=#00c853]Réglage :[/color] limiter cycles brûleur, conserver stratification.",
+            "text": "<p>Un ballon pour ECS + chauffage via serpentin.</p><p>Priorité ECS à paramétrer pour éviter douches tièdes.</p><p>Réglage :limiter cycles brûleur, conserver stratification.</p>",
             "color": "#e0f2fe",
             "image": null
           }
@@ -437,7 +437,7 @@ export default {
           {
             "id": 90501,
             "title": "Principe",
-            "text": "Petit tampon + échangeur dimensionné pour lisser les variations.\nNe couvre pas toute pointe 10 min mais réduit les chutes.\n[color=#ef4444]Entretien :[/color] détartrage échangeur.",
+            "text": "<p>Petit tampon + échangeur dimensionné pour lisser les variations.</p><p>Ne couvre pas toute pointe 10 min mais réduit les chutes.</p><p>Entretien : détartrage échangeur.</p>",
             "color": "#e0f2fe",
             "image": null
           }
@@ -453,7 +453,7 @@ export default {
           {
             "id": 90601,
             "title": "Principe",
-            "text": "Instantané + ballon tampon dimensionné pour pointe 10 min (Om).\n✔️ Débit soutenu court terme\n✔️ Ballon plus compact qu'accumulation totale\n⚠️ Pertes statiques existantes.",
+            "text": "<p>Instantané + ballon tampon dimensionné pour pointe 10 min (Om).</p><p>✔️ Débit soutenu court terme</p><p>✔️ Ballon plus compact qu'accumulation totale</p><p>⚠️ Pertes statiques existantes. </p>",
             "color": "#e0f2fe",
             "image": null
           }
@@ -469,7 +469,7 @@ export default {
           {
             "id": 90701,
             "title": "Guides rapides",
-            "text": "Instantané gaz : 1-2 points isolés\nMicro-accum élec : points proches, faible simultanéité\nAccum élec : pavillonnaire HC\nAccum gaz : usage continu, débit soutenu\nSolaire/thermo : conso régulière, économies énergie\nSemi-accum : petits ERP, pointes 10 min assurées",
+            "text": "<p>Instantané gaz : 1-2 points isolés</p><p>Micro-accum élec : points proches, faible simultanéité</p><p>Accum élec : pavillonnaire HC </p><p>Accum gaz : usage continu, débit soutenu</p><p>Solaire/thermo : conso régulière, économies énergie</p><p>Semi-accum : petits ERP, pointes 10 min assurées</p>",
             "color": "#e0f2fe",
             "image": null
           }
@@ -485,14 +485,14 @@ export default {
           {
             "id": 95001,
             "title": "Composition & raccordement",
-            "text": "### Poste mobile complet\n🧯 Bouteille O₂ + bouteille C₂H₂ (dissous) sur chariot [color=#3b82f6]stable[/color]\n📈 Mano-détendeurs double mano (HP/BP) sur chaque bouteille\n🧵 Flexibles caoutchouc toilé (O₂ bleu, C₂H₂ rouge) Ø adaptés\n🔗 Raccords rapides LOR : femelle en attente, mâle côté chalumeau\n\n| Élément | Détail | Emoji |\n| --- | --- | --- |\n| O₂ | Comburant, ogive blanche | 🟦 |\n| C₂H₂ | Carburant, ogive havane | 🟥 |\n| Clapets | Anti-retour + pare-flamme | 🛡️ |\n| Flexibles | 6x11 (petit), 9x16 (n°1) | 🧵 |\n\n[color=#00c853]Important :[/color] clapets anti-retour [color=#00c853]OBLIGATOIRES[/color]. Si >20 m de flexibles : un au détendeur + un au chalumeau.\n[color=#ef4444]Attention :[/color] toujours chaîner les bouteilles et garder les capuchons en transport ; pas de chocs.",
+            "text": "<p>### Poste mobile complet\n🧯 Bouteille O₂ + bouteille C₂H₂ (dissous) sur chariot stable\n📈 Mano-détendeurs double mano (HP/BP) sur chaque bouteille\n🧵 Flexibles caoutchouc toilé (O₂ bleu, C₂H₂ rouge) Ø adaptés\n🔗 Raccords rapides LOR : femelle en attente, mâle côté chalumeau</p><table style=\"min-width: 75px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\">Élément</th><th colspan=\"1\" rowspan=\"1\">Détail</th><th colspan=\"1\" rowspan=\"1\">Emoji</th></tr><tr><td colspan=\"1\" rowspan=\"1\">O₂</td><td colspan=\"1\" rowspan=\"1\">Comburant, ogive blanche</td><td colspan=\"1\" rowspan=\"1\">🟦</td></tr><tr><td colspan=\"1\" rowspan=\"1\">C₂H₂</td><td colspan=\"1\" rowspan=\"1\">Carburant, ogive havane</td><td colspan=\"1\" rowspan=\"1\">🟥</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Clapets</td><td colspan=\"1\" rowspan=\"1\">Anti-retour + pare-flamme</td><td colspan=\"1\" rowspan=\"1\">🛡️</td></tr><tr><td colspan=\"1\" rowspan=\"1\">Flexibles</td><td colspan=\"1\" rowspan=\"1\">6x11 (petit), 9x16 (n°1)</td><td colspan=\"1\" rowspan=\"1\">🧵</td></tr></tbody></table><p>Important : clapets anti-retour OBLIGATOIRES. Si &gt;20 m de flexibles : un au détendeur + un au chalumeau.<br>Attention :toujours chaîner les bouteilles et garder les capuchons en transport ; pas de chocs.</p>",
             "color": "#ffedd5",
             "image": null
           },
           {
             "id": 95002,
             "title": "Sécurité & clapets",
-            "text": "### Règles terrain\n🛡️ Chaîner systématiquement les bouteilles (debout, stable)\n🧢 Capuchon en place au transport, robinets fermés dès arrêt\n🌬️ Ventilation obligatoire (haute/basse) dans les zones fermées\n🔥 Distance : C₂H₂ >10 m de flamme/source chaleur\n\n[color=#00c853]Bon réflexe :[/color] tester les clapets (soufflage) avant allumage ; vérifier date d'épreuve flexible.\n[color=#ef4444]Interdit :[/color] toute graisse/huile sur O₂ ; pas de chiffon gras ni gants souillés à proximité.",
+            "text": "<p>### Règles terrain</p><p>🛡️ Chaîner systématiquement les bouteilles (debout, stable)</p><p>🧢 Capuchon en place au transport, robinets fermés dès arrêt</p><p>🌬️ Ventilation obligatoire (haute/basse) dans les zones fermées</p><p>🔥 Distance : C₂H₂ &gt;10 m de flamme/source chaleur </p><p></p><p>Bon réflexe : tester les clapets (soufflage) avant allumage ; vérifier date d'épreuve flexible.</p><p>Interdit :toute graisse/huile sur O₂ ; pas de chiffon gras ni gants souillés à proximité.</p>",
             "color": "#ffedd5",
             "image": null
           }
@@ -508,21 +508,21 @@ export default {
           {
             "id": 95101,
             "title": "Mix O₂ + C₂H₂",
-            "text": "🟦 **Oxygène** (comburant) : 200 bar, ogive blanche, raccord femelle droite\n🟥 **Acétylène** (carburant) : 15 bar dissous dans acétone, ogive havane, raccord femelle gauche\n\n[color=#00c853]Rôle :[/color] O₂ nourrit la flamme, C₂H₂ apporte le carburant.\n[color=#ef4444]Jamais[/color] d'huile/graisse sur O₂, pas de C₂H₂ libre >1 bar.",
+            "text": "<p>🟦 **Oxygène (comburant) : 200 bar, ogive blanche, raccord femelle droite</p><p>🟥 **Acétylène** (carburant) : 15 bar dissous dans acétone, ogive havane, raccord femelle gauche</p><p></p><p>Rôle : O₂ nourrit la flamme, C₂H₂ apporte le carburant.</p><p>Jamais d'huile/graisse sur O₂, pas de C₂H₂ libre &gt;1 bar.</p>",
             "color": "#ffedd5",
             "image": null
           },
           {
             "id": 95102,
             "title": "Compatibilités & interdits",
-            "text": "❌ C₂H₂ interdit avec Ag, Hg, Cu >70% (risque explosion)\n❌ Pas de ventilation à l'O₂ pur (combustion violente)\n✔️ Transport : cabine séparée du compartiment bouteilles, capuchons en place\n[color=#ef4444]Rappel :[/color] ne jamais transvaser de gaz d'une bouteille à l'autre.",
+            "text": "<p>❌ C₂H₂ interdit avec Ag, Hg, Cu &gt;70% (risque explosion)</p><p>❌ Pas de ventilation à l'O₂ pur (combustion violente) </p><p>✔️ Transport : cabine séparée du compartiment bouteilles, capuchons en place</p><p>[color=#ef4444]Rappel :[/color] ne jamais transvaser de gaz d'une bouteille à l'autre.</p>",
             "color": "#ffedd5",
             "image": null
           },
           {
             "id": 95103,
             "title": "Signalétique & odorants",
-            "text": "👃 Odeur ail = fuite C₂H₂\n🎨 Code couleurs ogives : blanc (O₂) / havane (C₂H₂)\n[color=#00c853]Contrôle terrain :[/color] pression résiduelle, date d'épreuve, état filetage.\n[color=#ef4444]Action immédiate :[/color] fuite = fermer, ventiler, baliser.",
+            "text": "<p>👃 Odeur ail = fuite C₂H₂</p><p>🎨 Code couleurs ogives : blanc (O₂) / havane (C₂H₂)</p><p>Contrôle terrain :* pression résiduelle, date d'épreuve, état filetage.</p><p>Action immédiate :fuite = fermer, ventiler, baliser.</p>",
             "color": "#ffedd5",
             "image": null
           }
@@ -538,7 +538,7 @@ export default {
           {
             "id": 95201,
             "title": "Signalétique & marquages",
-            "text": "| Gaz | Ogive | Volumes | Pression | Position | Raccord |\n| --- | --- | --- | --- | --- | --- |\n| O₂ | Blanche | 1-10 m³ | ~200 bar | Debout ou couché | Femelle droite |\n| C₂H₂ | Havane | 0,8-7 m³ | 15 bar | Debout / >30° | Femelle gauche |\n\n[color=#00c853]Check terrain :[/color] date d'épreuve, poinçon Mines, pression service.\n[color=#ef4444]Jamais[/color] de choc/soleil direct >50°C.",
+            "text": "<table style=\"min-width: 150px;\"><colgroup><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"><col style=\"min-width: 25px;\"></colgroup><tbody><tr><th colspan=\"1\" rowspan=\"1\"><p>Gaz</p></th><th colspan=\"1\" rowspan=\"1\"><p>Ogive</p></th><th colspan=\"1\" rowspan=\"1\"><p>Volumes</p></th><th colspan=\"1\" rowspan=\"1\"><p>Pression</p></th><th colspan=\"1\" rowspan=\"1\"><p>Position</p></th><th colspan=\"1\" rowspan=\"1\"><p>Raccord</p></th></tr><tr><th colspan=\"1\" rowspan=\"1\"><p>O₂</p></th><td colspan=\"1\" rowspan=\"1\"><p>Blanche</p></td><td colspan=\"1\" rowspan=\"1\"><p>1-10 m³</p></td><td colspan=\"1\" rowspan=\"1\"><p>~200 bar</p></td><td colspan=\"1\" rowspan=\"1\"><p>Debout ou couché</p></td><td colspan=\"1\" rowspan=\"1\"><p>Femelle droite</p></td></tr><tr><th colspan=\"1\" rowspan=\"1\"><p>C₂H₂</p></th><td colspan=\"1\" rowspan=\"1\"><p>Havane</p></td><td colspan=\"1\" rowspan=\"1\"><p>0,8-7 m³</p></td><td colspan=\"1\" rowspan=\"1\"><p>15 bar</p></td><td colspan=\"1\" rowspan=\"1\"><p>Debout / &gt;30°</p></td><td colspan=\"1\" rowspan=\"1\"><p>Femelle gauche</p></td></tr></tbody></table><p>Check terrain :date d'épreuve, poinçon Mines, pression service. Jamais de choc/soleil direct &gt;50°C.</p>",
             "color": "#ffedd5",
             "image": null
           },
@@ -561,14 +561,14 @@ export default {
           {
             "id": 95301,
             "title": "Usage & limites",
-            "text": "🟥 Gaz carburant, odeur ail, plus léger que l'air\n✔️ Dissous dans acétone/DMF, pression 15 bar max\n✔️ Raccord femelle à gauche\n[color=#ef4444]Instable >1 bar libre[/color] → garder bouteille verticale (>30° mini) et ne jamais purger à vide.\n[color=#00c853]Bon usage :[/color] fermer même vide pour limiter évaporation acétone.",
+            "text": "<p>🟥 Gaz carburant, odeur ail, plus léger que l'air</p><p>✔️ Dissous dans acétone/DMF, pression 15 bar max</p><p>✔️ Raccord femelle à gauche</p><p>Instable &gt;1 bar libre → garder bouteille verticale (&gt;30° mini) et ne jamais purger à vide.</p><p>Bon usage : fermer même vide pour limiter évaporation acétone.</p>",
             "color": "#ffedd5",
             "image": null
           },
           {
             "id": 95302,
             "title": "Transport & repos",
-            "text": "🚚 Transport possible couché mais [color=#00c853]repos debout[/color] avant service.\n🧊 Protéger du soleil >50°C, éviter chocs.\n🛡️ Chaîner systématiquement ; pas d'hydrocarbures à proximité.\n[color=#ef4444]Si échauffement :[/color] fermer, arroser, évacuer.",
+            "text": "<p>🚚 Transport possible couché mais [color=#00c853]repos debout[/color] avant service.</p><p>🧊 Protéger du soleil &gt;50°C, éviter chocs.  </p><p>🛡️ Chaîner systématiquement ; pas d'hydrocarbures à proximité.</p><p>[color=#ef4444]Si échauffement :[/color] fermer, arroser, évacuer.</p>",
             "color": "#ffedd5",
             "image": null
           }
@@ -584,7 +584,7 @@ export default {
           {
             "id": 95401,
             "title": "Caractéristiques",
-            "text": "🟦 Comburant pur, 200 bar, ogive blanche\n✔️ Raccord femelle à droite\n[color=#ef4444]Interdit[/color] : graisse/huile → risque combustion/explosion.\n[color=#00c853]Astuce :[/color] tolère stockage couché mais service idéal debout, vanne protégée.",
+            "text": "<p>🟦 Comburant pur, 200 bar, ogive blanche</p><p>✔️ Raccord femelle à droite</p><p>Interdit: graisse/huile → risque combustion/explosion.</p><p>Astuce :tolère stockage couché mais service idéal debout, vanne protégée.</p>",
             "color": "#ffedd5",
             "image": null
           },
@@ -607,14 +607,14 @@ export default {
           {
             "id": 95501,
             "title": "Rôle & réglages",
-            "text": "**Fonction :** abaisser, régler, stabiliser le débit.\n📊 Mano HP (bouteille) + BP (sortie) + molette réglage fin\n🔵 O₂ : sortie 1-8 bar selon buse\n🔴 C₂H₂ : sortie max 1 bar (jamais dépasser)\n[color=#00c853]Procédure montage :[/color] purger la sortie, visser à la clé, tester à la bombe à fuite.\n[color=#ef4444]Risque :[/color] fuite = arrêt immédiat, ventilation, contrôle eau savonneuse/bombe.",
+            "text": "<p>**Fonction :** abaisser, régler, stabiliser le débit.</p><p>📊 Mano HP (bouteille) + BP (sortie) + molette réglage fin</p><p>🔵 O₂ : sortie 1-8 bar selon buse</p><p>🔴 C₂H₂ : sortie max 1 bar (jamais dépasser)</p><p>Procédure montage : purger la sortie, visser à la clé, tester à la bombe à fuite.</p><p>Risque :fuite = arrêt immédiat, ventilation, contrôle eau savonneuse/bombe.</p>",
             "color": "#ffedd5",
             "image": null
           },
           {
             "id": 95502,
             "title": "Bonnes pratiques",
-            "text": "✔️ Positionner mano lisible depuis la zone de travail\n✔️ Resserrer sans excès (joints écrasés = fuite)\n✔️ Déverrouiller la vis de détente en fermeture complète après usage\n[color=#ef4444]Surpression :[/color] fermer, purger, vérifier clapets.",
+            "text": "<p>✔️ Positionner mano lisible depuis la zone de travail</p><p>✔️ Resserrer sans excès (joints écrasés = fuite)</p><p>✔️ Déverrouiller la vis de détente en fermeture complète après usage</p><p>Surpression : fermer, purger, vérifier clapets.</p>",
             "color": "#ffedd5",
             "image": null
           }
@@ -630,14 +630,14 @@ export default {
           {
             "id": 95601,
             "title": "Couleurs & diamètres",
-            "text": "**Tuyaux caoutchouc armé** (norme gaz).\n🔵 O₂ : bleu, petit Ø (12 mm env.)\n🟥 C₂H₂ : rouge, gros Ø (14 mm env.)\n📏 Diamètres courants : 6×11 (mini/étoile), 9×16 (n°1)\n[color=#00c853]Test fuite :[/color] eau savonneuse ou bombe détection (jamais flamme).",
+            "text": "<p>**Tuyaux caoutchouc armé** (norme gaz).</p><p>🔵 O₂ : bleu, petit Ø (12 mm env.)</p><p>🟥 C₂H₂ : rouge, gros Ø (14 mm env.)</p><p>📏 Diamètres courants : 6×11 (mini/étoile), 9×16 (n°1)</p><p>Test fuite : eau savonneuse ou bombe détection (jamais flamme).</p>",
             "color": "#ffedd5",
             "image": null
           },
           {
             "id": 95602,
             "title": "Raccordements & LOR",
-            "text": "🔗 Raccords rapides LOR : femelle en attente, mâle côté chalumeau\n🛑 Versions STOP-GAZ (coupure auto + clapet) complémentaires aux clapets anti-retour\n👉 Ø différents évitent inversion O₂/C₂H₂\n[color=#ef4444]Rappel :[/color] clapet anti-retour indispensable au détendeur et au chalumeau si >20 m de flexible.",
+            "text": "<p>🔗 Raccords rapides LOR : femelle en attente, mâle côté chalumeau</p><p>🛑 Versions STOP-GAZ (coupure auto + clapet) complémentaires aux clapets anti-retour</p><p>👉 Ø différents évitent inversion O₂/C₂H₂</p><p>Rappel : clapet anti-retour indispensable au détendeur et au chalumeau si &gt;20 m de flexible.</p>",
             "color": "#ffedd5",
             "image": null
           }
@@ -653,14 +653,14 @@ export default {
           {
             "id": 95701,
             "title": "Choix & réglages",
-            "text": "**Basse pression** : P C₂H₂ ≈0,5 bar, P O₂ ≈1 bar (selon buse).\n🔘 Buses étoile par débit (100-200 l/h lances malléables accès réduit).\n✅ Adapter buse au Ø tube (fin/moyen/gros).\n✅ Vérifier stabilité flamme (cône interne bleu net).\n[color=#ef4444]Flamme longue jaune[/color] = manque O₂ ; [color=#ef4444]retours de flamme[/color] = fermer, purger, contrôler clapets/buses.",
+            "text": "<p>**Basse pression** : P C₂H₂ ≈0,5 bar, P O₂ ≈1 bar (selon buse).</p><p>🔘 Buses étoile par débit (100-200 l/h lances malléables accès réduit).</p><p>✅ Adapter buse au Ø tube (fin/moyen/gros).</p><p>✅ Vérifier stabilité flamme (cône interne bleu net).</p><p>Flamme longue jaune = manque O₂ ; retours de flamme = fermer, purger, contrôler clapets/buses.</p>",
             "color": "#ffedd5",
             "image": null
           },
           {
             "id": 95702,
             "title": "Soudeur vs réchauffeur",
-            "text": "**Chalumeau soudeur** : flamme neutre 3200°C, métal d'apport, cordon fin.\n**Chalumeau réchauffeur** : flamme plus large, gros débit O₂, pour dilatation/déglaçage.\n[color=#00c853]Routine :[/color] purge O₂ puis C₂H₂ avant allumage, fermer C₂H₂ puis O��� à l'arrêt.\n[color=#ef4444]Toujours</color> porter EPI (lunettes teintées, gants anti-chaleur).",
+            "text": "<p>**Chalumeau soudeur** : flamme neutre 3200°C, métal d'apport, cordon fin.</p><p>**Chalumeau réchauffeur** : flamme plus large, gros débit O₂, pour dilatation/déglaçage.</p><p>Routine :purge O₂ puis C₂H₂ avant allumage, fermer C₂H₂ puis O��� à l'arrêt.</p><p>[Toujours porter EPI (lunettes teintées, gants anti-chaleur).</p>",
             "color": "#ffedd5",
             "image": null
           }
@@ -676,7 +676,7 @@ export default {
           {
             "id": 98001,
             "title": "Principe & sécurité",
-            "text": "**Élément cire + vanne 3 voies** : ajuste ouverture EF/ECS.\n✔️ Sécurité 40°C, précision ±0,5°C, réaction ~0,5 s\n✔️ Maintien T° même en cas de perturbation pression\n👉 Versions murales, encastrées, colonnettes pour gorge",
+            "text": "<p>**Élément cire + vanne 3 voies** : ajuste ouverture EF/ECS.</p><p>✔️ Sécurité 40°C, précision ±0,5°C, réaction ~0,5 s</p><p>✔️ Maintien T° même en cas de perturbation pression</p><p>👉 Versions murales, encastrées, colonnettes pour gorge </p>",
             "color": "#d1fae5",
             "image": null
           }
@@ -692,7 +692,7 @@ export default {
           {
             "id": 98101,
             "title": "Gabarits & entraxes",
-            "text": "Entraxe standard 150 mm.\nAlim douche cuivre 14×1 (hors jets hydro).\nGabarits ou douilles excentrées 90/270 GCU pour réglage.\nPercements gorge : mono Ø35 mm ; bi/tri Ø25 mm.\nOrientation sortie douche vers bas pour ne pas pincer flexible.",
+            "text": "<p>Entraxe standard 150 mm.</p><p>Alim douche cuivre 14×1 (hors jets hydro).</p><p>Gabarits ou douilles excentrées 90/270 GCU pour réglage.</p><p>Percements gorge : mono Ø35 mm ; bi/tri Ø25 mm. </p><p>Orientation sortie douche vers bas pour ne pas pincer flexible.</p>",
             "color": "#d1fae5",
             "image": null
           },
@@ -729,7 +729,7 @@ export default {
           {
             "id": 98203,
             "title": "Vidages & siphons",
-            "text": "Bonde + siphon (filetage 1\"1/2 40×49).\nGarde d'eau 5 cm, culot démontable.\nBibac : 2 bondes + accouplement + siphon, prise LV/LL possible.\nVidage auto (câble/ressort) courant.",
+            "text": "<p>Bonde + siphon (filetage 1\"1/2 40×49).</p><p>Garde d'eau 5 cm, culot démontable.</p><p>Bibac : 2 bondes + accouplement + siphon, prise LV/LL possible.</p><p>Vidage auto (câble/ressort) courant. </p>",
             "color": "#dcfce7",
             "image": null
           }
@@ -745,21 +745,21 @@ export default {
           {
             "id": 98301,
             "title": "Types & dimensions",
-            "text": "Formes : sabot, rectang., angle, ovale, ronde, bain-douche, balnéo.\nMatériaux : tôle émaillée, fonte vitrifiée, composites.\nHauteur 0,42-0,63 m selon pieds/modèle.",
+            "text": "<p>Formes : sabot, rectang., angle, ovale, ronde, bain-douche, balnéo.</p><p>Matériaux : tôle émaillée, fonte vitrifiée, composites.</p><p>Hauteur 0,42-0,63 m selon pieds/modèle. </p>",
             "color": "#dcfce7",
             "image": null
           },
           {
             "id": 98302,
             "title": "Pose & DTU 60.1",
-            "text": "Supporter fond + périphérie (profilés imputrescibles ou maçonnerie hydrofuge).\nPas de contact direct parois (joint mastic sanitaire continu, fond de joint mousse).\nTrappes de visite pour robinetterie/vidage.\nBalnéo : conserver plots anti-vibratiles, essai eau avant habillage.",
+            "text": "<p>Supporter fond + périphérie (profilés imputrescibles ou maçonnerie hydrofuge).</p><p>Pas de contact direct parois (joint mastic sanitaire continu, fond de joint mousse).</p><p>Trappes de visite pour robinetterie/vidage.</p><p>Balnéo : conserver plots anti-vibratiles, essai eau avant habillage. </p>",
             "color": "#dcfce7",
             "image": null
           },
           {
             "id": 98303,
             "title": "Vidage baignoire",
-            "text": "Bonde 49 ou 90 mm + siphon 1\"1/2 (40×49), sortie horizontale orientable.\nCommandes : câble sur trop-plein ou clapet ressort.\nOptions : grand débit, siphon ultra-plat, remplissage par trop-plein.",
+            "text": "<p>Bonde 49 ou 90 mm + siphon 1\"1/2 (40×49), sortie horizontale orientable.</p><p>Commandes : câble sur trop-plein ou clapet ressort.</p><p>Options : grand débit, siphon ultra-plat, remplissage par trop-plein.</p>",
             "color": "#dcfce7",
             "image": null
           }
@@ -775,14 +775,14 @@ export default {
           {
             "id": 98401,
             "title": "Choix fixations par support",
-            "text": "Mur béton/brique/plâtre/bois : choisir chevilles adaptées (plein/creux) et charges (lavabo, ballon ECS).\nCharges lourdes : chevilles métal/longues isolant ou scellement taquet bois.\nToujours respecter diamètres vis/cheville/foret.",
+            "text": "<p>Mur béton/brique/plâtre/bois : choisir chevilles adaptées (plein/creux) et charges (lavabo, ballon ECS).</p><p>Charges lourdes : chevilles métal/longues isolant ou scellement taquet bois.</p><p>Toujours respecter diamètres vis/cheville/foret. </p>",
             "color": "#e0f2fe",
             "image": null
           },
           {
             "id": 98402,
             "title": "Bâti-supports",
-            "text": "Adossé ou autoportant pour lavabos, bidets, WC suspendus.\nFixation sur murs pleins ou cloisons selon modèles (plaque plâtre ossature métal : privilégier autoportant).\nPermet pose propre sans solliciter cloison légère.",
+            "text": "<p>Adossé ou autoportant pour lavabos, bidets, WC suspendus.</p><p>Fixation sur murs pleins ou cloisons selon modèles (plaque plâtre ossature métal : privilégier autoportant).</p><p>Permet pose propre sans solliciter cloison légère. </p>",
             "color": "#e0f2fe",
             "image": null
           }
