@@ -54,14 +54,24 @@ async function main() {
     } catch (e) {
       throw new Error('La valeur Redis n\'est pas un JSON valide');
     }
-    fs.writeFileSync(OUTPUT_FILE, `export default ${JSON.stringify(dataObj, null, 2)};\n`, 'utf8');
-    console.log('Data saved to', OUTPUT_FILE);
-
-    // Git add/commit/push
-    execSync(`git add "${OUTPUT_FILE}"`);
-    execSync(`git commit -m "Export carnet-data from Upstash Redis [auto]"`);
-    execSync(`git push`);
-    console.log('Git commit & push done.');
+    const newContent = `export default ${JSON.stringify(dataObj, null, 2)};\n`;
+    let oldContent = null;
+    try {
+      oldContent = fs.readFileSync(OUTPUT_FILE, 'utf8');
+    } catch (e) {
+      // Fichier inexistant, on considère qu'il a changé
+    }
+    if (oldContent !== newContent) {
+      fs.writeFileSync(OUTPUT_FILE, newContent, 'utf8');
+      console.log('Data saved to', OUTPUT_FILE);
+      // Git add/commit/push
+      execSync(`git add "${OUTPUT_FILE}"`);
+      execSync(`git commit -m "Export carnet-data from Upstash Redis [auto]"`);
+      execSync(`git push`);
+      console.log('Git commit & push done.');
+    } else {
+      console.log('No change in data, nothing to commit.');
+    }
   } catch (err) {
     console.error('Error:', err.message);
     process.exit(1);

@@ -6,7 +6,6 @@ export default function StaffPanelPage({ onClose }) {
     <div className="staff-panel-web-bg">
       <div className="staff-panel-web-center">
         <StaffPanelFuturist />
-        <button onClick={onClose} className="staff-panel-web-quit">Quitter</button>
       </div>
       <style>{`
         .staff-panel-web-bg {

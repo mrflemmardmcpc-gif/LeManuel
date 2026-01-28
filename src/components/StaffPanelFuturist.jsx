@@ -182,27 +182,56 @@ export default function StaffPanelFuturist(props) {
   const circleCirc = 2 * Math.PI * circleRadius;
   const circleOffset = circleCirc * (1 - stats.quota / 100);
 
+  // Animation d'apparition globale
+  const [show, setShow] = useState(false);
+  useEffect(() => { setShow(true); }, []);
+
   return (
-    <div style={{minHeight:'100vh',minWidth:'100vw',width:'100vw',height:'100vh',background:'linear-gradient(135deg, #0f0c29, #302b63, #24243e)',color:'#fff',overflow:'hidden',position:'fixed',top:0,left:0,zIndex:9999}}>
+    <div
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)',
+        color: '#fff',
+        overflow: 'auto',
+        position: 'relative',
+        opacity: show ? 1 : 0,
+        transform: show ? 'translateY(0)' : 'translateY(40px)',
+        transition: 'opacity 0.7s cubic-bezier(.4,2,.6,1), transform 0.7s cubic-bezier(.4,2,.6,1)'
+      }}
+    >
       {/* Etoiles animées */}
-      <div className="stars" ref={starsRef} style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',pointerEvents:'none',zIndex:0}}></div>
-      <div className="container" style={{position:'relative',zIndex:1,maxWidth:1600,margin:'0 auto',padding:20,height:'100%',boxSizing:'border-box',display:'flex',flexDirection:'column'}}>
-        {/* Header profil */}
-        <div className="header" style={{background:'rgba(255,255,255,0.05)',backdropFilter:'blur(10px)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:20,padding:30,marginBottom:30,display:'flex',alignItems:'center',gap:30,boxShadow:'0 8px 32px rgba(0,0,0,0.3)'}}>
-          <div className="profile-pic" style={{width:120,height:120,borderRadius:'50%',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:48,fontWeight:'bold',border:'4px solid rgba(255,255,255,0.2)',position:'relative'}}>
+      <div className="stars" ref={starsRef} style={{position:'absolute',top:0,left:0,width:'100vw',height:'100vh',pointerEvents:'none',zIndex:0}}></div>
+      <div className="container" style={{position:'relative',zIndex:1,maxWidth:1600,width:'100%',margin:'0 auto',padding:20,paddingBottom:60,height:'100%',boxSizing:'border-box',display:'flex',flexDirection:'column'}}>
+        {/* Header profil (restauré, statique, intégré au flux) */}
+        <div className="header" style={{
+          background: 'rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 20,
+          padding: 30,
+          marginBottom: 30,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 30,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          <div className="profile-pic">
             JA
           </div>
-          <div className="profile-info" style={{flex:1}}>
-            <div className="profile-name" style={{fontSize:32,fontWeight:'bold',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',marginBottom:10}}>Jeremy AMZ - Admin Panel</div>
-            <div className="profile-role" style={{fontSize:18,color:'#a0aec0',marginBottom:15}}>
+          <div className="profile-info">
+            <div className="profile-name">Jeremy AMZ - Admin Panel</div>
+            <div className="profile-role">
               🏗️ Manuel du Bâtiment
-              <span className="status-badge status-online" style={{marginLeft:12,display:'inline-block',padding:'5px 12px',borderRadius:20,fontSize:12,fontWeight:600,background:'rgba(72,187,120,0.2)',border:'1px solid rgba(72,187,120,0.5)',color:'#48bb78'}}>● Site actif</span>
+              <span className="status-badge status-online">● Site actif</span>
             </div>
-            <div className="profile-stats" style={{display:'flex',gap:30,flexWrap:'wrap'}}>
-              <div className="stat-item"><div className="stat-value" style={{fontSize:28,fontWeight:'bold',color:'#667eea'}}>{stats.visitors.toLocaleString()}</div><div className="stat-label" style={{fontSize:12,color:'#a0aec0',textTransform:'uppercase'}}>Visiteurs/mois</div></div>
-              <div className="stat-item"><div className="stat-value" style={{fontSize:28,fontWeight:'bold',color:'#667eea'}}>{stats.bandwidth}</div><div className="stat-label" style={{fontSize:12,color:'#a0aec0',textTransform:'uppercase'}}>Bande passante</div></div>
-              <div className="stat-item"><div className="stat-value" style={{fontSize:28,fontWeight:'bold',color:'#667eea'}}>{stats.uptime}</div><div className="stat-label" style={{fontSize:12,color:'#a0aec0',textTransform:'uppercase'}}>Disponibilité</div></div>
-              <div className="stat-item"><div className="stat-value" style={{fontSize:28,fontWeight:'bold',color:'#667eea'}}>{stats.jobs}</div><div className="stat-label" style={{fontSize:12,color:'#a0aec0',textTransform:'uppercase'}}>Métiers référencés</div></div>
+            <div className="profile-stats">
+              <div className="stat-item"><div className="stat-value">{stats.visitors.toLocaleString()}</div><div className="stat-label">Visiteurs/mois</div></div>
+              <div className="stat-item"><div className="stat-value">{stats.bandwidth}</div><div className="stat-label">Bande passante</div></div>
+              <div className="stat-item"><div className="stat-value">{stats.uptime}</div><div className="stat-label">Disponibilité</div></div>
+              <div className="stat-item"><div className="stat-value">{stats.jobs}</div><div className="stat-label">Métiers référencés</div></div>
             </div>
           </div>
         </div>
@@ -224,10 +253,22 @@ export default function StaffPanelFuturist(props) {
               </div>
             </div>
             <div className="stats-grid" style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:15}}>
-              <div className="stat-card" style={{background:'rgba(255,255,255,0.05)',padding:20,borderRadius:10,textAlign:'center',cursor:'pointer'}} onClick={animateStatCard}><div className="stat-card-value" style={{fontSize:32,fontWeight:'bold',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',marginBottom:5}}>{stats.quota}%</div><div className="stat-card-label" style={{fontSize:13,color:'#a0aec0'}}>Bande passante</div></div>
-              <div className="stat-card" style={{background:'rgba(255,255,255,0.05)',padding:20,borderRadius:10,textAlign:'center',cursor:'pointer'}} onClick={animateStatCard}><div className="stat-card-value" style={{fontSize:32,fontWeight:'bold',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',marginBottom:5}}>{stats.requests}</div><div className="stat-card-label" style={{fontSize:13,color:'#a0aec0'}}>Requêtes</div></div>
-              <div className="stat-card" style={{background:'rgba(255,255,255,0.05)',padding:20,borderRadius:10,textAlign:'center',cursor:'pointer'}} onClick={animateStatCard}><div className="stat-card-value" style={{fontSize:32,fontWeight:'bold',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',marginBottom:5}}>{stats.data}</div><div className="stat-card-label" style={{fontSize:13,color:'#a0aec0'}}>Data utilisée</div></div>
-              <div className="stat-card" style={{background:'rgba(255,255,255,0.05)',padding:20,borderRadius:10,textAlign:'center',cursor:'pointer'}} onClick={animateStatCard}><div className="stat-card-value" style={{fontSize:32,fontWeight:'bold',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',marginBottom:5}}>{stats.daysLeft}</div><div className="stat-card-label" style={{fontSize:13,color:'#a0aec0'}}>Jours restants</div></div>
+              <div className="stat-card" onClick={animateStatCard}>
+                <div className="stat-card-value" style={{fontSize:32,fontWeight:'bold',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',marginBottom:5}}>{stats.quota}%</div>
+                <div className="stat-card-label" style={{fontSize:13,color:'#a0aec0'}}>Bande passante</div>
+              </div>
+              <div className="stat-card" onClick={animateStatCard}>
+                <div className="stat-card-value" style={{fontSize:32,fontWeight:'bold',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',marginBottom:5}}>{stats.requests}</div>
+                <div className="stat-card-label" style={{fontSize:13,color:'#a0aec0'}}>Requêtes</div>
+              </div>
+              <div className="stat-card" onClick={animateStatCard}>
+                <div className="stat-card-value" style={{fontSize:32,fontWeight:'bold',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',marginBottom:5}}>{stats.data}</div>
+                <div className="stat-card-label" style={{fontSize:13,color:'#a0aec0'}}>Data utilisée</div>
+              </div>
+              <div className="stat-card" onClick={animateStatCard}>
+                <div className="stat-card-value" style={{fontSize:32,fontWeight:'bold',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',marginBottom:5}}>{stats.daysLeft}</div>
+                <div className="stat-card-label" style={{fontSize:13,color:'#a0aec0'}}>Jours restants</div>
+              </div>
             </div>
             <div className="progress-container" style={{marginTop:20}}>
               <div className="progress-label" style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:14}}>
@@ -249,7 +290,7 @@ export default function StaffPanelFuturist(props) {
             </div>
             <div className="chart-container" style={{height:200,position:'relative',marginTop:15,display:'flex',alignItems:'flex-end',gap:15,justifyContent:'space-around'}}>
               {demoCategories.map((cat, i) => (
-                <div key={cat.name} className="chart-bar" style={{width:40,background:'linear-gradient(to top,#667eea,#764ba2)',borderRadius:'5px 5px 0 0',transition:'all 0.5s cubic-bezier(0.68,-0.55,0.265,1.55)',position:'relative',cursor:'pointer',height:chartVals[i]*2}}>
+                <div key={cat.name} className="chart-bar" style={{width:40,background:'linear-gradient(to top,#667eea,#764ba2)',borderRadius:'5px 5px 0 0',position:'relative',cursor:'pointer',height:chartVals[i]*2}}>
                   <div className="chart-label" style={{position:'absolute',bottom:-25,left:'50%',transform:'translateX(-50%)',fontSize:11,color:'#a0aec0'}}>{cat.name}</div>
                   <div className="chart-value" style={{position:'absolute',top:-25,left:'50%',transform:'translateX(-50%)',fontSize:13,fontWeight:'bold',color:'#667eea'}}>{chartVals[i]}%</div>
                 </div>
@@ -264,7 +305,7 @@ export default function StaffPanelFuturist(props) {
             </div>
             <div className="activity-list" style={{maxHeight:250,overflowY:'auto'}}>
               {demoJobs.map((job,i) => (
-                <div key={job.title} className="activity-item" style={{display:'flex',alignItems:'center',gap:15,padding:12,background:'rgba(255,255,255,0.03)',borderRadius:10,marginBottom:10,transition:'all 0.3s',cursor:'pointer'}}>
+                <div key={job.title} className="activity-item" style={{display:'flex',alignItems:'center',gap:15,padding:12,background:'rgba(255,255,255,0.03)',borderRadius:10,marginBottom:10,cursor:'pointer'}}>
                   <div className="activity-icon" style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{i+1}</div>
                   <div className="activity-details" style={{flex:1}}>
                     <div className="activity-title" style={{fontSize:14,fontWeight:600,marginBottom:3}}>{job.title}</div>
@@ -328,7 +369,7 @@ export default function StaffPanelFuturist(props) {
             </div>
             <div className="user-list" style={{display:'flex',flexDirection:'column',gap:10}}>
               {demoPhotos.map(photo => (
-                <div key={photo.name} className="user-item" style={{display:'flex',alignItems:'center',gap:15,padding:12,background:'rgba(255,255,255,0.03)',borderRadius:10,transition:'all 0.3s',cursor:'pointer'}}>
+                <div key={photo.name} className="user-item" style={{display:'flex',alignItems:'center',gap:15,padding:12,background:'rgba(255,255,255,0.03)',borderRadius:10,cursor:'pointer'}}>
                   <div className="user-avatar" style={{width:45,height:45,borderRadius:'50%',background:`linear-gradient(135deg,${photo.color})`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:'bold',position:'relative'}}>{photo.icon}</div>
                   <div className="user-details" style={{flex:1}}>
                     <div className="user-name" style={{fontSize:14,fontWeight:600,marginBottom:3}}>{photo.name}</div>
@@ -349,7 +390,7 @@ export default function StaffPanelFuturist(props) {
             </div>
             <div className="activity-list" style={{maxHeight:200,overflowY:'auto'}}>
               {demoSecurity.map((item,i) => (
-                <div key={item.title} className="activity-item" style={{display:'flex',alignItems:'center',gap:15,padding:12,background:'rgba(255,255,255,0.03)',borderRadius:10,marginBottom:10,transition:'all 0.3s',cursor:'pointer',borderLeft:`3px solid ${item.border}`}}>
+                <div key={item.title} className="activity-item" style={{display:'flex',alignItems:'center',gap:15,padding:12,background:'rgba(255,255,255,0.03)',borderRadius:10,marginBottom:10,cursor:'pointer',borderLeft:`3px solid ${item.border}`}}>
                   <div className="activity-icon" style={{width:40,height:40,borderRadius:'50%',background:`linear-gradient(135deg,${item.color})`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{item.icon}</div>
                   <div className="activity-details" style={{flex:1}}>
                     <div className="activity-title" style={{fontSize:14,fontWeight:600,marginBottom:3}}>{item.title}</div>
@@ -367,16 +408,43 @@ export default function StaffPanelFuturist(props) {
           </div>
           {/* Module Actions Administration */}
           <div className="module module-large" style={{background:'rgba(255,255,255,0.05)',backdropFilter:'blur(10px)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:15,padding:25,boxShadow:'0 4px 16px rgba(0,0,0,0.2)',gridColumn:'span 2'}}>
-            <div className="module-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <div className="module-title" style={{fontSize:20,fontWeight:'bold',display:'flex',alignItems:'center',gap:10}}><div className="module-icon" style={{width:35,height:35,background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>⚡</div>Actions Administration</div>
+            <div className="module-header" style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+              <div className="module-icon" style={{width:35,height:35,background:'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>⚡</div>
+              <div className="module-title" style={{fontSize:22,fontWeight:'bold'}}>Actions Administration</div>
             </div>
-            <div className="stats-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:15}}>
-              <div className="stat-card" style={{cursor:'pointer'}} onClick={()=>quickAction('content')}><div className="stat-card-value">📚</div><div className="stat-card-label">Gérer Contenu</div></div>
-              <div className="stat-card" style={{cursor:'pointer'}} onClick={()=>quickAction('ban')}><div className="stat-card-value">🚫</div><div className="stat-card-label">Bannir Email</div></div>
-              <div className="stat-card" style={{cursor:'pointer'}} onClick={()=>quickAction('logs')}><div className="stat-card-value">📝</div><div className="stat-card-label">Consulter Logs</div></div>
-              <div className="stat-card" style={{cursor:'pointer'}} onClick={()=>quickAction('users')}><div className="stat-card-value">👥</div><div className="stat-card-label">Utilisateurs</div></div>
-              <div className="stat-card" style={{cursor:'pointer'}} onClick={()=>quickAction('analytics')}><div className="stat-card-value">📊</div><div className="stat-card-label">Analytics</div></div>
-              <div className="stat-card" style={{cursor:'pointer'}} onClick={()=>quickAction('backup')}><div className="stat-card-value">💾</div><div className="stat-card-label">Backup</div></div>
+            <div className="admin-actions-grid" style={{
+              display:'grid',
+              gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',
+              gap: '28px',
+              marginTop: 18,
+              marginBottom: 8,
+              justifyItems: 'center',
+              alignItems: 'center',
+            }}>
+              <div className="admin-action-card" style={{background:'rgba(255,255,255,0.07)',borderRadius:18,padding:'32px 0 18px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:120,minWidth:180,cursor:'pointer',transition:'box-shadow 0.22s,transform 0.18s',boxShadow:'0 2px 8px #0001'}} onClick={()=>quickAction('content')}>
+                <div style={{fontSize:38,marginBottom:10,opacity:0.7}}>📚</div>
+                <div style={{fontSize:18,fontWeight:500,opacity:0.8}}>Gérer Contenu</div>
+              </div>
+              <div className="admin-action-card" style={{background:'rgba(255,255,255,0.07)',borderRadius:18,padding:'32px 0 18px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:120,minWidth:180,cursor:'pointer',transition:'box-shadow 0.22s,transform 0.18s',boxShadow:'0 2px 8px #0001'}} onClick={()=>quickAction('ban')}>
+                <div style={{fontSize:38,marginBottom:10,opacity:0.7}}>🚫</div>
+                <div style={{fontSize:18,fontWeight:500,opacity:0.8}}>Bannir Email</div>
+              </div>
+              <div className="admin-action-card" style={{background:'rgba(255,255,255,0.07)',borderRadius:18,padding:'32px 0 18px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:120,minWidth:180,cursor:'pointer',transition:'box-shadow 0.22s,transform 0.18s',boxShadow:'0 2px 8px #0001'}} onClick={()=>quickAction('logs')}>
+                <div style={{fontSize:38,marginBottom:10,opacity:0.7}}>📝</div>
+                <div style={{fontSize:18,fontWeight:500,opacity:0.8}}>Consulter Logs</div>
+              </div>
+              <div className="admin-action-card" style={{background:'rgba(255,255,255,0.07)',borderRadius:18,padding:'32px 0 18px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:120,minWidth:180,cursor:'pointer',transition:'box-shadow 0.22s,transform 0.18s',boxShadow:'0 2px 8px #0001'}} onClick={()=>quickAction('users')}>
+                <div style={{fontSize:38,marginBottom:10,opacity:0.7}}>👥</div>
+                <div style={{fontSize:18,fontWeight:500,opacity:0.8}}>Utilisateurs</div>
+              </div>
+              <div className="admin-action-card" style={{background:'rgba(255,255,255,0.07)',borderRadius:18,padding:'32px 0 18px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:120,minWidth:180,cursor:'pointer',transition:'box-shadow 0.22s,transform 0.18s',boxShadow:'0 2px 8px #0001'}} onClick={()=>quickAction('analytics')}>
+                <div style={{fontSize:38,marginBottom:10,opacity:0.7}}>📊</div>
+                <div style={{fontSize:18,fontWeight:500,opacity:0.8}}>Analytics</div>
+              </div>
+              <div className="admin-action-card" style={{background:'rgba(255,255,255,0.07)',borderRadius:18,padding:'32px 0 18px 0',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:120,minWidth:180,cursor:'pointer',transition:'box-shadow 0.22s,transform 0.18s',boxShadow:'0 2px 8px #0001'}} onClick={()=>quickAction('backup')}>
+                <div style={{fontSize:38,marginBottom:10,opacity:0.7}}>💾</div>
+                <div style={{fontSize:18,fontWeight:500,opacity:0.8}}>Backup</div>
+              </div>
             </div>
           </div>
         </div>
@@ -386,7 +454,98 @@ export default function StaffPanelFuturist(props) {
       </div>
       {/* Styles étoiles animées */}
       <style>{`
-        html, body, #root { width: 100vw; height: 100vh; margin: 0; padding: 0; overflow: hidden; }
+                                          /* Effet visuel sur chaque carte d'action admin */
+                                          .admin-action-card {
+                                            transition: box-shadow 0.22s, transform 0.18s, background 0.22s, filter 0.22s;
+                                          }
+                                          .admin-action-card:hover, .admin-action-card:focus {
+                                            box-shadow: 0 8px 32px #00f0ff33, 0 2px 8px #764ba233;
+                                            transform: scale(1.035);
+                                            background: rgba(102,126,234,0.13);
+                                            filter: brightness(1.08) saturate(1.12);
+                                          }
+                                          .admin-action-card:active {
+                                            transform: scale(0.98);
+                                            filter: brightness(0.98) saturate(0.95);
+                                          }
+                                  .dashboard-grid, .container {
+                                    overflow: visible !important;
+                                  }
+                          /* Le header a un z-index faible pour ne pas couper les modules */
+                          .header { z-index: 1 !important; position: relative; }
+                          .module:hover, .module:focus-within { z-index: 10 !important; position: relative; }
+                        /* Les modules passent au-dessus du header au hover */
+                        .module:hover, .module:focus-within {
+                          z-index: 20 !important;
+                          position: relative;
+                        }
+                /* header statique, plus aucune position sticky/fixed */
+                .profile-pic {
+                  width: 120px;
+                  height: 120px;
+                  border-radius: 50%;
+                  background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 48px;
+                  font-weight: bold;
+                  border: 4px solid rgba(255,255,255,0.2);
+                  position: relative;
+                }
+                .profile-info { flex: 1; }
+                .profile-name {
+                  font-size: 32px;
+                  font-weight: bold;
+                  background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+                  -webkit-background-clip: text;
+                  -webkit-text-fill-color: transparent;
+                  background-clip: text;
+                  margin-bottom: 10px;
+                }
+                .profile-role {
+                  font-size: 18px;
+                  color: #a0aec0;
+                  margin-bottom: 15px;
+                }
+                .status-badge.status-online {
+                  margin-left: 12px;
+                  display: inline-block;
+                  padding: 5px 12px;
+                  border-radius: 20px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  background: rgba(72,187,120,0.2);
+                  border: 1px solid rgba(72,187,120,0.5);
+                  color: #48bb78;
+                }
+                .profile-stats {
+                  display: flex;
+                  gap: 30px;
+                  flex-wrap: wrap;
+                }
+                .stat-item {}
+                .stat-value {
+                  font-size: 28px;
+                  font-weight: bold;
+                  color: #667eea;
+                }
+                .stat-label {
+                  font-size: 12px;
+                  color: #a0aec0;
+                  text-transform: uppercase;
+                }
+        html, body, #root {
+          width: 100vw;
+          height: 100vh;
+          margin: 0;
+          padding: 0;
+          overflow-x: hidden !important;
+          overflow-y: auto;
+        }
+        .container {
+          overflow-x: hidden !important;
+        }
         .star {
           position: absolute;
           width: 2px;
@@ -398,6 +557,54 @@ export default function StaffPanelFuturist(props) {
         @keyframes twinkle {
           0%, 100% { opacity: 0.3; }
           50% { opacity: 1; }
+        }
+        /* Apparition fade-in/slide-in du dashboard */
+        .dashboard-appear {
+          opacity: 0;
+          transform: translateY(40px);
+          transition: opacity 0.7s cubic-bezier(.4,2,.6,1), transform 0.7s cubic-bezier(.4,2,.6,1);
+        }
+        .dashboard-appear.show {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        /* Effets hover/actif sur cartes et modules (effet centré, sans décalage ni rotation) */
+        .stat-card, .module, .chart-bar {
+          transition: box-shadow 0.32s cubic-bezier(.4,2,.6,1), transform 0.32s cubic-bezier(.4,2,.6,1), background 0.22s, filter 0.22s;
+        }
+        .module:hover, .module:focus {
+          box-shadow: 0 8px 32px 0 #0002, 0 1.5px 8px 0 #00f0ff22;
+          background: rgba(255,255,255,0.09);
+          transform: scale(1.018);
+          filter: brightness(1.04) saturate(1.06);
+        }
+        .stat-card:hover, .stat-card:focus, .chart-bar:hover, .chart-bar:focus {
+          box-shadow: 0 8px 32px #00f0ff33, 0 2px 8px #764ba233;
+          transform: scale(1.035);
+          background: rgba(102,126,234,0.13);
+          filter: brightness(1.08) saturate(1.12);
+        }
+        .stat-card:active, .module:active, .chart-bar:active {
+          transform: scale(0.98);
+          filter: brightness(0.98) saturate(0.95);
+        }
+        /* Effets sur boutons */
+        button, .nav-tab {
+          transition: box-shadow 0.22s, transform 0.18s, background 0.22s, color 0.18s;
+        }
+        .nav-tab, button {
+          box-shadow: 0 1px 4px #764ba211;
+        }
+        .nav-tab:hover, button:hover, .nav-tab:focus, button:focus {
+          box-shadow: 0 8px 32px #00f0ff33, 0 2px 8px #764ba233;
+          transform: scale(1.035);
+          background: rgba(102,126,234,0.13);
+          filter: brightness(1.08) saturate(1.12);
+          color: #fff;
+        }
+        .nav-tab:active, button:active {
+          transform: scale(0.98);
+          filter: brightness(0.98) saturate(0.95);
         }
         .nav-tab.active {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
