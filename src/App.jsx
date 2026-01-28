@@ -333,11 +333,16 @@ function Markdown({ content }) {
   // Conversion Markdown :
   // 1. Les doubles retours à la ligne (\n\n) deviennent des paragraphes
   // 2. Les retours à la ligne simples (\n) deviennent des <br>
-  let html = typeof content === 'string'
+  // 3. On applique le parsing Markdown APRÈS la conversion <br>
+  let raw = typeof content === 'string'
     ? content
         .replace(/\n{2,}/g, '<p></p>') // paragraphes
         .replace(/\n/g, '<br>')        // sauts de ligne
     : content;
+
+  // Appliquer le parsing Markdown sur le texte déjà converti
+  let html = raw;
+  // ...existing parsing Markdown...
   // Amélioration du parsing Markdown pour gérer tous les cas imbriqués
   // ...existing code...
 
