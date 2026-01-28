@@ -24,7 +24,6 @@ import { FaBold, FaItalic, FaUnderline, FaHighlighter, FaListUl, FaListOl, FaHea
 // Ce composant centralisera tout le mode édition (catégorie, module, formattage, etc.)
 // Les props attendues sont à ajuster selon les besoins réels
 export default function EditorPanel({
-  // Edition module
   editTitle,
   setEditTitle,
   editText,
@@ -34,12 +33,10 @@ export default function EditorPanel({
   saveEditSub,
   cancelEdit,
   editingSubId,
-  // Edition générale
   editMode,
   setEditMode,
   isAuthenticated,
   theme,
-  // Ajout catégorie
   newCatTitle,
   setNewCatTitle,
   newCatEmoji,
@@ -50,7 +47,6 @@ export default function EditorPanel({
   setNewCatSection,
   addCategory,
   sections,
-  // Outils de formattage
   selectionInfo,
   setSelectionInfo,
   applyFormatting,
@@ -62,7 +58,6 @@ export default function EditorPanel({
   selectionCustomColor,
   setSelectionCustomColor,
   darkMode,
-  // Pour ajout de module (props manquantes)
   addingSubToCatId,
   newSubTitle,
   setNewSubTitle,
@@ -75,6 +70,19 @@ export default function EditorPanel({
   handleTextSelect,
   insertTableTemplate
 }) {
+  // Ref pour scroller en haut lors de l'édition
+  const editPanelRef = useRef(null);
+
+  // Scroll automatique en haut lors de l'édition d'un module ou d'une catégorie
+  useEffect(() => {
+    if (editingSubId || newCatTitle === "") {
+      setTimeout(() => {
+        if (editPanelRef.current) {
+          editPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [editingSubId, newCatTitle]);
   // Convertit <br> en retour à la ligne pour édition
   function normalizeForEditor(text) {
     return typeof text === 'string' ? text.replace(/<br\s*\/?>(\n)?/g, '\n') : text;
@@ -88,7 +96,7 @@ export default function EditorPanel({
   }, []);
   if (!editMode || !isAuthenticated) return null;
   return (
-    <div style={{
+    <div ref={editPanelRef} style={{
       background: theme?.bg || "#f8fafc",
       border: `2px solid ${theme?.accent1 || "#f59e42"}`,
       borderRadius: 18,
@@ -493,33 +501,7 @@ export default function EditorPanel({
               marginBottom: 12,
             }}
           />
-          <textarea
-            value={newSubText}
-            onChange={(e) => setNewSubText(e.target.value)}
-            onSelect={(e) => handleTextSelect(e, "newSub")}
-            placeholder="Saisis ou colle ton texte (markdown)"
-            style={{
-              width: "100%",
-              minHeight: 160,
-              padding: 16,
-              borderRadius: 12,
-              border: `1.5px solid ${theme?.accent1 || '#10b981'}`,
-              background:
-                darkMode
-                  ? "linear-gradient(135deg, rgba(26,32,44,0.92), rgba(17,24,39,0.92))"
-                  : "linear-gradient(135deg, #f8fafc, #eef2ff)",
-              color: theme?.text || "#fff",
-              fontFamily: "'Inter', 'SFMono-Regular', monospace",
-              lineHeight: 1.6,
-              boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-              marginBottom: 12,
-              borderColor:
-                darkMode
-                  ? "rgba(16,185,129,0.45)"
-                  : "rgba(16,185,129,0.65)",
-              fontSize: 15,
-            }}
-          />
+
           {/* Outils de formattage */}
           {selectionInfo.text && selectionInfo.target === "newSub" && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: 10, borderRadius: 10, backgroundColor: theme?.panel, border: `1px solid ${theme?.border}`, marginBottom: 10 }}>

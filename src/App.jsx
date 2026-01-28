@@ -1,3 +1,5 @@
+// Détection du thème sombre du système pour initialiser darkMode
+const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import "./AppTiptap.css";
 // ...existing code...
@@ -13,65 +15,79 @@ import Gallery from "./components/Gallery";
 
 
 
+
 import EditorPanel from "./components/EditorPanel";
 import TiptapViewer from "./components/TiptapViewer";
 
-  // Fonction pour enregistrer une image dans la galerie (doit être après les hooks)
-   function saveImage() {
-      if (!newImageCatId || !newImageSubId || !newImageUrl) {
-        setToast({ message: "Sélectionne une catégorie, un module et une image." });
-        return;
-      }
-      setGalleryUploadBusy(true);
-      setTimeout(() => {
-        setData((d) => ({
-          ...d,
-          categories: d.categories.map((cat) =>
-            cat.id === newImageCatId
-              ? {
-                  ...cat,
-                  subs: cat.subs.map((sub) =>
-                    sub.id === newImageSubId
-                      ? {
-                          ...sub,
-                          images: [
-                            ...(Array.isArray(sub.images) ? sub.images : sub.image ? [sub.image] : []),
-                            { url: newImageUrl, desc: newImageDesc },
-                          ],
-                        }
-                      : sub
-                  ),
-                }
-              : cat
-          ),
-        }));
-        setNewImageUrl("");
-        setNewImageDesc("");
-        setGalleryUploadBusy(false);
-        setToast({ message: "Image ajoutée !" });
-      }, 500);
-    }
-
 export default function App() {
+            // Couleur personnalisée pour la sélection de texte
+            const [selectionCustomColor, setSelectionCustomColor] = useState("#3b82f6");
+          // Palette de couleurs rapides pour la mise en forme
+          const quickColors = [
+            "#f43f5e", // rouge
+            "#f59e42", // orange
+            "#eab308", // jaune
+            "#10b981", // vert
+            "#3b82f6", // bleu
+            "#6366f1", // violet
+            "#334155", // gris foncé
+            "#64748b", // gris
+            "#e5e7eb"  // gris clair
+          ];
+        // Hooks pour la gestion des images inline
+        const [inlineImageTarget, setInlineImageTarget] = useState(null);
+        const [inlineImageUrl, setInlineImageUrl] = useState("");
+        const [inlineImageDesc, setInlineImageDesc] = useState("");
+        const [inlineImageLoading, setInlineImageLoading] = useState(false);
+        const [inlineUploadBusy, setInlineUploadBusy] = useState(false);
+      // État pour la gestion de la sélection de texte (mise en forme, couleur, etc.)
+      const [selectionInfo, setSelectionInfo] = useState({ text: "", start: 0, end: 0, target: null });
+    // États pour la création d'une nouvelle catégorie
     const [newCatTitle, setNewCatTitle] = useState("");
-    const [inlineImageTarget, setInlineImageTarget] = useState(null);
-    const [inlineImageUrl, setInlineImageUrl] = useState("");
-    const [inlineImageDesc, setInlineImageDesc] = useState("");
-    const [inlineImageLoading, setInlineImageLoading] = useState(false);
-    const [inlineUploadBusy, setInlineUploadBusy] = useState(false);
-    const [selectionInfo, setSelectionInfo] = useState({ text: "", start: 0, end: 0, target: null });
-    const [quickColors] = useState(["#f59e42", "#10b981", "#3b82f6", "#ef4444", "#eab308", "#6366f1", "#64748b"]);
-    const [selectionCustomColor, setSelectionCustomColor] = useState("#f59e42");
-  // Détection du dark mode système par défaut
-  // Thème par défaut : foncé (même si le système est en clair)
-  const prefersDark = true;
+    const [newCatEmoji, setNewCatEmoji] = useState("");
+    const [newCatColor, setNewCatColor] = useState("#ffffff");
+    const [newCatSection, setNewCatSection] = useState(null);
+  // Enregistre une image dans la galerie (catégorie et sous-catégorie)
+  const saveImage = () => {
+    if (!newImageUrl) {
+      setToast({ message: "Aucune image à enregistrer." });
+      return;
+    }
+    if (!newImageCatId || !newImageSubId) {
+      setToast({ message: "Sélectionne une catégorie et un module." });
+      return;
+    }
+    setGalleryUploadBusy(true);
+    setTimeout(() => {
+      setData((d) => ({
+        ...d,
+        categories: d.categories.map((cat) =>
+          cat.id === newImageCatId
+            ? {
+                ...cat,
+                subs: cat.subs.map((sub) =>
+                  sub.id === newImageSubId
+                    ? {
+                        ...sub,
+                        images: [
+                          ...(Array.isArray(sub.images) ? sub.images : sub.image ? [sub.image] : []),
+                          { url: newImageUrl, desc: newImageDesc }
+                        ]
+                      }
+                    : sub
+                )
+              }
+            : cat
+        )
+      }));
+      setNewImageUrl("");
+      setNewImageDesc("");
+      setGalleryUploadBusy(false);
+      setIsAddingImage(false);
+      setToast({ message: "Image ajoutée !" });
+    }, 500);
+  };
 
-  // Initialisation de l'état d'accès et du dark mode
-  useEffect(() => {
-    setAccessMode((prev) => (prev === null ? "home" : prev));
-    setDarkMode(true); // Toujours démarrer en mode foncé
-    // Désactive l'écoute du système pour forcer le dark
-  }, []);
                                     // Références d'éléments potentiellement utilisées
                                     const subRefs = useRef({});
                                     const sectionRefs = useRef({});
@@ -103,8 +119,7 @@ export default function App() {
                           const [editCatSection, setEditCatSection] = useState(null);
                           const [editCatColor, setEditCatColor] = useState("");
                           const [newCatName, setNewCatName] = useState("");
-                          const [newCatEmoji, setNewCatEmoji] = useState("");
-                          const [newCatColor, setNewCatColor] = useState("");
+                          // ...existing code...
                           const [newSubColor, setNewSubColor] = useState("");
                           const [editTitle, setEditTitle] = useState("");
                           const [editText, setEditText] = useState("");
@@ -126,7 +141,7 @@ const sectionSwatches = [
                     const [showSearchModal, setShowSearchModal] = useState(false);
                   const [showGallery, setShowGallery] = useState(false);
                 const [showSectionPanel, setShowSectionPanel] = useState(true);
-              const [accessMode, setAccessMode] = useState(null); // "visitor" | "admin" | "home" | null
+              const [accessMode, setAccessMode] = useState("home"); // "visitor" | "admin" | "home" | null
      const inlineFileInputRef = useRef(null);
      const fileInputRef = useRef(null);
                                       const [darkMode, setDarkMode] = useState(prefersDark);
@@ -166,7 +181,7 @@ const sectionSwatches = [
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState({ message: "" });
   const [isMobile, setIsMobile] = useState(false);
-  const [newCatSection, setNewCatSection] = useState(null);
+  // ...existing code...
   // const [newSubTitle, setNewSubTitle] = useState("");
   // const [newSubText, setNewSubText] = useState("");
   const tableTemplates = useMemo(() => ([
@@ -1467,26 +1482,7 @@ function Markdown({ content }) {
                               {isEditing ? (
                                 <div>
                                   <input placeholder="Titre" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, marginBottom: 10 }} />
-                                  <textarea
-                                    value={editText}
-                                    onChange={(e) => setEditText(e.target.value)}
-                                    onSelect={(e) => handleTextSelect(e, "editSub")}
-                                    placeholder="Saisis ou colle ton texte (markdown)"
-                                    style={{
-                                      width: "100%",
-                                      minHeight: 180,
-                                      padding: 14,
-                                      borderRadius: 12,
-                                      border: `1px solid ${theme.accent1}`,
-                                      background: darkMode ? "linear-gradient(135deg, rgba(26,32,44,0.92), rgba(17,24,39,0.92))" : "linear-gradient(135deg, #f8fafc, #eef2ff)",
-                                      color: theme.text,
-                                      fontFamily: "'Inter', 'SFMono-Regular', monospace",
-                                      lineHeight: 1.6,
-                                      boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-                                      marginBottom: 12,
-                                      borderColor: darkMode ? "rgba(255,179,102,0.45)" : "rgba(255,179,102,0.65)",
-                                    }}
-                                  />
+                                  {/* Zone d'édition Tiptap uniquement, textarea supprimé */}
 
                                   {selectionInfo.text && selectionInfo.target === "editSub" && (
                                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: 10, borderRadius: 10, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, marginBottom: 10 }}>
