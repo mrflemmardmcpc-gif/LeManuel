@@ -462,6 +462,7 @@ function Markdown({ content }) {
   // Sauvegarde automatique sur Redis à chaque modification de data (temps réel)
   useEffect(() => {
     if (!data) return;
+    if (accessMode === "visitor") return; // Ne sauvegarde rien en mode visiteur
     const save = async () => {
       try {
         await fetch("/api/state", {
@@ -478,7 +479,7 @@ function Markdown({ content }) {
       }
     };
     save();
-  }, [data]);
+  }, [data, accessMode]);
   // Bouton principal Sauvegarder
   const handleMainSave = async () => {
     setKvStatus("saving");
@@ -502,6 +503,10 @@ function Markdown({ content }) {
 
   // Hydrate from KV persistence (single snapshot) + polling pour synchro temps réel
   useEffect(() => {
+    if (accessMode === "visitor") {
+      setData({ sections, categories });
+      return;
+    }
     let cancelled = false;
     let intervalId;
     const load = async () => {
@@ -534,7 +539,7 @@ function Markdown({ content }) {
     load();
     intervalId = setInterval(load, 2000); // Polling toutes les 2 secondes
     return () => { cancelled = true; clearInterval(intervalId); };
-  }, []);
+  }, [accessMode]);
 
   // Marque les changements locaux comme non sauvegardés une fois la KV chargée.
   useEffect(() => {
@@ -1032,6 +1037,7 @@ function Markdown({ content }) {
     setLoginError("");
     setShowEditSectionsPanel(false);
     setShowSectionPanel(false); // Ferme la barre latérale
+    setData({ sections, categories }); // Force les données locales
   };
 
   const handleOpenAdminLogin = () => {
