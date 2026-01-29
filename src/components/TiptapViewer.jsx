@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Bold from "@tiptap/extension-bold";
@@ -108,5 +108,23 @@ export default function TiptapViewer({ html, darkMode, theme }) {
     },
   });
 
-  return <EditorContent editor={editor} />;
+  // Ref pour accéder au DOM de l'EditorContent
+  const editorContentRef = useRef();
+
+  // Effet pour wrapper tous les tableaux dans .table-scroll-x après chaque rendu
+  useEffect(() => {
+    const container = editorContentRef.current;
+    if (!container) return;
+    // Pour chaque table non déjà wrappée
+    container.querySelectorAll('table').forEach(table => {
+      if (!table.parentElement.classList.contains('table-scroll-x')) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-scroll-x';
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      }
+    });
+  }, [editor?.getHTML()]);
+
+  return <EditorContent editor={editor} ref={editorContentRef} />;
 }
