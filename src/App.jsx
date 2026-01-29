@@ -522,17 +522,17 @@ function Markdown({ content }) {
       setKvStatus("saved");
       setKvLastSaved(Date.now());
       setIsDirty(false);
-      // 2. Export Git (depuis la dernière version Redis)
-      const exportRes = await fetch("/api/export-push", {
+      // 2. Déclenche le workflow GitHub Actions via .trigger-export
+      const triggerRes = await fetch("/api/trigger-export", {
         method: "POST",
         headers: { 'x-admin-key': 'ITSTIEC2026' },
       });
-      if (!exportRes.ok) {
-        const body = await exportRes.json().catch(() => ({}));
-        throw new Error(body?.error || "Export Git échoué");
+      if (!triggerRes.ok) {
+        const body = await triggerRes.json().catch(() => ({}));
+        throw new Error(body?.error || "Export GitHub Actions échoué");
       }
       setIsExportDirty(false); // Export fait
-      showToast("Sauvegardé + Git");
+      showToast("Sauvegardé + GitHub Actions");
     } catch (err) {
       setKvStatus("error");
       setKvErrorMsg(err?.message || "Échec sauvegarde");
