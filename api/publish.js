@@ -14,11 +14,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Token GitHub manquant' });
   }
 
-  // À adapter selon ton repo/branche/workflow
-  const owner = 'Jerem'; // Remplace par ton nom d’utilisateur GitHub
-  const repo = 'LeManuel'; // Remplace par le nom du repo
-  const workflow_id = 'export-redis-to-git.yml'; // Nom du fichier workflow dans .github/workflows
-  const ref = 'main'; // Branche cible
+  // Paramètres GitHub corrects
+  const owner = 'mrflemmardmcpc-gif'; // Ton nom d’utilisateur GitHub
+  const repo = 'LeManuel'; // Nom du repo
+  const workflow_id = 'export-redis-to-git.yml'; // Nom exact du fichier workflow
+  const ref = 'main'; // Branche principale
 
   const url = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow_id}/dispatches`;
 
