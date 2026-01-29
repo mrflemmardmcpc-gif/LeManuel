@@ -545,7 +545,7 @@ export default {
           {
             "id": 95202,
             "title": "Transport & stockage",
-            "text": "✔️ Capuchon vissé, chaînes serrées, chariot stable\n✔️ Pas de transvasement de gaz (interdit)\n✔️ Fermer bouteille vide (limite évaporation acétone C₂H₂)\n[color=#ef4444]Ne pas[/color] coucher l'acétylène en service ; en transport couché : laisser reposer debout avant usage.\n[color=#00c853]Ventilation :[/color] local aéré, détecter les odeurs (ail) signe de fuite C₂H₂.",
+            "text": "<p>✔️ Capuchon vissé, chaînes serrées, chariot stable</p><p>✔️ Pas de transvasement de gaz (interdit)</p><p>✔️ Fermer bouteille vide (limite évaporation acétone C₂H₂)</p><p>Ne pas coucher l'acétylène en service ; en transport couché : laisser reposer debout avant usage.</p><p>Ventilation : local aéré, détecter les odeurs (ail) signe de fuite C₂H₂.</p>",
             "color": "#ffedd5",
             "image": null
           }
