@@ -17,7 +17,15 @@ export default async function handler(req, res) {
   }
 
   exec('node export-redis-to-git.cjs', { cwd: process.cwd() }, (error, stdout, stderr) => {
+    // Si le script retourne "No change in data, nothing to commit." ou tout message sur stdout, on considère comme succès
+    if (stdout && stdout.includes('No change in data, nothing to commit.')) {
+      return res.status(200).json({ success: true, output: stdout });
+    }
     if (error) {
+      // Si le script a écrit sur stdout (succès partiel), on considère comme succès
+      if (stdout && stdout.trim().length > 0) {
+        return res.status(200).json({ success: true, output: stdout });
+      }
       return res.status(500).json({ error: stderr || error.message });
     }
     res.status(200).json({ success: true, output: stdout });

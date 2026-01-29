@@ -512,8 +512,17 @@ function Markdown({ content }) {
   const handleMainSave = async () => {
     setKvStatus("saving");
     try {
-      // On ne refait pas la sauvegarde Redis ici, elle est déjà faite automatiquement
-      // On fait juste l'export Git
+      // 1. Sauvegarde sur Redis (pour garantir que la dernière modif est bien sur Redis)
+      const res = await fetch("/api/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data }),
+      });
+      if (!res.ok) throw new Error("Erreur sauvegarde");
+      setKvStatus("saved");
+      setKvLastSaved(Date.now());
+      setIsDirty(false);
+      // 2. Export Git (depuis la dernière version Redis)
       const exportRes = await fetch("/api/export-push", {
         method: "POST",
         headers: { 'x-admin-key': 'ITSTIEC2026' },
