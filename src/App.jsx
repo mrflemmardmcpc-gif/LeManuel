@@ -522,17 +522,16 @@ function Markdown({ content }) {
       setKvStatus("saved");
       setKvLastSaved(Date.now());
       setIsDirty(false);
-      // 2. Déclenche le workflow GitHub Actions via .trigger-export
-      const triggerRes = await fetch("/api/trigger-export", {
+      // 2. Déclenche le workflow GitHub Actions via /api/publish
+      const publishRes = await fetch("/api/publish", {
         method: "POST",
-        headers: { 'x-admin-key': 'ITSTIEC2026' },
       });
-      if (!triggerRes.ok) {
-        const body = await triggerRes.json().catch(() => ({}));
-        throw new Error(body?.error || "Export GitHub Actions échoué");
+      if (!publishRes.ok) {
+        const body = await publishRes.json().catch(() => ({}));
+        throw new Error(body?.error || "Publication GitHub Actions échouée");
       }
       setIsExportDirty(false); // Export fait
-      showToast("Sauvegardé + GitHub Actions");
+      showToast("Sauvegardé + publication envoyée");
     } catch (err) {
       setKvStatus("error");
       setKvErrorMsg(err?.message || "Échec sauvegarde");
