@@ -64,7 +64,7 @@ export default {
           {
             "id": 301,
             "title": "Sécurité électrique - Appareils électroportatifs",
-            "text": "<p>⚠️ **Plus de 1 000 accidents électriques par an en France**, dont ~20 mortels.</p><p> </p><p>💡 Vérifier l'état général des appareils et rallonges en 230V.</p><p>⚡ 50V en milieu sec peut être létal, 25V en milieu humide.</p><p></p><p>Prévention essentielle : Utiliser disjoncteur différentiel et équipement personnel.</p>",
+            "text": "<p>⚠️ Plus de <span style=\"color: rgb(251, 191, 36);\">1 000 accidents</span> électriques par an en France, dont ~20 mortels.</p><p></p><p>💡 Vérifier l'état général des appareils et rallonges en 230V.</p><p>⚡ 50V en milieu sec peut être létal, 25V en milieu humide.</p><p></p><p>Prévention essentielle : Utiliser disjoncteur différentiel et équipement personnel.</p>",
             "color": "#cffafe",
             "image": null
           },
@@ -78,7 +78,7 @@ export default {
           {
             "id": 303,
             "title": "NiMH (Nickel-Métal-Hydrure)",
-            "text": "<p>Commercialisées vers 1990 plus performantes que NiCd, pas de cadmium ni plomb.</p><p></p><p>💡 Faible effet mémoire, écologique</p><p>Durée de vie : 500-1000 cycles</p>",
+            "text": "<p>Commercialisées vers 1990 plus performantes que NiCd, pas de cadmium ni plomb.</p><p></p><p>💡 <span style=\"color: rgb(16, 185, 129);\">Faible</span> effet mémoire, écologique</p><p>Durée de vie : 500-1000 cycles</p>",
             "color": "#cffafe",
             "image": null
           },
