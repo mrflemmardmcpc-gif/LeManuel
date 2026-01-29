@@ -1,3 +1,35 @@
+// Extension fontSize personnalisée (copiée depuis EditorPanel.jsx)
+import { Extension } from '@tiptap/core';
+
+const FontSize = Extension.create({
+  name: 'fontSize',
+  addOptions() {
+    return {
+      types: ['textStyle'],
+    }
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['textStyle'],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: element => element.style.fontSize?.replace(/['"]+/g, ''),
+            renderHTML: attributes => {
+              if (!attributes.fontSize) {
+                return {};
+              }
+              return {
+                style: `font-size: ${attributes.fontSize}`,
+              };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
 import React, { useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -93,6 +125,7 @@ export default function TiptapViewer({ html, darkMode, theme }) {
       Color,
       TextStyle,
       Highlight,
+      FontSize,
       Table.configure({ resizable: true }),
       TableRow,
       CleanTableHeader,
@@ -103,7 +136,7 @@ export default function TiptapViewer({ html, darkMode, theme }) {
     editable: false,
     editorProps: {
       attributes: {
-        style: `min-height: 180px; font-size: 1.05rem; border: none; background: none; color: inherit; border-radius: 0;`,
+        style: `min-height: 180px; border: none; background: none; color: inherit; border-radius: 0;`,
       },
     },
   });
