@@ -1,0 +1,41 @@
+/* Styles de base pour tous les tableaux Tiptap, sur PC et mobile */
+.tiptap table, .ProseMirror table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin: 1em 0;
+  border-radius: 16px 16px 16px 16px;
+  overflow: hidden;
+  box-shadow: 0 0 0 2px #2563eb;
+}
+.tiptap th, .ProseMirror th,
+.tiptap td, .ProseMirror td {
+  border: 1px solid #2563eb;
+  padding: 0.5em 0.75em;
+  text-align: left;
+  background: #111827;
+  color: #fff;
+}
+.tiptap th, .ProseMirror th {
+  background: #1e293b;
+  font-weight: 600;
+  color: #3b82f6;
+}
+.tiptap tr.selected td, .tiptap td.selected,
+.ProseMirror tr.selected td, .ProseMirror td.selected {
+  background: #e0e7ef;
+  color: #111827;
+}
+.tiptap .column-resize-handle, .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #a0aec0;
+  cursor: col-resize;
+  z-index: 10;
+}
+.tiptap .tableWrapper, .ProseMirror .tableWrapper {
+  overflow-x: auto;
+}

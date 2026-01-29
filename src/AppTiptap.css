@@ -1,19 +1,5 @@
-@media (max-width: 600px) {
-  /* Tableaux et texte plus petits sur mobile */
-  .ProseMirror th, .ProseMirror td {
-    font-size: 0.85rem;
-    padding: 5px 4px;
-    min-width: 28px;
-  }
-  .ProseMirror table {
-    min-width: 0;
-    width: 100% !important;
-    max-width: 100%;
-  }
-  .ProseMirror {
-    font-size: 0.98rem;
-  }
-}
+@import url('/tiptap/tiptap-table.css');
+@import url('/tiptap/mobile-interface.css');
 /* Permet le scroll horizontal des tableaux sur mobile et évite qu'ils débordent */
 
 /* Scroll horizontal uniquement sur les tableaux, pas sur tout le bloc */
@@ -64,7 +50,8 @@
 .ProseMirror mark[style], .ProseMirror mark[data-color] {
   background-color: inherit !important;
 }
-@import url('https://cdn.jsdelivr.net/npm/@tiptap/extension-table@2.0.0-beta.212/style.css');
+
+
 
 .note-viewer {
   background: none;

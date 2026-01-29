@@ -1,0 +1,54 @@
+/* Styles spécifiques à l’interface mobile pour Tiptap et l’application */
+
+@media (max-width: 600px) {
+  /* Réduction drastique de la taille sur mobile uniquement */
+  .ProseMirror,
+  .module,
+  .module-content,
+  .note-viewer {
+    font-size: 0.92rem !important;
+    line-height: 1.28 !important;
+  }
+  .module th, .module td,
+  .module-content th, .module-content td,
+  .note-viewer th, .note-viewer td,
+  .ProseMirror th, .ProseMirror td {
+    font-size: 0.72rem !important;
+    padding: 4px 7px !important;
+  }
+  /* Tableaux dans les modules : jamais plus larges que le conteneur, scrollables */
+  .ProseMirror table,
+  .module-table-wrapper table,
+  .note-viewer table,
+  .module-content table,
+  .module table {
+    width: 100% !important;
+    max-width: 100vw;
+    min-width: 0;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 auto 8px auto;
+    box-sizing: border-box;
+    table-layout: fixed;
+  }
+  /* Forcer le conteneur parent à ne pas déborder */
+  .ProseMirror, .module-table-wrapper, .note-viewer {
+    overflow-x: auto;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+  /* Cellules : texte et padding plus petits, retour à la ligne, pas de débordement */
+  .ProseMirror th, .ProseMirror td,
+  .module-table-wrapper th, .module-table-wrapper td,
+  .note-viewer th, .note-viewer td,
+  .module-content th, .module-content td,
+  .module th, .module td {
+    font-size: 0.72rem !important;
+    padding: 4px 7px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    text-align: center !important;
+  }
+}
