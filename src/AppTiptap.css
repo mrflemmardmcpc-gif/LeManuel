@@ -1,3 +1,65 @@
+@media (max-width: 600px) {
+  /* Tableaux et texte plus petits sur mobile */
+  .ProseMirror th, .ProseMirror td {
+    font-size: 0.85rem;
+    padding: 5px 4px;
+    min-width: 28px;
+  }
+  .ProseMirror table {
+    min-width: 0;
+    width: 100% !important;
+    max-width: 100%;
+  }
+  .ProseMirror {
+    font-size: 0.98rem;
+  }
+}
+/* Permet le scroll horizontal des tableaux sur mobile et évite qu'ils débordent */
+
+/* Scroll horizontal uniquement sur les tableaux, pas sur tout le bloc */
+.ProseMirror table {
+  width: 100% !important;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 12px;
+  table-layout: auto;
+}
+
+/* Scrollbar personnalisée pour les tableaux */
+.ProseMirror table::-webkit-scrollbar {
+  height: 7px;
+  background: transparent;
+}
+.ProseMirror table::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 6px;
+}
+.ProseMirror table::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ProseMirror table {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 transparent;
+}
+
+/* Scrollbar personnalisée, fine et collée au tableau */
+.table-scroll-x::-webkit-scrollbar {
+  height: 7px;
+  background: transparent;
+}
+.table-scroll-x::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 6px;
+}
+.table-scroll-x::-webkit-scrollbar-track {
+  background: transparent;
+}
+.table-scroll-x {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 transparent;
+}
+
 /* Correction surligneur multicolore Tiptap : laisse la couleur inline primer */
 .ProseMirror mark[style], .ProseMirror mark[data-color] {
   background-color: inherit !important;
@@ -49,9 +111,9 @@
 .ProseMirror table {
   border-collapse: separate;
   border-spacing: 0;
-  width: auto !important;
-  min-width: unset !important;
-  max-width: 100%;
+  width: max-content !important;
+  min-width: 480px;
+  max-width: none;
   margin: 1.2em 0;
   background: rgba(30, 34, 54, 0.98); /* fond sombre, légèrement transparent */
   color: #e0e6ed;

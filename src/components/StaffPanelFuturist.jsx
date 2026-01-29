@@ -8,6 +8,8 @@ try {
 }
 
 // Données de démo pour les modules (à remplacer par API plus tard)
+import '../AppTiptap.css'; // pour s'assurer que le CSS mobile est chargé
+
 const demoStats = {
   visitors: 12847,
   bandwidth: "48 GB",
