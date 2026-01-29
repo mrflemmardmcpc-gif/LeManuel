@@ -81,6 +81,7 @@ import { FaBold, FaItalic, FaUnderline, FaHighlighter, FaListUl, FaListOl, FaHea
 
 // Ce composant centralisera tout le mode édition (catégorie, module, formattage, etc.)
 // Les props attendues sont à ajuster selon les besoins réels
+// export default function EditorPanel({
 export default function EditorPanel({
   editTitle,
   setEditTitle,
@@ -126,7 +127,8 @@ export default function EditorPanel({
   saveNewSub,
   cancelAddingSub,
   handleTextSelect,
-  insertTableTemplate
+  insertTableTemplate,
+  categories = [],
 }) {
 
   // State global pour la couleur du surligneur (doit être tout en haut !)
@@ -191,121 +193,32 @@ export default function EditorPanel({
         flexDirection: "column",
         gap: 24,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-          <span style={{ fontSize: 26, color: theme?.accent1 || "#f59e42", fontWeight: 700, marginRight: 6 }}>➕</span>
-          <h3 style={{ margin: 0, color: theme?.accent1 || "#f59e42", fontSize: 20, fontWeight: 700, letterSpacing: 0.1 }}>Ajouter une catégorie</h3>
-        </div>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "2.2fr 1.1fr 1.1fr 2.5fr",
-          gap: 18,
-          alignItems: "end",
-          marginTop: 8,
-          marginBottom: 0,
-        }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label style={{ fontSize: 14, color: theme?.subtext || "#888", fontWeight: 600 }}>Nom</label>
-            <input
-              value={newCatTitle}
-              onChange={(e) => setNewCatTitle(e.target.value)}
-              placeholder="Nom de la catégorie"
-              style={{
-                width: "100%",
-                padding: "14px 16px",
-                borderRadius: 10,
-                border: `1.5px solid ${theme?.border || "#f59e42"}`,
-                background: theme?.input || "#23202d",
-                color: theme?.text || "#fff",
-                fontSize: 16,
-                fontWeight: 500,
-                outline: "none",
-                transition: "border 0.2s",
-              }}
-            />
+        {/* Bloc info catégorie parente lors de la modification d'une sous-catégorie */}
+        {editingSubId && (
+          <div style={{
+            marginBottom: 18,
+            background: theme?.panel || "#23202d",
+            borderRadius: 14,
+            padding: "18px 24px 12px 24px",
+            border: `1.5px solid ${theme?.accent1 || "#f59e42"}`,
+            boxShadow: theme?.shadow || "0 4px 16px rgba(0,0,0,0.08)",
+            maxWidth: 700,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8
+          }}>
+            <h3 style={{ margin: 0, color: theme?.accent1 || "#f59e42", fontSize: 20, fontWeight: 700, letterSpacing: 0.1 }}>Catégorie parente</h3>
+            {/* Affichage des infos de la catégorie parente (à adapter selon ta structure) */}
+            <div style={{ display: 'flex', gap: 18, alignItems: 'center', marginTop: 8 }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: theme?.accent1 }}>{/* Emoji */} {categories?.find(cat => cat.subs?.some(sub => sub.id === editingSubId))?.icon || '📁'}</div>
+              <div style={{ fontSize: 16, color: theme?.text }}>{categories?.find(cat => cat.subs?.some(sub => sub.id === editingSubId))?.name || 'Catégorie inconnue'}</div>
+              <div style={{ width: 28, height: 28, borderRadius: 6, background: categories?.find(cat => cat.subs?.some(sub => sub.id === editingSubId))?.color || '#fff', border: `1.5px solid ${theme?.border}` }} />
+              <div style={{ fontSize: 14, color: theme?.subtext }}>
+                {sections?.find(sec => sec.id === categories?.find(cat => cat.subs?.some(sub => sub.id === editingSubId))?.sectionId)?.name || ''}
+              </div>
+            </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label style={{ fontSize: 14, color: theme?.subtext || "#888", fontWeight: 600 }}>Emoji</label>
-            <input
-              value={newCatEmoji}
-              onChange={(e) => setNewCatEmoji(e.target.value)}
-              placeholder="Emoji"
-              style={{
-                width: "100%",
-                padding: "14px 16px",
-                borderRadius: 10,
-                border: `1.5px solid ${theme?.border || "#f59e42"}`,
-                background: theme?.input || "#23202d",
-                color: theme?.text || "#fff",
-                fontSize: 16,
-                fontWeight: 500,
-                outline: "none",
-                transition: "border 0.2s",
-              }}
-            />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label style={{ fontSize: 14, color: theme?.subtext || "#888", fontWeight: 600 }}>Couleur</label>
-            <input
-              type="color"
-              value={newCatColor}
-              onChange={(e) => setNewCatColor(e.target.value)}
-              style={{
-                width: "100%",
-                height: 44,
-                borderRadius: 10,
-                border: `1.5px solid ${theme?.border || "#f59e42"}`,
-                background: "transparent",
-                cursor: "pointer",
-                padding: 0,
-              }}
-            />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label style={{ fontSize: 14, color: theme?.subtext || "#888", fontWeight: 600 }}>Grande partie</label>
-            <select
-              value={newCatSection || ""}
-              onChange={(e) => setNewCatSection(Number(e.target.value))}
-              style={{
-                width: "100%",
-                padding: "14px 16px",
-                borderRadius: 10,
-                border: `1.5px solid ${theme?.border || "#f59e42"}`,
-                background: theme?.input || "#23202d",
-                color: theme?.text || "#fff",
-                fontSize: 16,
-                fontWeight: 500,
-                outline: "none",
-                transition: "border 0.2s",
-              }}
-            >
-              <option value="">Choisir...</option>
-              {sections.map((section) => (
-                <option key={section.id} value={section.id}>
-                  {section.emoji} {section.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <button
-          onClick={addCategory}
-          style={{
-            marginTop: 10,
-            padding: "14px 32px",
-            borderRadius: 10,
-            background: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
-            color: "white",
-            border: "none",
-            fontWeight: 700,
-            fontSize: 18,
-            boxShadow: "0 2px 8px rgba(16,185,129,0.13)",
-            letterSpacing: 0.1,
-            cursor: "pointer",
-            transition: "background 0.2s",
-          }}
-        >
-          ✅ Créer la catégorie
-        </button>
+        )}
       </div>
       {/* Edition d'un module (sous-catégorie) */}
       {editingSubId && (

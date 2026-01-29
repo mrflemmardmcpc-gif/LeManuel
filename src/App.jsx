@@ -23,6 +23,7 @@ import Gallery from "./components/Gallery";
 
 
 import EditorPanel from "./components/EditorPanel";
+import FullEditorPage from "./modals/FullEditorPage";
 import TiptapViewer from "./components/TiptapViewer";
 
 
@@ -35,6 +36,9 @@ export default function App() {
   const [staffUser, setStaffUser] = useState(null);
   // État pour le mode développeur caché
   const [showDevMode, setShowDevMode] = useState(false);
+
+  // État pour afficher la page éditeur complète
+  const [showFullEditor, setShowFullEditor] = useState(false);
 
   // Handler pour le scroll sur le bouton dark mode
   const handleDarkModeWheel = (e) => {
@@ -1481,7 +1485,11 @@ function Markdown({ content }) {
               )}
               {/* Bloc édition centralisé */}
 
-              <EditorPanel
+              {/* Bouton pour ouvrir l'éditeur complet en surimpression */}
+              <button onClick={() => setShowFullEditor(true)} style={{position:'fixed',bottom:80,right:18,zIndex:10000}}>Ouvrir éditeur complet</button>
+              <FullEditorPage
+                open={showFullEditor}
+                onClose={() => setShowFullEditor(false)}
                 editMode={editMode}
                 setEditMode={setEditMode}
                 isAuthenticated={isAuthenticated}
@@ -1497,8 +1505,8 @@ function Markdown({ content }) {
                 setNewCatSection={setNewCatSection}
                 addCategory={addCategory}
                 sections={data.sections}
+                categories={data.categories}
                 theme={theme}
-                // Props pour édition de module
                 editingSubId={editingSubId}
                 editTitle={editTitle}
                 setEditTitle={setEditTitle}
@@ -1519,7 +1527,6 @@ function Markdown({ content }) {
                 selectionCustomColor={selectionCustomColor}
                 setSelectionCustomColor={setSelectionCustomColor}
                 darkMode={darkMode}
-                // Props pour ajout de module gérés dans EditorPanel
                 handleTextSelect={handleTextSelect}
                 insertTableTemplate={insertTableTemplate}
               />
