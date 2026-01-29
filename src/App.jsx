@@ -27,6 +27,8 @@ import TiptapViewer from "./components/TiptapViewer";
 
 
 export default function App() {
+    // Nouvel état : export Git en attente
+    const [isExportDirty, setIsExportDirty] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [showStaffLogin, setShowStaffLogin] = useState(false);
   const [pendingStaffPanel, setPendingStaffPanel] = useState(false);
@@ -498,6 +500,7 @@ function Markdown({ content }) {
         setKvStatus("saved");
         setKvLastSaved(Date.now());
         setIsDirty(false);
+        setIsExportDirty(true); // Marque l'export Git comme à faire
       } catch (err) {
         setKvStatus("error");
         setKvErrorMsg(err?.message || "Échec sauvegarde");
@@ -509,16 +512,18 @@ function Markdown({ content }) {
   const handleMainSave = async () => {
     setKvStatus("saving");
     try {
-      const res = await fetch("/api/state", {
+      // On ne refait pas la sauvegarde Redis ici, elle est déjà faite automatiquement
+      // On fait juste l'export Git
+      const exportRes = await fetch("/api/export-push", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data }),
+        headers: { 'x-admin-key': 'ITSTIEC2026' },
       });
-      if (!res.ok) throw new Error("Erreur sauvegarde");
-      setKvStatus("saved");
-      setKvLastSaved(Date.now());
-      setIsDirty(false);
-      showToast("Sauvegardé");
+      if (!exportRes.ok) {
+        const body = await exportRes.json().catch(() => ({}));
+        throw new Error(body?.error || "Export Git échoué");
+      }
+      setIsExportDirty(false); // Export fait
+      showToast("Sauvegardé + Git");
     } catch (err) {
       setKvStatus("error");
       setKvErrorMsg(err?.message || "Échec sauvegarde");
@@ -1442,7 +1447,7 @@ function Markdown({ content }) {
             <section style={{ flex: 1, overflow: "auto", padding: layout.contentPad }} ref={sectionScrollRef}>
               {/* Bouton flottant Sauvegarder (emoji) */}
               {/* Bouton Sauvegarder flottant : admin uniquement, plus petit, et seulement si isDirty */}
-              {isAuthenticated && isDirty && (
+              {isAuthenticated && isExportDirty && (
                 <button
                   onClick={handleMainSave}
                   title="Sauvegarder"
