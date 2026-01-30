@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { marked } = require('marked');
 
-const dataFilePath = path.join(__dirname, 'src', 'data.structure.js');
+const dataFilePath = path.join(__dirname, '../data.structure.js');
 
 function isMarkdownField(key) {
   // Adjust this function if you have other field names to convert
@@ -40,7 +40,7 @@ function main() {
   const converted = convertMarkdownFields(data);
 
   // Génère le code JS exportant la structure convertie
-  const output = 'module.exports = ' + JSON.stringify(converted, null, 2) + ';\n';
+  const output = 'module.exports = ' + JSON.stringify(converted, null, 2) + '\n';
 
   fs.writeFileSync(dataFilePath, output, 'utf-8');
   console.log('Conversion terminée. Les champs markdown sont maintenant en HTML.');

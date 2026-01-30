@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dataFilePath = path.join(__dirname, 'src', 'data.structure.js');
+const dataFilePath = path.join(__dirname, '../data.structure.js');
 
 function isMarkdownField(key) {
   return (

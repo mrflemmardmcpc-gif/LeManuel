@@ -43,7 +43,7 @@ export default function Sidebar({
   if (!show) return null;
   return (
     <>
-      <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.3)", zIndex: 200 }} onClick={onClose} />
+      <div style={{ position: "fixed", inset: 0, backgroundColor: "transparent", zIndex: 200 }} onClick={onClose} />
       <aside style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: layout.sideWidth, backgroundColor: theme.panel, backdropFilter: "blur(20px)", zIndex: 300, overflow: "auto", padding: layout.modalPad, borderRight: `1px solid ${theme.border}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <h2 style={{ margin: 0, color: theme.accent1 }}>📂 Menu</h2>

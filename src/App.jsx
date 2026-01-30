@@ -1,44 +1,74 @@
+import TiptapViewer from "./components/TiptapViewer";
+// ...existing code...
+// ...existing code...
+// ...existing code...
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import imageCompression from 'browser-image-compression';
 import "./AppTiptap.css";
 import StaffPanelPage from "./StaffPanelPage";
 import StaffLoginModal from "./modals/StaffLoginModal.jsx";
 import StaffQRModal from "./modals/StaffQRModal.jsx";
-// Détection du thème sombre du système pour initialiser darkMode
-const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-// ...existing code...
 import LoginModal from "./modals/LoginModal";
 import ConfirmModal from "./modals/ConfirmModal";
 import SearchModal from "./modals/SearchModal";
-import data from "./data.structure";
-const { sections, categories } = data.value || {};
+import initialData from "./data.structure";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import Gallery from "./components/Gallery";
-
-
-
-
-import EditorPanel from "./components/EditorPanel";
 import FullEditorPage from "./modals/FullEditorPage";
-import TiptapViewer from "./components/TiptapViewer";
 
+// Détection du thème sombre du système pour initialiser darkMode
+const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+
+const { sections, categories } = initialData.value || {};
 
 export default function App() {
-    // Nouvel état : export Git en attente
-    const [isExportDirty, setIsExportDirty] = useState(false);
-  const [showQR, setShowQR] = useState(false);
-  const [showStaffLogin, setShowStaffLogin] = useState(false);
-  const [pendingStaffPanel, setPendingStaffPanel] = useState(false);
-  const [staffUser, setStaffUser] = useState(null);
-  // État pour le mode développeur caché
   const [showDevMode, setShowDevMode] = useState(false);
-
-  // État pour afficher la page éditeur complète
+  const [isExportDirty, setIsExportDirty] = useState(false);
   const [showFullEditor, setShowFullEditor] = useState(false);
+  const [data, setData] = useState({ sections, categories });
+
+  // Déplacement d'une sous-catégorie (module) d'une catégorie à une autre
+  const moveSubToCategory = (subId, newCatId) => {
+    console.log('moveSubToCategory called', { subId, newCatId });
+    setData((d) => {
+      // Trouver la sous-catégorie et sa catégorie actuelle
+      let subToMove = null;
+      let oldCatId = null;
+      const newCategories = d.categories.map(cat => {
+        if (cat.subs.some(sub => sub.id === subId)) {
+          subToMove = cat.subs.find(sub => sub.id === subId);
+          oldCatId = cat.id;
+          // On retire la sous-catégorie de l'ancienne catégorie
+          return { ...cat, subs: cat.subs.filter(sub => sub.id !== subId) };
+        }
+        return cat;
+      });
+      if (!subToMove) return d; // rien à faire
+      // Ajouter la sous-catégorie à la nouvelle catégorie
+      return {
+        ...d,
+        categories: newCategories.map(cat =>
+          cat.id === newCatId
+            ? { ...cat, subs: [...cat.subs, subToMove] }
+            : cat
+        )
+      };
+    });
+    if (setSelectedCategoryId) {
+      setSelectedCategoryId(null);
+      setTimeout(() => setSelectedCategoryId(newCatId), 0);
+    }
+    setEditingSubId && setEditingSubId(subId);
+    setToast && setToast({ message: "Module déplacé !" });
+  };
+
+
+
+
 
   // Handler pour le scroll sur le bouton dark mode
   const handleDarkModeWheel = (e) => {
@@ -195,7 +225,7 @@ const sectionSwatches = [
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Tous les hooks doivent être déclarés ici, hors de tout objet/tableau/fonction !
   const [expandedSections, setExpandedSections] = useState({});
-  const [data, setData] = useState({ sections, categories });
+  const [showStaffLogin, setShowStaffLogin] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState(null);
   const [insertPosition, setInsertPosition] = useState(null);
   const ydocRef = useRef(null);
@@ -1485,8 +1515,6 @@ function Markdown({ content }) {
               )}
               {/* Bloc édition centralisé */}
 
-              {/* Bouton pour ouvrir l'éditeur complet en surimpression */}
-              <button onClick={() => setShowFullEditor(true)} style={{position:'fixed',bottom:80,right:18,zIndex:10000}}>Ouvrir éditeur complet</button>
               <FullEditorPage
                 open={showFullEditor}
                 onClose={() => setShowFullEditor(false)}
@@ -1529,6 +1557,7 @@ function Markdown({ content }) {
                 darkMode={darkMode}
                 handleTextSelect={handleTextSelect}
                 insertTableTemplate={insertTableTemplate}
+                moveSubToCategory={moveSubToCategory}
               />
 
               {filteredCategories.map((cat) => {
@@ -1584,7 +1613,7 @@ function Markdown({ content }) {
                         <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: 12, color: cat.color || theme.accent1 }}><span style={{ fontSize: 28 }}>{cat.icon}</span>{cat.name}</h2>
                         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                           {/* Flèches haut/bas supprimées */}
-                          {editMode && <button onClick={(e) => { e.stopPropagation(); startEditCategory(cat); }} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer" }}>✏️</button>}
+                          {editMode && <button onClick={(e) => { e.stopPropagation(); setShowFullEditor(true); startEditCategory(cat); }} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer" }}>✏️</button>}
                           {editMode && <button onClick={(e) => { e.stopPropagation(); deleteCategory(cat.id); }} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>🗑️</button>}
                           <span style={{ fontSize: 20 }}>{expanded ? "▼" : "▶"}</span>
                         </div>
@@ -1611,7 +1640,7 @@ function Markdown({ content }) {
                                 </h3>
                                 {editMode && !isEditing && (
                                   <div style={{ display: "flex", gap: 8 }}>
-                                    <button onClick={() => startEditSub(cat.id, sub)} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer" }}>✏️</button>
+                                    <button onClick={() => { setShowFullEditor(true); startEditSub(cat.id, sub); }} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer" }}>✏️</button>
                                     <button onClick={() => deleteSub(cat.id, sub.id)} style={{ padding: "6px 12px", borderRadius: 6, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>🗑️</button>
                                   </div>
                                 )}
