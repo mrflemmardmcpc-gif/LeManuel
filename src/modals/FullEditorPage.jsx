@@ -8,14 +8,14 @@ function FullEditorPage({ open, onClose, saveEditSub, saveEditCategory, sections
       position: "fixed",
       inset: 0,
       background: "transparent",
-      zIndex: 9999,
+      zIndex: 2147483647,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       overflow: "hidden"
     }}>
       <div style={{
-        background: "#23202d",
+        background: "transparent",
         borderRadius: 18,
         padding: 0,
         minWidth: 0,
@@ -23,13 +23,21 @@ function FullEditorPage({ open, onClose, saveEditSub, saveEditCategory, sections
         width: '100%',
         margin: '0 auto',
         maxHeight: "calc(100vh - 48px)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.22)",
+        boxShadow: "none",
         display: "flex",
         flexDirection: "column",
-        border: `2px solid #444`,
+        border: 'none',
         position: "relative",
-        overflow: "auto"
-      }}>
+        overflow: "auto",
+        scrollbarWidth: 'none', /* Firefox */
+        msOverflowStyle: 'none', /* IE 10+ */
+      }}
+        /* Chrome, Edge, Safari */
+        className="no-scrollbar"
+      >
+        <button onClick={onClose} style={{ position: "absolute", top: 18, right: 24, background: "#35324a", color: "#eee", border: "none", borderRadius: 8, padding: "7px 14px", fontWeight: 600, cursor: "pointer", zIndex: 10000 }}>
+          &#10006;
+        </button>
         {/* Barre latérale outils texte supprimée pour alignement à gauche */}
         {/* Zone principale éditeur */}
         <div style={{ flex: 1, padding: 0, minWidth: 0, display: "flex", flexDirection: "column", position: "relative" }}>

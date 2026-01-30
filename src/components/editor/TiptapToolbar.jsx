@@ -35,7 +35,7 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
         left: 335,
         top: 30,
         bottom: 0,
-            height: '88vh',
+        height: '88vh',
         zIndex: 10000,
         display: 'flex',
         flexDirection: 'column',
@@ -50,9 +50,9 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
         fontSize: 22,
         minWidth: 80,
         maxWidth: 110,
-            minHeight: 540,
-            paddingTop: 22,
-            paddingBottom: 22,
+        minHeight: 540,
+        paddingTop: 22,
+        paddingBottom: 22,
       }}
     >
       

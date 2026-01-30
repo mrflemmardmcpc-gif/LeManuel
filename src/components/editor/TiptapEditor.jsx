@@ -267,8 +267,6 @@ export default function TiptapEditor({
         left: 450,
         height: '100vh',
         zIndex: 10000,
-        background: 'rgba(36,34,54,0.72)',
-        boxShadow: '2px 0 16px 0 rgba(59,130,246,0.10)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
