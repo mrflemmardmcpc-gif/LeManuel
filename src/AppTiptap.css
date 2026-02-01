@@ -1,5 +1,28 @@
 @import url('/tiptap/tiptap-table.css');
 @import url('/tiptap/mobile-interface.css');
+/* Correction surligneur multicolore Tiptap pour le viewer : la couleur inline prime sur le fond par défaut */
+.note-viewer mark[data-type="highlight"] {
+  background-color: inherit !important;
+}
+.note-viewer mark[data-type="highlight"][style] {
+  background-color: unset !important;
+}
+/* Forcer l'affichage des puces et numéros dans les listes Tiptap */
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.6em !important;
+  margin: 0.5em 0 !important;
+}
+.ProseMirror ul {
+  list-style-type: disc !important;
+}
+.ProseMirror ol {
+  list-style-type: decimal !important;
+}
+.ProseMirror li {
+  margin: 0.2em 0 !important;
+  padding-left: 0.1em !important;
+}
 /* Permet le scroll horizontal des tableaux sur mobile et évite qu'ils débordent */
 
 /* Scroll horizontal uniquement sur les tableaux, pas sur tout le bloc */
@@ -47,9 +70,31 @@
 }
 
 /* Correction surligneur multicolore Tiptap : laisse la couleur inline primer */
-.ProseMirror mark[style], .ProseMirror mark[data-color] {
-  background-color: inherit !important;
+
+.favorites-scroll-x {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 220px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  ms-overflow-style: auto;
+  white-space: nowrap;
 }
+.favorites-scroll-x > button {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 2px;
+  display: inline-block;
+}
+
+.ProseMirror em, .ProseMirror i {
+  font-style: italic !important;
+}
+
 
 
 

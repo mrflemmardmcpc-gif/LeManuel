@@ -18,12 +18,12 @@ export default function EditorPanel(props) {
       marginBottom: 0,
       boxShadow: theme?.shadow || "0 8px 32px rgba(0,0,0,0.08)",
       maxWidth: 1400,
-        marginLeft: 0,
-        marginRight: 0,
+      width: 'auto',
+      marginLeft: 60,
+      marginRight: 'auto',
       position: "relative",
-      height: '100%',
       minHeight: 0,
-      display: 'Sflex',
+      display: 'flex',
       flexDirection: 'column',
       overflow: 'auto',
     }}>
@@ -84,7 +84,7 @@ export default function EditorPanel(props) {
           </select>
         </div>
       )}
-        {editingSubId && <ModuleEditForm {...props} normalizeLineBreaks={normalizeLineBreaks} />}
+        {editingSubId && <ModuleEditForm {...props} saveEditSub={props.saveEditSub} normalizeLineBreaks={normalizeLineBreaks} />}
       {addingSubToCatId && <ModuleAddForm {...props} />}
       {/* Bouton 'Quitter le mode édition' supprimé */}
     </div>
@@ -116,13 +116,14 @@ function TiptapMenuBar({ editor, theme, highlightColor, setHighlightColor }) {
       flexWrap: 'wrap',
       gap: 14,
       marginBottom: 18,
-      background: theme?.panel || '#23202d',
+      background: 'linear-gradient(120deg, rgba(103,58,183,0.85) 0%, rgba(156,39,176,0.75) 100%)',
       borderRadius: 14,
       padding: '14px 18px',
       border: `2.5px solid ${theme?.accent1 || '#f59e42'}`,
       alignItems: 'center',
       boxShadow: '0 4px 18px rgba(0,0,0,0.10)',
       fontSize: 18,
+      backdropFilter: 'blur(2px)',
     }}>
       <button title="Gras" onClick={() => editor.chain().focus().toggleBold().run()} disabled={!editor.can().chain().focus().toggleBold().run()} style={toolBtnStyle}><FaBold /></button>
       <button title="Italique" onClick={() => editor.chain().focus().toggleItalic().run()} disabled={!editor.can().chain().focus().toggleItalic().run()} style={toolBtnStyle}><FaItalic /></button>

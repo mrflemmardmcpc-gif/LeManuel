@@ -1,0 +1,9 @@
+.rotate3d-perspective {
+  perspective: 900px;
+}
+
+.rotate3d-preserve {
+  transform-style: preserve-3d;
+}
+
+/* Les faces du cube peuvent réutiliser ces classes si besoin */

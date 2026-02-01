@@ -124,7 +124,7 @@ export default function TiptapViewer({ html, darkMode, theme }) {
       Link,
       Color,
       TextStyle,
-      Highlight,
+      Highlight.configure({ multicolor: true }),
       FontSize,
       Table.configure({ resizable: true }),
       TableRow,

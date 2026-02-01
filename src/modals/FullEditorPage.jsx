@@ -10,18 +10,20 @@ function FullEditorPage({ open, onClose, saveEditSub, saveEditCategory, sections
       background: "transparent",
       zIndex: 2147483647,
       display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      overflow: "hidden"
+      alignItems: "flex-start",
+      justifyContent: "flex-end",
+      overflow: "hidden",
+      pointerEvents: 'auto',
     }}>
       <div style={{
         background: "transparent",
         borderRadius: 18,
         padding: 0,
         minWidth: 0,
-        maxWidth: 600,
-        width: '100%',
-        margin: '0 auto',
+        maxWidth: 1400,
+        width: 'auto',
+        marginRight: 614,
+        marginTop: 20,
         maxHeight: "calc(100vh - 48px)",
         boxShadow: "none",
         display: "flex",
@@ -44,10 +46,12 @@ function FullEditorPage({ open, onClose, saveEditSub, saveEditCategory, sections
           {/* Force re-render on subId or parentCatId change to update select */}
           <EditorPanel
             key={editorProps.editingSubId ? `${editorProps.editingSubId}-${editorProps.categories?.find(cat => cat.subs?.some(sub => sub.id === editorProps.editingSubId))?.id || ''}` : 'no-edit'}
+            {...editorProps}
+            saveEditSub={saveEditSub}
+            saveEditCategory={saveEditCategory}
             sections={sections}
             darkMode={darkMode}
             selectionInfo={selectionInfo}
-            {...editorProps}
           />
         </div>
         {/* Bouton 'Quitter le mode édition' supprimé */}

@@ -6,12 +6,15 @@ export default defineConfig({
   plugins: [react()],
   build: {
     // Relaxe l'alerte de taille de chunk sans bloquer le build
-    chunkSizeWarningLimit: 1200,
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
-      // Découpe les dépendances principales pour garder des bundles plus lisibles
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('tiptap') || id.includes('prosemirror')) return 'tiptap';
+            if (id.includes('react')) return 'vendor';
+            return 'vendor';
+          }
         },
       },
     },

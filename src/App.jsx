@@ -26,6 +26,8 @@ const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-schem
 const { sections, categories } = initialData.value || {};
 
 export default function App() {
+  // State pour suivre le dernier module sauvegardé
+  const [lastSavedSubId, setLastSavedSubId] = useState(null);
   const [showDevMode, setShowDevMode] = useState(false);
   const [isExportDirty, setIsExportDirty] = useState(false);
   const [showFullEditor, setShowFullEditor] = useState(false);
@@ -408,71 +410,8 @@ function addMarkdownLineBreaks(text) {
   return typeof text === 'string' ? text.replace(/([^\s])\n/g, '$1  \n') : text;
 }
 
-function Markdown({ content }) {
-  // Conversion Markdown :
-  // 1. Les doubles retours à la ligne (\n\n) deviennent des paragraphes
-  // 2. Les retours à la ligne simples (\n) deviennent des <br>
-  // 3. On applique le parsing Markdown APRÈS la conversion <br>
-  let raw = typeof content === 'string'
-    ? content
-        .replace(/\n{2,}/g, '<p></p>') // paragraphes
-        .replace(/\n/g, '<br>')        // sauts de ligne
-    : content;
 
-  // Appliquer le parsing Markdown sur le texte déjà converti
-  let html = raw;
-  // ...existing parsing Markdown...
-  // Amélioration du parsing Markdown pour gérer tous les cas imbriqués
-  // ...existing code...
-
-  // D'abord, traiter les balises imbriquées (color, size, underline)
-  html = html.replace(/\[color=(#[0-9a-fA-F]{3,6})\]([\s\S]+?)\[\/color\]/g, '<span style="color:$1;font-weight:bold;">$2</span>');
-  html = html.replace(/\[size=(\d{1,3})\]([\s\S]+?)\[\/size\]/g, (_m, sz, txt) => `<span style="font-size:${sz}px;">${txt}</span>`);
-  html = html.replace(/\[u\]([\s\S]+?)\[\/u\]/g, '<span style="text-decoration:underline;">$1</span>');
-
-  // Titres
-  html = html.replace(/^### (.+)$/gm, '<h3 class="text-lg md:text-xl font-semibold mt-3 mb-1 text-blue-400">$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2 class="text-xl md:text-2xl font-semibold mt-4 mb-2 text-blue-500">$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1 class="text-2xl md:text-3xl font-bold mt-4 mb-2 text-blue-700">$1</h1>');
-
-  // Important
-  html = html.replace(/^(IMPORTANT:.*)$/gim, '<p class="text-red-500 font-bold">$1</p>');
-
-  // Gras, italique
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-
-  // Listes
-  html = html.replace(/^\s*[-*+] (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*?<\/li>)/gms, '<ul class="ml-5 list-disc">$1<\/ul>');
-
-  // Tableaux Markdown
-  html = html.replace(/((?:^\|.+\|$\n?)+)/gm, (tableBlock) => {
-    const lines = tableBlock.trim().split('\n').filter(l => l.trim().startsWith('|') && l.trim().endsWith('|'));
-    if (lines.length < 2) return tableBlock;
-    const headers = lines[0].split('|').filter(Boolean).map(h => h.trim());
-    const headerHtml = headers.map(h => `<th class=\"p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700 bg-slate-800 text-blue-400\" style=\"word-break:break-word;white-space:pre-line;overflow-wrap:anywhere;\">${h}</th>`).join('');
-    const bodyHtml = lines.slice(2).map(row => {
-      const cols = row.split('|').filter(Boolean).map(c => c.trim());
-      return `<tr>${cols.map(c => `<td class=\"p-2 text-[clamp(14px,4vw,18px)] align-top border border-slate-700\" style=\"word-break:break-word;white-space:pre-line;overflow-wrap:anywhere;\">${c}</td>`).join('')}</tr>`;
-    }).join('');
-    // Bloc scrollable, largeur forcée, espace réduit
-    return `
-      <div class=\"relative w-full\" style=\"overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; margin:10px 0 6px 0;\">
-        <table class=\"border-collapse w-full min-w-full text-[clamp(14px,4vw,18px)]\" style=\"margin:0;\"><colgroup>${headers.map(() => '<col style=\'width:auto;min-width:80px;max-width:1fr;\'>').join('')}</colgroup><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>
-        <div class=\"pointer-events-none absolute top-0 right-0 h-full w-8 hidden sm:block\" style=\"background:linear-gradient(to left,rgba(30,41,59,0.7),transparent);\"></div>
-        <div class=\"pointer-events-none absolute top-0 left-0 h-full w-8 hidden sm:block\" style=\"background:linear-gradient(to right,rgba(30,41,59,0.7),transparent);\"></div>
-      </div>
-    `;
-  });
-
-  // Paragraphe et liste stylée
-  html = html.replace(/<p(.*?)>/g, '<p$1 class="text-[clamp(16px,4vw,20px)] leading-relaxed" style="white-space:pre-wrap;">');
-  html = html.replace(/<li(.*?)>/g, '<li$1 class="text-[clamp(16px,4vw,20px)] leading-relaxed" style="white-space:pre-wrap;">');
-
-  // Forcer le retour à la ligne partout
-  return <div style={{ wordBreak: "break-word", whiteSpace: "pre-line", overflowWrap: "anywhere" }} dangerouslySetInnerHTML={{ __html: html }} />;
-}
+// Markdown n'est plus utilisé, on affiche tout avec TiptapViewer pour garantir le rendu identique à l'éditeur
 
 
 
@@ -1013,28 +952,35 @@ function Markdown({ content }) {
     setEditColor(sub.color || "#e6eef8");
   };
 
-  const saveEditSub = () => {
+  const saveEditSub = (textOverride) => {
+    const textToSave = typeof textOverride === 'string' ? textOverride : editText;
     if (!editTitle.trim()) { showToast("Le titre ne peut pas être vide"); return; }
+    if (!editingSubId) { showToast("Aucun module à éditer."); return; }
+    let updated = false;
     setData((d) => ({
       ...d,
       categories: d.categories.map((cat) => {
-        // Si on est filtré, on ne touche qu'à la catégorie sélectionnée
-        if (selectedCategoryId !== null) {
-          return cat.id === selectedCategoryId
-            ? { ...cat, subs: cat.subs.map((s) => s.id === editingSubId ? { ...s, title: editTitle, text: editText, color: editColor } : s) }
-            : cat;
-        } else {
-          // Sinon, on cherche la catégorie qui contient le module à éditer
-          if (cat.subs.some((s) => s.id === editingSubId)) {
-            return { ...cat, subs: cat.subs.map((s) => s.id === editingSubId ? { ...s, title: editTitle, text: editText, color: editColor } : s) };
-          } else {
-            return cat;
-          }
+        // Cherche le module dans chaque catégorie
+        if (cat.subs.some((s) => s.id === editingSubId)) {
+          updated = true;
+          return {
+            ...cat,
+            subs: cat.subs.map((s) =>
+              s.id === editingSubId
+                ? { ...s, title: editTitle, text: textToSave, color: editColor }
+                : s
+            ),
+          };
         }
-      })
+        return cat;
+      }),
     }));
-    // Ne touche pas au filtre, laisse l'affichage comme il était
-    cancelEdit();
+    // Ne ferme plus le module edit après sauvegarde
+    if (updated) {
+      showToast("Module modifié !");
+    } else {
+      showToast("Module non trouvé.");
+    }
   };
 
   const cancelEdit = () => {
@@ -1517,7 +1463,10 @@ function Markdown({ content }) {
 
               <FullEditorPage
                 open={showFullEditor}
-                onClose={() => setShowFullEditor(false)}
+                onClose={() => {
+                  setShowFullEditor(false);
+                  setEditingSubId(null);
+                }}
                 editMode={editMode}
                 setEditMode={setEditMode}
                 isAuthenticated={isAuthenticated}
@@ -1646,62 +1595,19 @@ function Markdown({ content }) {
                                 )}
                               </div>
 
-                              {isEditing ? (
-                                <div>
-                                  <input placeholder="Titre" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.panel, color: theme.text, marginBottom: 10 }} />
-                                  {/* Zone d'édition Tiptap uniquement, textarea supprimé */}
-
-                                  {selectionInfo.text && selectionInfo.target === "editSub" && (
-                                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", padding: 10, borderRadius: 10, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, marginBottom: 10 }}>
-                                      <span style={{ fontSize: 12, color: theme.subtext }}>{`"${selectionInfo.text}"`}</span>
-                                      <div style={{ display: "flex", gap: 6 }}>
-                                        <button onClick={() => applyFormatting("bold")}
-                                          style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, fontWeight: 800, cursor: "pointer", fontSize: 12 }}>G</button>
-                                        <button onClick={() => applyFormatting("italic")}
-                                          style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, fontStyle: "italic", cursor: "pointer", fontSize: 12 }}>I</button>
-                                        <button onClick={() => applyFormatting("underline")}
-                                          style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, textDecoration: "underline", cursor: "pointer", fontSize: 12 }}>U</button>
-                                        {[14, 16, 18, 20].map((s) => (
-                                          <button key={s} onClick={() => applyFormatting("size", s)} style={{ padding: "6px 8px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", fontSize: 12 }}>{s}px</button>
-                                        ))}
-                                        <div style={{ position: "relative" }}>
-                                          <button onClick={() => setTableMenuOpen(tableMenuOpen === "editSub" ? null : "editSub")}
-                                            style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
-                                            📊
-                                            <span style={{ fontWeight: 700 }}>Table</span>
-                                          </button>
-                                          {tableMenuOpen === "editSub" && (
-                                            <div style={{ position: "absolute", top: "110%", left: 0, backgroundColor: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 10, boxShadow: theme.shadow, padding: 8, minWidth: 180, zIndex: 50 }}>
-                                              {tableTemplates.map((tpl) => (
-                                                <button key={tpl.key} onClick={() => insertTableTemplate("editSub", tpl.text)} style={{ width: "100%", textAlign: "left", padding: 8, borderRadius: 8, border: `1px solid ${theme.border}`, backgroundColor: theme.bg, color: theme.text, cursor: "pointer", marginBottom: 6, fontSize: 12 }}>
-                                                  <div style={{ fontWeight: 700 }}>{tpl.label}</div>
-                                                  <div style={{ fontFamily: "monospace", fontSize: 11, opacity: 0.8 }}>{tpl.preview}</div>
-                                                </button>
-                                              ))}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                      {quickColors.map((c) => (
-                                        <button key={c} onClick={() => applyColorToSelection(c)} style={{ width: 24, height: 24, borderRadius: 6, border: `1px solid ${theme.border}`, backgroundColor: c, cursor: "pointer" }} />
-                                      ))}
-                                      <input type="color" value={selectionCustomColor} onChange={(e) => setSelectionCustomColor(e.target.value)} style={{ width: 32, height: 32, padding: 2, borderRadius: 8, border: `1px solid ${theme.border}`, cursor: "pointer" }} />
-                                      <button onClick={() => applyColorToSelection(selectionCustomColor)} style={{ padding: "6px 10px", borderRadius: 8, backgroundColor: "#3b82f6", color: "white", border: "none", cursor: "pointer", fontSize: 12 }}>OK</button>
-                                      <button onClick={() => { setSelectionInfo({ text: "", start: 0, end: 0, target: null }); setTableMenuOpen(null); }} style={{ padding: "6px 8px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontSize: 12 }}>✖</button>
-                                    </div>
-                                  )}
-                                  
-                                  <input type="color" value={editColor} onChange={(e) => setEditColor(e.target.value)} style={{ width: "100%", padding: 8, borderRadius: 8, border: `1px solid ${theme.border}`, cursor: "pointer", marginBottom: 10 }} />
-                                  <div style={{ display: "flex", gap: 8 }}>
-                                    <button onClick={saveEditSub} style={{ padding: "10px 16px", borderRadius: 8, backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer" }}>💾</button>
-                                    <button onClick={cancelEdit} style={{ padding: "10px 16px", borderRadius: 8, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer" }}>❌</button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="note-viewer">
-                                  <TiptapViewer html={sub.text} darkMode={darkMode} theme={theme} />
-                                </div>
-                              )}
+                              <div className="note-viewer">
+                                {sub.id === lastSavedSubId && (() => {
+                                  console.log('%c[MAP SUB] sub.id=' + sub.id + ' (dernier enregistré)', 'color: #fff; background: #6366f1; font-weight: bold; padding:2px 8px;', sub.text);
+                                  setTimeout(() => setLastSavedSubId(null), 0);
+                                  return null;
+                                })()}
+                                <TiptapViewer 
+                                  key={sub.id + '-' + (typeof sub.text === 'string' ? sub.text.length : 0)}
+                                  html={sub.text} 
+                                  darkMode={darkMode} 
+                                  theme={theme} 
+                                />
+                              </div>
 
                               {isAuthenticated && editMode && !isEditing && (
                                 <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>

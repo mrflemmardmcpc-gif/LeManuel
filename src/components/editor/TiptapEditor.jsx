@@ -2,6 +2,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import FontSize from "./FontSizeExtension";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import Color from "@tiptap/extension-color";
@@ -64,6 +65,7 @@ export default function TiptapEditor({
       Link,
       Color,
       TextStyle,
+      FontSize,
       Highlight.configure({ multicolor: true }),
       Table.configure({ resizable: true }),
       TableRow,
@@ -77,7 +79,7 @@ export default function TiptapEditor({
     },
     editorProps: {
       attributes: {
-        style: `background: ${darkMode ? '#181c24' : '#f8fafc'}; color: ${darkMode ? '#f3f4f6' : '#181c24'}; border-radius: 12px; min-height: 180px; font-size: 1.05rem; border: 1.5px solid ${theme?.accent1 || '#f59e42'}`,
+        style: `background: ${darkMode ? '#181c24' : '#f8fafc'}; color: ${darkMode ? '#f3f4f6' : '#181c24'}; border-radius: 12px; min-height: 180px; font-size: 1.05rem; border: 1.5px solid ${theme?.accent1 || '#f59e42'}; padding-left: 8px; padding-top: 8px;`,
       },
       handlePaste(view, event, slice) {
         const text = event.clipboardData?.getData('text/plain');
