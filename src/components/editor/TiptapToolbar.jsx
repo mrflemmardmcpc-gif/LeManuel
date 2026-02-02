@@ -1,6 +1,5 @@
 import React from "react";
 import FontSizeDropdown from "./FontSizeDropdown";
-import Select from "react-select";
 import { FaBold, FaItalic, FaUnderline, FaStrikethrough, FaHeading, FaListUl, FaListOl, FaLink, FaImage, FaTable, FaUndo, FaRedo, FaHighlighter, FaQuoteRight, FaCode, FaTextHeight } from "react-icons/fa";
 import { MdFormatColorText } from "react-icons/md";
 import { IoMdRemoveCircleOutline } from "react-icons/io";
@@ -23,10 +22,7 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
       );
     }
 
-  const [showFontMenu, setShowFontMenu] = React.useState(false);
   const [currentFontSize, setCurrentFontSize] = React.useState(16);
-  const [showHighlightPalette, setShowHighlightPalette] = React.useState(false);
-  const fontSizes = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 48, 56, 64];
 
   React.useEffect(() => {
     const updateFontSize = () => {
