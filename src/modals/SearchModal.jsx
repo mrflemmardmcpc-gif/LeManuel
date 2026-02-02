@@ -1,9 +1,6 @@
 import React from "react";
-import { useResponsive } from "../utils/responsive";
 
 function SearchModal({ open, onClose, search, setSearch, theme }) {
-  const screen = useResponsive();
-
   if (!open) return null;
   
   return (
@@ -16,15 +13,15 @@ function SearchModal({ open, onClose, search, setSearch, theme }) {
         display: "flex", 
         alignItems: "flex-start", 
         justifyContent: "center", 
-        paddingTop: screen.isMobile ? 10 : 20 
+        paddingTop: 20 
       }}
       onClick={onClose}
     >
       <div 
         style={{ 
           backgroundColor: theme.panel, 
-          borderRadius: screen.isMobile ? 10 : 12, 
-          padding: screen.isMobile ? 12 : 16, 
+          borderRadius: 12, 
+          padding: 16, 
           width: "90%", 
           maxWidth: 500 
         }}
