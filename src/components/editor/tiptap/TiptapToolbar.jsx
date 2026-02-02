@@ -3,7 +3,7 @@ import FontSizeDropdown from "./FontSizeDropdown";
 import { FaBold, FaItalic, FaUnderline, FaStrikethrough, FaHeading, FaListUl, FaListOl, FaLink, FaImage, FaTable, FaUndo, FaRedo, FaHighlighter, FaQuoteRight, FaCode, FaTextHeight } from "react-icons/fa";
 import { MdFormatColorText } from "react-icons/md";
 import { IoMdRemoveCircleOutline } from "react-icons/io";
-import { SpiralColorPickerModal } from "./picker";
+import { SpiralColorPickerModal } from "./SpiralColorPicker";
 
 export default function TiptapToolbar({ editor, theme, highlightColor, setHighlightColor }) {
   const [showTextPicker, setShowTextPicker] = React.useState(false);

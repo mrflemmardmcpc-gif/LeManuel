@@ -1,7 +1,13 @@
+import React from "react";
+import { CategoryForm, ModuleEditForm, ModuleAddForm } from "./editor/forms";
+import { useResponsive, getResponsiveSpacing } from "../utils/responsive";
 
 // Composant centralisé, délègue tout aux sous-composants atomiques
 export default function EditorPanel(props) {
   const { editMode, isAuthenticated, editingSubId, addingSubToCatId, theme } = props;
+  const screen = useResponsive();
+  const padding = getResponsiveSpacing(32, screen);
+  
   // Ajout d'une fonction utilitaire pour normaliser les sauts de ligne
   function normalizeLineBreaks(str) {
     if (typeof str !== 'string') return str;
@@ -13,13 +19,13 @@ export default function EditorPanel(props) {
       <div style={{
       background: theme?.bg || "#f8fafc",
       border: `2px solid ${theme?.accent1 || "#f59e42"}`,
-      borderRadius: 18,
-      padding: 32,
+      borderRadius: screen.isMobile ? 12 : 18,
+      padding: padding,
       marginBottom: 0,
       boxShadow: theme?.shadow || "0 8px 32px rgba(0,0,0,0.08)",
-      maxWidth: 1400,
+      maxWidth: screen.isMobile ? '95%' : screen.isTablet ? 1000 : 1400,
       width: 'auto',
-      marginLeft: 60,
+      marginLeft: screen.isMobile ? 'auto' : 60,
       marginRight: 'auto',
       position: "relative",
       minHeight: 0,
@@ -27,27 +33,46 @@ export default function EditorPanel(props) {
       flexDirection: 'column',
       overflow: 'auto',
     }}>
-      <h2 style={{ color: theme?.accent1 || "#f59e42", margin: 0, fontWeight: 800, fontSize: 24, letterSpacing: 0.2 }}>Mode édition centralisé</h2>
+      <h2 style={{ 
+        color: theme?.accent1 || "#f59e42", 
+        margin: 0, 
+        fontWeight: 800, 
+        fontSize: screen.isMobile ? 18 : screen.isTablet ? 20 : 24, 
+        letterSpacing: 0.2 
+      }}>
+        Mode édition centralisé
+      </h2>
       {/* Bloc de déplacement de sous-catégorie */}
       {editingSubId && (
         <div style={{
-          margin: "32px 0 0 0",
+          margin: `${getResponsiveSpacing(32, screen)}px 0 0 0`,
           background: theme?.panel || "#fff",
-          borderRadius: 16,
-          padding: "32px 24px 24px 24px",
+          borderRadius: screen.isMobile ? 12 : 16,
+          padding: screen.isMobile ? "16px 12px" : "32px 24px 24px 24px",
           border: `1.5px solid ${theme?.border || "#f59e42"}`,
           boxShadow: theme?.shadow || "0 8px 32px rgba(0,0,0,0.08)",
-          minWidth: 320,
-          maxWidth: 900,
+          minWidth: screen.isMobile ? '100%' : 320,
+          maxWidth: screen.isMobile ? '100%' : 900,
           marginLeft: "auto",
           marginRight: "auto",
           display: "flex",
           flexDirection: "column",
-          gap: 24,
+          gap: screen.isMobile ? 16 : 24,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-            <span style={{ fontSize: 26, color: theme?.accent1 || "#f59e42", fontWeight: 700, marginRight: 6 }}>⇄</span>
-            <span style={{ color: theme?.accent1 || "#f59e42", fontWeight: 700, fontSize: 20 }}>Déplacer ce module dans une autre catégorie</span>
+            <span style={{ 
+              fontSize: screen.isMobile ? 20 : 26, 
+              color: theme?.accent1 || "#f59e42", 
+              fontWeight: 700, 
+              marginRight: 6 
+            }}>⇄</span>
+            <span style={{ 
+              color: theme?.accent1 || "#f59e42", 
+              fontWeight: 700, 
+              fontSize: screen.isMobile ? 16 : 20 
+            }}>
+              Déplacer ce module dans une autre catégorie
+            </span>
           </div>
           <style>{`
             select {
@@ -67,8 +92,8 @@ export default function EditorPanel(props) {
             value={props.categories.find(cat => cat.subs.some(sub => sub.id === editingSubId))?.id || ''}
             onChange={e => props.moveSubToCategory(editingSubId, Number(e.target.value))}
             style={{
-              fontSize: 18,
-              padding: '12px 18px',
+              fontSize: screen.isMobile ? 16 : 18,
+              padding: screen.isMobile ? '10px 14px' : '12px 18px',
               borderRadius: 10,
               border: `1.5px solid ${theme?.border || "#f59e42"}`,
               background: 'linear-gradient(120deg, #271d44 0%, #3a2a5c 60%, #241c3a 100%)',
@@ -89,8 +114,3 @@ export default function EditorPanel(props) {
     </div>
   );
 }
-
-import React from "react";
-import CategoryForm from "./editor/CategoryForm";
-import ModuleEditForm from "./editor/ModuleEditForm";
-import ModuleAddForm from "./editor/ModuleAddForm";

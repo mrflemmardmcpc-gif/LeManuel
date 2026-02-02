@@ -1,11 +1,10 @@
 import React, { useRef, useState } from "react";
-import TiptapEditor from "./TiptapEditor";
-import TextInput from "./TextInput";
-import CubeButton3D from "../../ui/visual/CubeButton";
-import useRotate3D from "../../ui/animations/useRotate3D";
-import "../../ui/animations/rotate3d.css";
-import mainTheme from "../../theme/theme";
-import PanelTitle from "./PanelTitle";
+import { TiptapEditor } from "../tiptap";
+import { TextInput, PanelTitle } from "../shared/FormInputs";
+import CubeButton3D from "../../../ui/visual/CubeButton";
+import useRotate3D from "../../../ui/animations/useRotate3D";
+import "../../../ui/animations/rotate3d.css";
+import mainTheme from "../../../theme/theme";
 
 export default function ModuleEditForm({
   editTitle,

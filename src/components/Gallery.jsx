@@ -1,4 +1,5 @@
 import React from "react";
+import { useResponsive, getResponsiveSpacing } from "../utils/responsive";
 
 export default function Gallery({
   showGallery,
@@ -34,20 +35,70 @@ export default function Gallery({
   setExpandedCategories,
   subRefs,
   }) {
+    const screen = useResponsive();
+    const padding = getResponsiveSpacing(layout.modalPad, screen);
+    
     if (!showGallery) return null;
     return (
-      <div style={{ position: "fixed", inset: 0, background: "radial-gradient(circle at 20% 20%, rgba(59,130,246,0.25), transparent 35%), radial-gradient(circle at 80% 10%, rgba(16,185,129,0.18), transparent 30%), rgba(0,0,0,0.82)", backdropFilter: "blur(6px)", zIndex: 200, overflow: "auto", padding: layout.modalPad }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto", backgroundColor: darkMode ? "rgba(12,14,26,0.9)" : "rgba(255,255,255,0.94)", borderRadius: 18, padding: layout.modalPad, border: `1px solid ${theme.border}`, boxShadow: "0 18px 50px rgba(0,0,0,0.35)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ 
+        position: "fixed", 
+        inset: 0, 
+        background: "radial-gradient(circle at 20% 20%, rgba(59,130,246,0.25), transparent 35%), radial-gradient(circle at 80% 10%, rgba(16,185,129,0.18), transparent 30%), rgba(0,0,0,0.82)", 
+        backdropFilter: "blur(6px)", 
+        zIndex: 200, 
+        overflow: "auto", 
+        padding: padding 
+      }}>
+        <div style={{ 
+          maxWidth: screen.isMobile ? '100%' : screen.isTablet ? 900 : 1180, 
+          margin: "0 auto", 
+          backgroundColor: darkMode ? "rgba(12,14,26,0.9)" : "rgba(255,255,255,0.94)", 
+          borderRadius: screen.isMobile ? 12 : 18, 
+          padding: padding, 
+          border: `1px solid ${theme.border}`, 
+          boxShadow: "0 18px 50px rgba(0,0,0,0.35)" 
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: screen.isMobile ? 'wrap' : 'nowrap', gap: screen.isMobile ? 12 : 0 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <h2 style={{ margin: 0, color: theme.accent1, letterSpacing: 0.4 }}>📷 Galerie</h2>
-              <span style={{ color: theme.subtext, fontSize: 13 }}>Ajoute, trie et consulte tes photos par module.</span>
+              <h2 style={{ 
+                margin: 0, 
+                color: theme.accent1, 
+                letterSpacing: 0.4,
+                fontSize: screen.isMobile ? 20 : screen.isTablet ? 22 : 24,
+              }}>📷 Galerie</h2>
+              <span style={{ color: theme.subtext, fontSize: screen.isMobile ? 12 : 13 }}>Ajoute, trie et consulte tes photos par module.</span>
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               {isAuthenticated && (
-                <button onClick={() => setEditMode((e) => !e)} style={{ padding: "9px 14px", borderRadius: 10, background: editMode ? "linear-gradient(120deg, #10b981, #22d3ee)" : theme.panel, color: editMode ? "white" : theme.text, border: `1px solid ${theme.border}`, cursor: "pointer", fontWeight: 700, boxShadow: editMode ? "0 8px 20px rgba(16,185,129,0.35)" : "none" }}>{editMode ? "Mode édition" : "Editer"}</button>
+                <button 
+                  onClick={() => setEditMode((e) => !e)} 
+                  style={{ 
+                    padding: screen.isMobile ? "7px 12px" : "9px 14px", 
+                    borderRadius: 10, 
+                    background: editMode ? "linear-gradient(120deg, #10b981, #22d3ee)" : theme.panel, 
+                    color: editMode ? "white" : theme.text, 
+                    border: `1px solid ${theme.border}`, 
+                    cursor: "pointer", 
+                    fontWeight: 700, 
+                    fontSize: screen.isMobile ? 13 : 14,
+                    boxShadow: editMode ? "0 8px 20px rgba(16,185,129,0.35)" : "none" 
+                  }}
+                >
+                  {editMode ? "Mode édition" : "Editer"}
+                </button>
               )}
-              <button onClick={() => setShowGallery(false)} style={{ padding: "9px 12px", borderRadius: 10, backgroundColor: "#ef4444", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>✖</button>
+              <button 
+                onClick={() => setShowGallery(false)} 
+                style={{ 
+                  padding: screen.isMobile ? "7px 10px" : "9px 12px", 
+                  borderRadius: 10, 
+                  backgroundColor: "#ef4444", 
+                  color: "white", 
+                  border: "none", 
+                  cursor: "pointer", 
+                  fontWeight: 700,
+                  fontSize: screen.isMobile ? 14 : 16,
+                }}>✖</button>
             </div>
           </div>
 

@@ -14,8 +14,7 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import Image from "@tiptap/extension-image";
 import TiptapToolbar from "./TiptapToolbar";
-import TableContextMenu from "./TableContextMenu";
-import TableHandleButtons from "./TableHandleButtons";
+import { TableContextMenu, TableHandleButtons } from "./TableControls";
 
 // Dummy extensions for custom table header/cell if needed
 const CustomTableHeader = TableRow;

@@ -1,9 +1,6 @@
 import React from "react";
-import TextInput from "./TextInput";
-import ColorInput from "./ColorInput";
-import SelectInput from "./SelectInput";
-import ActionButton from "./ActionButton";
-import PanelTitle from "./PanelTitle";
+import { TextInput, ColorInput, SelectInput, PanelTitle } from "../shared/FormInputs";
+import { ActionButton } from "../shared";
 
 export default function CategoryForm({
   newCatTitle,

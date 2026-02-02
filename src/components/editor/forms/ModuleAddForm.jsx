@@ -1,8 +1,6 @@
 import React from "react";
-import TextInput from "./TextInput";
-import ColorInput from "./ColorInput";
-import ActionButton from "./ActionButton";
-import PanelTitle from "./PanelTitle";
+import { TextInput, ColorInput, PanelTitle } from "../shared/FormInputs";
+import { ActionButton } from "../shared";
 
 export default function ModuleAddForm({
   newSubTitle,
