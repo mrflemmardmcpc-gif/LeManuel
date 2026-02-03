@@ -61,8 +61,9 @@
   .tiptap-toolbar-mobile {
     position: fixed !important;
     left: 4px !important;
-    top: auto !important;
-    bottom: 8px !important;
+    right: 4px !important;
+    top: 8px !important;
+    bottom: auto !important;
     height: auto !important;
     max-height: 52px !important;
     min-height: 44px !important;
@@ -73,29 +74,50 @@
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
-    gap: 2px !important;
-    padding: 6px 8px !important;
+    gap: 4px !important;
+    padding: 6px 10px !important;
     border-radius: 12px !important;
     z-index: 10001 !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    justify-content: flex-start !important;
+    align-items: center !important;
   }
   .tiptap-toolbar-mobile::-webkit-scrollbar {
     display: none;
   }
   .tiptap-toolbar-mobile button {
     flex: 0 0 auto !important;
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    margin: 0 1px !important;
-    padding: 4px !important;
+    width: 39px !important;
+    height: 39px !important;
+    min-width: 39px !important;
+    margin: 0 3px !important;
+    padding: 6px !important;
+    background: rgba(39, 29, 68, 0.85) !important;
+    border: 1.5px solid rgba(245, 158, 66, 0.5) !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
-  .tiptap-toolbar-mobile button svg {
-    font-size: 16px !important;
-    width: 16px !important;
-    height: 16px !important;
+  .tiptap-toolbar-mobile button svg,
+  .tiptap-toolbar-mobile button svg * {
+    font-size: 21px !important;
+    width: 21px !important;
+    height: 21px !important;
+    min-width: 21px !important;
+    min-height: 21px !important;
+    color: #fff !important;
+    fill: #fff !important;
+    stroke: #fff !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   /* ==================== EDITOR PANEL RESPONSIVE ==================== */
