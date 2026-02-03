@@ -57,6 +57,7 @@ export default function SpiralColorPickerDoubleModal({
   setActivePicker,
   textIconNode,
   highlightIconNode,
+  isMobile = false,
 }) {
   const getFavoritesKey = type => "spiralFavorites_" + type;
   const favoritesStore = makeFavoritesState(getFavoritesKey);
@@ -269,26 +270,104 @@ export default function SpiralColorPickerDoubleModal({
     <div
       id={`spiral-modal-content-${pickerKey}`}
       style={{
-        display: bothOpen ? "flex" : "block",
-        flexDirection: bothOpen ? "row" : "column",
+        display: (bothOpen && !isMobile) ? "flex" : "block",
+        flexDirection: (bothOpen && !isMobile) ? "row" : "column",
         alignItems: "center",
-        gap: bothOpen ? 0 : 8,
+        gap: (bothOpen && !isMobile) ? 0 : 8,
         position: "relative",
         zIndex: 1,
         background: "rgba(0,0,0,0)",
         boxShadow: "none",
         border: "none",
         padding: 0,
-        minWidth: bothOpen ? 480 : 220,
-        minHeight: 220,
+        minWidth: (bothOpen && !isMobile) ? 480 : isMobile ? 'auto' : 220,
+        minHeight: isMobile ? 'auto' : 220,
         marginTop: 0,
         overflow: "visible",
-        perspective: bothOpen ? 1200 : undefined,
+        perspective: (bothOpen && !isMobile) ? 1200 : undefined,
       }}
       onClick={e => e.stopPropagation()}
       onMouseDown={e => e.stopPropagation()}
     >
-      {bothOpen ? (
+      {/* Mobile: single picker only, no mirror effect */}
+      {isMobile ? (
+        <div
+          ref={activePicker === "text" ? textRootRef : highlightRootRef}
+          style={{
+            width: '100%',
+            maxWidth: 280,
+            margin: '0 auto',
+            background: activePicker === "text"
+              ? "linear-gradient(120deg, #271d44 0%, #3a2a5c 60%, #241c3a 100%)"
+              : "linear-gradient(120deg, #241c3a 0%, #3a2a5c 60%, #271d44 100%)",
+            borderRadius: 16,
+            boxShadow: `0 8px 24px 0 var(--spiral-glow, rgba(124,58,237,0.35))`,
+            border: "2px solid #f59e42",
+            padding: 14,
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <div style={{ position: "absolute", top: 6, right: 10, zIndex: 5, opacity: 0.92 }}>
+            {activePicker === "text"
+              ? renderTextClear(value, () => onChange && onChange("none"))
+              : renderHighlightClear(value, () => onChange && onChange("none"))}
+          </div>
+          <SpiralColorPicker 
+            value={value} 
+            onChange={handleChange} 
+            theme={theme} 
+            smallSize={180}
+            onPreviewChange={hex => handlePreviewIncoming(hex, activePicker)} 
+          />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, marginTop: 8, width: "100%" }}>
+            <button
+              style={{
+                background: "none",
+                border: "none",
+                color: getFavorites(activePicker).includes(value) ? theme?.accent1 || "#fbbf24" : "#fff",
+                fontSize: 20,
+                cursor: "pointer",
+                transition: "color 0.18s, transform 0.18s",
+              }}
+              title={getFavorites(activePicker).includes(value) ? "Retirer des favoris" : "Enregistrer en favori"}
+              onClick={() => toggleFavorite(value, activePicker)}
+              onMouseDown={e => e.stopPropagation()}
+            >
+              {getFavorites(activePicker).includes(value) ? "★" : "☆"}
+            </button>
+            <div className="favorites-scroll-x" style={{ marginTop: 0, maxWidth: '100%' }}>
+              <div style={{ display: 'flex', gap: 4, padding: '2px 0' }}>
+                {getFavorites(activePicker).length === 0 && (
+                  <span style={{ color: "#888", fontSize: 12 }}>Aucun favori</span>
+                )}
+                {getFavorites(activePicker).map(c => (
+                  <button
+                    key={c}
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 4,
+                      background: c,
+                      border: value === c ? "2px solid #fff" : "1px solid #666",
+                      cursor: "pointer",
+                      boxShadow: value === c ? "0 0 0 2px #fff, 0 0 6px #f59e42" : "none",
+                      transition: "box-shadow 0.18s",
+                      flexShrink: 0,
+                    }}
+                    title={`Favori ${c}`}
+                    onClick={() => handleChange(c)}
+                    onMouseDown={e => e.stopPropagation()}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : bothOpen ? (
         <>
           {(() => {
             const activeIsText = activePicker === "text";

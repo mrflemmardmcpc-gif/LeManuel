@@ -1,16 +1,37 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import FontSizeDropdown from "./FontSizeDropdown";
 import { FaBold, FaItalic, FaUnderline, FaStrikethrough, FaHeading, FaListUl, FaListOl, FaLink, FaImage, FaTable, FaUndo, FaRedo, FaHighlighter, FaQuoteRight, FaCode, FaTextHeight } from "react-icons/fa";
-import { MdFormatColorText } from "react-icons/md";
+import { MdFormatColorText, MdClose } from "react-icons/md";
 import { IoMdRemoveCircleOutline } from "react-icons/io";
 import { SpiralColorPickerDoubleModal } from "../spiral-picker";
+import { useMobilePickerKeyboard, isMobileDevice } from "./useMobilePickerKeyboard";
 
 export default function TiptapToolbar({ editor, theme, highlightColor, setHighlightColor }) {
   const [showTextPicker, setShowTextPicker] = React.useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = React.useState(false);
-  // Effet miroir décalé et switch animé entre les deux pickers
   const [activePicker, setActivePicker] = React.useState('highlight');
-    // Vérification robuste de la prop editor
+  const [isMobile, setIsMobile] = React.useState(false);
+  
+  // Check if mobile on mount
+  React.useEffect(() => {
+    setIsMobile(isMobileDevice());
+    const handleResize = () => setIsMobile(isMobileDevice());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  // Simulate keyboard behavior when picker is open on mobile
+  const pickerOpen = showTextPicker || showHighlightPicker;
+  useMobilePickerKeyboard(pickerOpen && isMobile, 320);
+  
+  // Close picker handler
+  const closePicker = React.useCallback(() => {
+    setShowTextPicker(false);
+    setShowHighlightPicker(false);
+  }, []);
+  
+  // Vérification robuste de la prop editor
     const editorValid = editor && typeof editor.getAttributes === 'function' && typeof editor.chain === 'function' && typeof editor.isActive === 'function' && typeof editor.on === 'function' && typeof editor.off === 'function';
     if (!editorValid) {
       return (
@@ -143,42 +164,131 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
         >
           {React.createElement(MdFormatColorText, { style: { fontSize: 15, width: 15, height: 15, display: 'block', margin: '0 auto' } })}
         </button>
-        {/* SpiralColorPickerDoubleModal inline, sans conteneur modal/fixed */}
+        {/* SpiralColorPickerDoubleModal - Portal for mobile, inline for desktop */}
         {(showTextPicker || showHighlightPicker) && (
-          <div className="spiral-picker-container-mobile" style={{ position: 'absolute', top: 130, left: 680, zIndex: 30000 }}>
-            <SpiralColorPickerDoubleModal
-              value={activePicker === 'highlight' ? (highlightColor || '#fbbf24') : (editor.getAttributes('textStyle').color || '#fff')}
-              onChange={color => {
-                if (activePicker === 'highlight') {
-                  if (color === 'none') {
-                    editor.chain().focus().unsetHighlight().run();
-                    setHighlightColor(null);
+          isMobile ? (
+            // Mobile: render via Portal to body for proper positioning
+            ReactDOM.createPortal(
+              <>
+                {/* Backdrop overlay */}
+                <div 
+                  onClick={closePicker}
+                  style={{
+                    position: 'fixed',
+                    inset: 0,
+                    background: 'rgba(0,0,0,0.5)',
+                    zIndex: 30000,
+                  }}
+                />
+                <div className="spiral-picker-container-mobile">
+                  <button
+                    onClick={closePicker}
+                    style={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 12,
+                      background: 'rgba(0,0,0,0.3)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: 32,
+                      height: 32,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                    }}
+                    title="Fermer"
+                  >
+                    <MdClose style={{ fontSize: 20, color: '#fff' }} />
+                  </button>
+                  <div className="spiral-picker-mobile-switch">
+                    <button
+                      className={activePicker === 'highlight' ? 'active' : ''}
+                      onClick={() => { setActivePicker('highlight'); setShowHighlightPicker(true); }}
+                    >
+                      <FaHighlighter /> Surligner
+                    </button>
+                    <button
+                      className={activePicker === 'text' ? 'active' : ''}
+                      onClick={() => { setActivePicker('text'); setShowTextPicker(true); }}
+                    >
+                      <MdFormatColorText /> Texte
+                    </button>
+                  </div>
+                  <SpiralColorPickerDoubleModal
+                    value={activePicker === 'highlight' ? (highlightColor || '#fbbf24') : (editor.getAttributes('textStyle').color || '#fff')}
+                    onChange={color => {
+                      if (activePicker === 'highlight') {
+                        if (color === 'none') {
+                          editor.chain().focus().unsetHighlight().run();
+                          setHighlightColor(null);
+                        } else {
+                          editor.chain().focus().unsetHighlight().setHighlight({ color }).run();
+                          setTimeout(() => {
+                            const attrs = editor.getAttributes('highlight');
+                            setHighlightColor(attrs?.color || color);
+                          }, 0);
+                        }
+                      } else {
+                        if (color === 'none') {
+                          editor.chain().focus().unsetColor().run();
+                        } else {
+                          editor.chain().focus().setColor(color).run();
+                        }
+                      }
+                    }}
+                    theme={theme}
+                    pickerKey={activePicker}
+                    showTextPicker={showTextPicker}
+                    showHighlightPicker={showHighlightPicker}
+                    activePicker={activePicker}
+                    setActivePicker={setActivePicker}
+                    isMobile={isMobile}
+                    textIconNode={<MdFormatColorText style={{ fontSize: 22, color: '#fbbf24', filter: 'drop-shadow(0 1px 2px #0008)' }} title="Texte" />}
+                    highlightIconNode={<FaHighlighter style={{ fontSize: 20, color: '#fbbf24', filter: 'drop-shadow(0 1px 2px #0008)' }} title="Surligneur" />}
+                  />
+                </div>
+              </>,
+              document.body
+            )
+          ) : (
+            // Desktop: inline positioned
+            <div className="spiral-picker-container-mobile" style={{ position: 'absolute', top: 130, left: 680, zIndex: 30000 }}>
+              <SpiralColorPickerDoubleModal
+                value={activePicker === 'highlight' ? (highlightColor || '#fbbf24') : (editor.getAttributes('textStyle').color || '#fff')}
+                onChange={color => {
+                  if (activePicker === 'highlight') {
+                    if (color === 'none') {
+                      editor.chain().focus().unsetHighlight().run();
+                      setHighlightColor(null);
+                    } else {
+                      editor.chain().focus().unsetHighlight().setHighlight({ color }).run();
+                      setTimeout(() => {
+                        const attrs = editor.getAttributes('highlight');
+                        setHighlightColor(attrs?.color || color);
+                      }, 0);
+                    }
                   } else {
-                    editor.chain().focus().unsetHighlight().setHighlight({ color }).run();
-                    // Synchronise le state avec la couleur réellement appliquée
-                    setTimeout(() => {
-                      const attrs = editor.getAttributes('highlight');
-                      setHighlightColor(attrs?.color || color);
-                    }, 0);
+                    if (color === 'none') {
+                      editor.chain().focus().unsetColor().run();
+                    } else {
+                      editor.chain().focus().setColor(color).run();
+                    }
                   }
-                } else {
-                  if (color === 'none') {
-                    editor.chain().focus().unsetColor().run();
-                  } else {
-                    editor.chain().focus().setColor(color).run();
-                  }
-                }
-              }}
-              theme={theme}
-              pickerKey={activePicker}
-              showTextPicker={showTextPicker}
-              showHighlightPicker={showHighlightPicker}
-              activePicker={activePicker}
-              setActivePicker={setActivePicker}
-              textIconNode={<MdFormatColorText style={{ fontSize: 22, color: '#fbbf24', filter: 'drop-shadow(0 1px 2px #0008)' }} title="Texte" />}
-              highlightIconNode={<FaHighlighter style={{ fontSize: 20, color: '#fbbf24', filter: 'drop-shadow(0 1px 2px #0008)' }} title="Surligneur" />}
-            />
-          </div>
+                }}
+                theme={theme}
+                pickerKey={activePicker}
+                showTextPicker={showTextPicker}
+                showHighlightPicker={showHighlightPicker}
+                activePicker={activePicker}
+                setActivePicker={setActivePicker}
+                isMobile={isMobile}
+                textIconNode={<MdFormatColorText style={{ fontSize: 22, color: '#fbbf24', filter: 'drop-shadow(0 1px 2px #0008)' }} title="Texte" />}
+                highlightIconNode={<FaHighlighter style={{ fontSize: 20, color: '#fbbf24', filter: 'drop-shadow(0 1px 2px #0008)' }} title="Surligneur" />}
+              />
+            </div>
+          )
         )}
         {/* Bouton taille de texte + menu déroulant */}
         <FontSizeDropdown

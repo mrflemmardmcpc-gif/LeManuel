@@ -20,21 +20,21 @@ import { TableContextMenu, TableHandleButtons } from "./TableControls";
 const CustomTableHeader = TableRow;
 const CustomTableCell = TableRow;
 
-// Mobile keyboard handler - positions toolbar above keyboard using transform
+// Mobile keyboard handler - positions toolbar above keyboard OR picker-as-keyboard
 function useMobileKeyboard() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth <= 600;
     if (!isMobile) return;
 
     const vv = window.visualViewport;
     if (!vv) return;
 
     let rafId = null;
-    let isOpen = false;
+    let isKeyboardOpen = false;
+    let pickerKeyboardHeight = 0;
 
     const resetToolbar = (toolbar) => {
-      // Fully reset all inline styles
       toolbar.style.position = '';
       toolbar.style.top = '';
       toolbar.style.left = '';
@@ -50,16 +50,28 @@ function useMobileKeyboard() {
       const toolbar = document.querySelector('.tiptap-toolbar-mobile');
       if (!toolbar) return;
 
-      const keyboardHeight = window.innerHeight - vv.height;
-      const nowOpen = keyboardHeight > 100;
+      // Check native keyboard
+      const nativeKeyboardHeight = window.innerHeight - vv.height;
+      const nativeOpen = nativeKeyboardHeight > 100;
+      
+      // Check picker-as-keyboard (from CSS variable or class)
+      const pickerOpen = document.documentElement.classList.contains('picker-keyboard-open');
+      if (pickerOpen) {
+        const h = getComputedStyle(document.documentElement).getPropertyValue('--picker-keyboard-height');
+        pickerKeyboardHeight = parseInt(h) || 280;
+      } else {
+        pickerKeyboardHeight = 0;
+      }
+
+      const effectiveOpen = nativeOpen || pickerOpen;
+      const effectiveHeight = nativeOpen ? nativeKeyboardHeight : pickerKeyboardHeight;
 
       // State changed
-      if (nowOpen !== isOpen) {
-        isOpen = nowOpen;
-        document.documentElement.classList.toggle('keyboard-open', nowOpen);
+      if (effectiveOpen !== isKeyboardOpen) {
+        isKeyboardOpen = effectiveOpen;
+        document.documentElement.classList.toggle('keyboard-open', effectiveOpen);
         
-        // If closing, reset toolbar immediately
-        if (!nowOpen) {
+        if (!effectiveOpen) {
           if (rafId) {
             cancelAnimationFrame(rafId);
             rafId = null;
@@ -69,10 +81,17 @@ function useMobileKeyboard() {
         }
       }
 
-      if (nowOpen) {
-        // Calculate position: toolbar at bottom of visual viewport
+      if (effectiveOpen) {
         const toolbarHeight = toolbar.offsetHeight || 52;
-        const targetTop = vv.offsetTop + vv.height - toolbarHeight;
+        let targetTop;
+        
+        if (nativeOpen) {
+          // Native keyboard: use visual viewport
+          targetTop = vv.offsetTop + vv.height - toolbarHeight;
+        } else {
+          // Picker-as-keyboard: position above the picker
+          targetTop = window.innerHeight - effectiveHeight - toolbarHeight;
+        }
         
         toolbar.style.position = 'fixed';
         toolbar.style.top = '0';
@@ -80,11 +99,10 @@ function useMobileKeyboard() {
         toolbar.style.right = '0';
         toolbar.style.bottom = 'auto';
         toolbar.style.width = '100vw';
-        toolbar.style.transform = `translateY(${targetTop}px)`;
+        toolbar.style.transform = `translateY(${Math.max(0, targetTop)}px)`;
         toolbar.style.zIndex = '99999';
         toolbar.style.borderRadius = '0';
 
-        // Keep updating while keyboard is open
         rafId = requestAnimationFrame(positionToolbar);
       }
     };
@@ -97,14 +115,20 @@ function useMobileKeyboard() {
       positionToolbar();
     };
 
+    // Listen for picker keyboard changes too
+    const onPickerChange = () => {
+      onResize();
+    };
+
     vv.addEventListener('resize', onResize);
     vv.addEventListener('scroll', onResize);
+    window.addEventListener('pickerKeyboardChange', onPickerChange);
 
     return () => {
       vv.removeEventListener('resize', onResize);
       vv.removeEventListener('scroll', onResize);
+      window.removeEventListener('pickerKeyboardChange', onPickerChange);
       if (rafId) cancelAnimationFrame(rafId);
-      // Reset toolbar on unmount
       const toolbar = document.querySelector('.tiptap-toolbar-mobile');
       if (toolbar) resetToolbar(toolbar);
       document.documentElement.classList.remove('keyboard-open');
