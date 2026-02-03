@@ -43,7 +43,7 @@ export default {
           {
             "id": 206,
             "title": "Pattes à vis - Types et dimensioning",
-            "text": "<p><span style=\"color: rgb(225, 29, 72);\">Pattes à vis métal</span></p><p>Adaptées aux chevilles métalliques</p><p>Ø5 ou Ø6</p><p>Longueurs jusqu'à 70 mm</p><p>Support : Cloisons, placos</p><p></p><p>Règles de vissage minimum</p><p>🔹 Cheville plastique : 30 mm minimum</p><p>🔹 Bois tendre : 20 mm minimum</p><p>🔹 Bois dur : 10 mm minimum</p><p></p><p>À respecter impérativement</p><p>Insuffisant = arrachement garanti</p>",
+            "text": "<p><span style=\"color: rgb(225, 29, 72); font-size: 20px;\"><strong><u>Pattes à vis métal</u></strong></span></p><p>Adaptées aux chevilles métalliques</p><p>Ø5 ou Ø6</p><p>Longueurs jusqu'à 70 mm</p><p>Support : Cloisons, placos</p><p></p><p>Règles de vissage minimum</p><p>🔹 Cheville plastique : 30 mm minimum</p><p>🔹 Bois tendre : 20 mm minimum</p><p>🔹 Bois dur : 10 mm minimum</p><p></p><p>À respecter impérativement</p><p>Insuffisant = arrachement garanti</p>",
             "color": "#8a96a8",
             "images": [
               {
