@@ -79,9 +79,12 @@
   max-width: 220px;
   overflow-x: auto;
   padding-bottom: 4px;
-  scrollbar-width: thin;
-  ms-overflow-style: auto;
+  scrollbar-width: none; /* Firefox: cache la scrollbar native */
+  -ms-overflow-style: none; /* IE/Edge: cache la scrollbar native */
   white-space: nowrap;
+}
+.favorites-scroll-x::-webkit-scrollbar {
+  display: none; /* Chrome/Safari: cache la scrollbar native */
 }
 .favorites-scroll-x > button {
   flex: 0 0 auto;

@@ -3,12 +3,12 @@ import FontSizeDropdown from "./FontSizeDropdown";
 import { FaBold, FaItalic, FaUnderline, FaStrikethrough, FaHeading, FaListUl, FaListOl, FaLink, FaImage, FaTable, FaUndo, FaRedo, FaHighlighter, FaQuoteRight, FaCode, FaTextHeight } from "react-icons/fa";
 import { MdFormatColorText } from "react-icons/md";
 import { IoMdRemoveCircleOutline } from "react-icons/io";
-import { SpiralColorPickerModal } from "./SpiralColorPicker";
+import { SpiralColorPickerDoubleModal } from "../spiral-picker";
 
 export default function TiptapToolbar({ editor, theme, highlightColor, setHighlightColor }) {
   const [showTextPicker, setShowTextPicker] = React.useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = React.useState(false);
-  // Effet miroir décalé et switch animé entre les deux SpiralColorPickerModal
+  // Effet miroir décalé et switch animé entre les deux pickers
   const [activePicker, setActivePicker] = React.useState('highlight');
     // Vérification robuste de la prop editor
     const editorValid = editor && typeof editor.getAttributes === 'function' && typeof editor.chain === 'function' && typeof editor.isActive === 'function' && typeof editor.on === 'function' && typeof editor.off === 'function';
@@ -142,10 +142,10 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
         >
           {React.createElement(MdFormatColorText, { style: { fontSize: 15, width: 15, height: 15, display: 'block', margin: '0 auto' } })}
         </button>
-        {/* SpiralColorPickerModal inline, sans conteneur modal/fixed */}
+        {/* SpiralColorPickerDoubleModal inline, sans conteneur modal/fixed */}
         {(showTextPicker || showHighlightPicker) && (
           <div style={{ position: 'absolute', top: 130, left: 680, zIndex: 30000 }}>
-            <SpiralColorPickerModal
+            <SpiralColorPickerDoubleModal
               value={activePicker === 'highlight' ? (highlightColor || '#fbbf24') : (editor.getAttributes('textStyle').color || '#fff')}
               onChange={color => {
                 if (activePicker === 'highlight') {
@@ -170,13 +170,12 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
               }}
               theme={theme}
               pickerKey={activePicker}
-              trigger={null}
-              effect="popSlideGrow"
-              position={{}}
               showTextPicker={showTextPicker}
               showHighlightPicker={showHighlightPicker}
               activePicker={activePicker}
               setActivePicker={setActivePicker}
+              textIconNode={<MdFormatColorText style={{ fontSize: 22, color: '#fbbf24', filter: 'drop-shadow(0 1px 2px #0008)' }} title="Texte" />}
+              highlightIconNode={<FaHighlighter style={{ fontSize: 20, color: '#fbbf24', filter: 'drop-shadow(0 1px 2px #0008)' }} title="Surligneur" />}
             />
           </div>
         )}

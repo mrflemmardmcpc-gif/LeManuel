@@ -1,0 +1,182 @@
+/* Animations pour le Spiral Color Picker */
+
+/* Classes de base pour le système de swipe */
+.spiral-swipe {
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              box-shadow 0.3s ease-out, 
+              opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              filter 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, opacity;
+}
+
+.spiral-swipe.active {
+  z-index: 2;
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.53), 
+              0 2px 8px rgba(124, 58, 237, 0.53);
+}
+
+.spiral-swipe.mirror {
+  filter: brightness(0.92) contrast(1.08) grayscale(0.12) blur(0.5px);
+  opacity: 0.92;
+  transform: scaleX(-1) translateX(24px) rotateY(6deg) scale(0.8);
+}
+
+.spiral-swipe:not(.active) {
+  opacity: 0.7;
+  filter: blur(0.5px) grayscale(0.18);
+}
+
+/* Bouton de switch central */
+.spiral-swipe-switch-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fbbf24;
+  color: #271d44;
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.27);
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.25s ease-out, 
+              color 0.25s ease-out, 
+              transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.spiral-swipe-switch-btn:hover {
+  background: #f59e42;
+  color: #fff;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Animations de switch gauche/droite */
+.spiral-anim-left {
+  animation: spiralSwitchLeft 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.spiral-anim-right {
+  animation: spiralSwitchRight 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes spiralSwitchLeft {
+  0% {
+    transform: translateX(0) scale(1) rotateY(0deg);
+    opacity: 1;
+    filter: blur(0);
+  }
+  50% {
+    transform: translateX(-240px) scale(0.8) rotateY(30deg);
+    opacity: 0.3;
+    filter: blur(1.5px);
+    z-index: 1;
+  }
+  100% {
+    transform: translateX(0) scale(1) rotateY(0deg);
+    opacity: 1;
+    filter: blur(0);
+    z-index: 2;
+  }
+}
+
+@keyframes spiralSwitchRight {
+  0% {
+    transform: translateX(0) scale(1) rotateY(0deg);
+    opacity: 1;
+    filter: blur(0);
+  }
+  50% {
+    transform: translateX(240px) scale(0.8) rotateY(-30deg);
+    opacity: 0.3;
+    filter: blur(1.5px);
+    z-index: 1;
+  }
+  100% {
+    transform: translateX(0) scale(1) rotateY(0deg);
+    opacity: 1;
+    filter: blur(0);
+    z-index: 2;
+  }
+}
+
+/* Animation de glow pour le curseur */
+@keyframes spiralCursorGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px 2px rgba(251, 191, 36, 0.8),
+                0 0 4px rgba(255, 255, 255, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 16px 4px rgba(251, 191, 36, 1),
+                0 0 8px 2px rgba(255, 255, 255, 1);
+  }
+}
+
+/* Animation d'apparition du picker */
+@keyframes popSlideGrow {
+  0% {
+    transform: scale(0.05) translateY(220px) translateX(-80px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) translateY(-10px) translateX(10px);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.9) translateY(5px) translateX(-5px);
+  }
+  100% {
+    transform: scale(1) translateY(0) translateX(0);
+  }
+}
+
+/* Scroll horizontal pour favoris */
+.favorites-scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox: cache la scrollbar native */
+  -ms-overflow-style: none; /* IE/Edge: cache la scrollbar native */
+}
+
+.favorites-scroll-x::-webkit-scrollbar {
+  display: none; /* Chrome/Safari: cache la scrollbar native */
+}
+
+.favorites-scroll-x::-webkit-scrollbar-track {
+  display: none;
+}
+
+.favorites-scroll-x::-webkit-scrollbar-thumb {
+  display: none;
+}
+
+.favorites-scroll-x::-webkit-scrollbar-thumb:hover {
+  display: none;
+}
+
+/* Scrollbar personnalisée pour le picker */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.5) rgba(255, 255, 255, 0.1);
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.5);
+  border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.8);
+}
