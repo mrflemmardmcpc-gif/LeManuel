@@ -201,101 +201,42 @@
     /* JS sets all positioning - just ensure no conflicting styles */
   }
 
-  /* ==================== SPIRAL PICKER - KEYBOARD STYLE ==================== */
-  /* S'affiche en bas comme un clavier, en mode horizontal compact */
+  /* ==================== SPIRAL PICKER RESPONSIVE ==================== */
   .spiral-picker-container-mobile {
     position: fixed !important;
-    top: auto !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    transform: none !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: auto !important;
-    max-height: 45vh !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 92vw !important;
+    max-width: 320px !important;
+    max-height: 85vh !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    z-index: 100000 !important;
-    padding: 12px 8px 16px 8px !important;
-    border-radius: 20px 20px 0 0 !important;
+    z-index: 30001 !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
     background: linear-gradient(120deg, #271d44 0%, #3a2a5c 60%, #241c3a 100%) !important;
     border: 2px solid #f59e42 !important;
-    border-bottom: none !important;
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.5) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 8px !important;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.5) !important;
   }
-  
-  /* Layout horizontal pour le picker */
-  .spiral-picker-container-mobile > div {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 10px !important;
-    width: 100% !important;
-  }
-  
-  /* Spiral canvas plus petit et sur le côté */
   .spiral-picker-container-mobile .spiral-swipe {
-    width: 120px !important;
-    min-width: 120px !important;
-    max-width: 120px !important;
-    height: 120px !important;
-    margin: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 auto 12px auto !important;
     transform: none !important;
     filter: none !important;
-    flex-shrink: 0 !important;
   }
   .spiral-picker-container-mobile .spiral-swipe.mirror {
     display: none !important;
   }
   .spiral-picker-container-mobile canvas {
-    width: 120px !important;
-    height: 120px !important;
+    max-width: 100% !important;
+    height: auto !important;
   }
-  
-  /* Favoris en ligne horizontale */
   .spiral-picker-container-mobile .favorites-scroll-x {
     max-width: 100% !important;
-    width: auto !important;
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    gap: 6px !important;
-  }
-  
-  /* Boutons de couleur favoris plus compacts */
-  .spiral-picker-container-mobile .favorites-scroll-x > * {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    border-radius: 8px !important;
-  }
-  
-  /* Input hex compact */
-  .spiral-picker-container-mobile input[type="text"] {
-    width: 90px !important;
-    font-size: 14px !important;
-    padding: 6px 8px !important;
-  }
-  
-  /* Tabs picker (text/highlight) en ligne */
-  .spiral-picker-container-mobile .picker-tabs {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 8px !important;
-    margin-bottom: 4px !important;
-  }
-  .spiral-picker-container-mobile .picker-tabs button {
-    padding: 8px 16px !important;
-    font-size: 14px !important;
+    width: 100% !important;
   }
 
   /* ==================== FULL EDITOR PAGE RESPONSIVE ==================== */
