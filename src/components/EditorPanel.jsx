@@ -10,7 +10,7 @@ export default function EditorPanel(props) {
   }
   if (!editMode || !isAuthenticated) return null;
   return (
-      <div style={{
+      <div className="editor-panel-mobile" style={{
       background: theme?.bg || "#f8fafc",
       border: `2px solid ${theme?.accent1 || "#f59e42"}`,
       borderRadius: 18,

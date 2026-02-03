@@ -46,6 +46,7 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
   return (
     <>
       <div
+        className="tiptap-toolbar-mobile"
         style={{
           position: 'fixed',
           left: 220, // décalé plus à gauche (avant 385)
@@ -144,7 +145,7 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
         </button>
         {/* SpiralColorPickerDoubleModal inline, sans conteneur modal/fixed */}
         {(showTextPicker || showHighlightPicker) && (
-          <div style={{ position: 'absolute', top: 130, left: 680, zIndex: 30000 }}>
+          <div className="spiral-picker-container-mobile" style={{ position: 'absolute', top: 130, left: 680, zIndex: 30000 }}>
             <SpiralColorPickerDoubleModal
               value={activePicker === 'highlight' ? (highlightColor || '#fbbf24') : (editor.getAttributes('textStyle').color || '#fff')}
               onChange={color => {

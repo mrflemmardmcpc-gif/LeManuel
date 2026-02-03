@@ -4,7 +4,7 @@ import EditorPanel from "../components/EditorPanel";
 function FullEditorPage({ open, onClose, saveEditSub, saveEditCategory, sections, darkMode, selectionInfo, ...editorProps }) {
   if (!open) return null;
   return (
-    <div style={{
+    <div className="full-editor-page-mobile" style={{
       position: "fixed",
       inset: 0,
       background: "transparent",
