@@ -96,6 +96,8 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
             marginBottom: 10,
           }}
           onClick={() => {
+            // Fermer le clavier sur mobile
+            if (document.activeElement) document.activeElement.blur();
             const attrs = editor.getAttributes('highlight');
             if (showHighlightPicker && editor.isActive('highlight') && attrs?.color) {
               // Si déjà ouvert et actif, retire la couleur
@@ -130,6 +132,8 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
             marginBottom: 10,
           }}
           onClick={() => {
+            // Fermer le clavier sur mobile
+            if (document.activeElement) document.activeElement.blur();
             const color = editor.getAttributes('textStyle').color;
             if (showTextPicker && color) {
               // Si déjà ouvert et une couleur est active, retire la couleur
@@ -143,9 +147,9 @@ export default function TiptapToolbar({ editor, theme, highlightColor, setHighli
         >
           {React.createElement(MdFormatColorText, { style: { fontSize: 15, width: 15, height: 15, display: 'block', margin: '0 auto' } })}
         </button>
-        {/* SpiralColorPickerDoubleModal inline, sans conteneur modal/fixed */}
+        {/* SpiralColorPickerDoubleModal - style géré par CSS sur mobile */}
         {(showTextPicker || showHighlightPicker) && (
-          <div className="spiral-picker-container-mobile" style={{ position: 'absolute', top: 130, left: 680, zIndex: 30000 }}>
+          <div className="spiral-picker-container-mobile">
             <SpiralColorPickerDoubleModal
               value={activePicker === 'highlight' ? (highlightColor || '#fbbf24') : (editor.getAttributes('textStyle').color || '#fff')}
               onChange={color => {

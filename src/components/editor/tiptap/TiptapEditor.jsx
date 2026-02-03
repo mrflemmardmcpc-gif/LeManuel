@@ -20,6 +20,128 @@ import { TableContextMenu, TableHandleButtons } from "./TableControls";
 const CustomTableHeader = TableRow;
 const CustomTableCell = TableRow;
 
+// Mobile keyboard handler - positions toolbar above keyboard using transform
+function useMobileKeyboard() {
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!isMobile) return;
+
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    let rafId = null;
+    let isOpen = false;
+
+    const resetToolbar = (toolbar) => {
+      // Fully reset all inline styles
+      toolbar.style.position = '';
+      toolbar.style.top = '';
+      toolbar.style.left = '';
+      toolbar.style.right = '';
+      toolbar.style.bottom = '';
+      toolbar.style.width = '';
+      toolbar.style.transform = '';
+      toolbar.style.zIndex = '';
+      toolbar.style.borderRadius = '';
+    };
+
+    const positionToolbar = () => {
+      const toolbar = document.querySelector('.tiptap-toolbar-mobile');
+      if (!toolbar) return;
+
+      const keyboardHeight = window.innerHeight - vv.height;
+      const nowOpen = keyboardHeight > 100;
+
+      // State changed
+      if (nowOpen !== isOpen) {
+        isOpen = nowOpen;
+        document.documentElement.classList.toggle('keyboard-open', nowOpen);
+        
+        // If closing, reset toolbar immediately
+        if (!nowOpen) {
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+          }
+          resetToolbar(toolbar);
+          return;
+        }
+      }
+
+      if (nowOpen) {
+        // Calculate position: toolbar at bottom of visual viewport
+        const toolbarHeight = toolbar.offsetHeight || 52;
+        const targetTop = vv.offsetTop + vv.height - toolbarHeight;
+        
+        toolbar.style.position = 'fixed';
+        toolbar.style.top = '0';
+        toolbar.style.left = '0';
+        toolbar.style.right = '0';
+        toolbar.style.bottom = 'auto';
+        toolbar.style.width = '100vw';
+        toolbar.style.transform = `translateY(${targetTop}px)`;
+        toolbar.style.zIndex = '99999';
+        toolbar.style.borderRadius = '0';
+
+        // Keep updating while keyboard is open
+        rafId = requestAnimationFrame(positionToolbar);
+      }
+    };
+
+    const onResize = () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      positionToolbar();
+    };
+
+    vv.addEventListener('resize', onResize);
+    vv.addEventListener('scroll', onResize);
+
+    return () => {
+      vv.removeEventListener('resize', onResize);
+      vv.removeEventListener('scroll', onResize);
+      if (rafId) cancelAnimationFrame(rafId);
+      // Reset toolbar on unmount
+      const toolbar = document.querySelector('.tiptap-toolbar-mobile');
+      if (toolbar) resetToolbar(toolbar);
+      document.documentElement.classList.remove('keyboard-open');
+    };
+  }, []);
+}
+
+// Scroll editor to keep cursor visible above keyboard
+function scrollToCursor(editor) {
+  if (!editor) return;
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (!isMobile) return;
+
+  requestAnimationFrame(() => {
+    try {
+      const { view } = editor;
+      const coords = view.coordsAtPos(view.state.selection.head);
+      if (!coords) return;
+
+      const vv = window.visualViewport;
+      if (!vv) return;
+
+      const toolbarHeight = 60;
+      const padding = 20;
+      // Visible area: from toolbar at top to bottom of visual viewport
+      const visibleTop = vv.offsetTop + toolbarHeight + padding;
+      const visibleBottom = vv.offsetTop + vv.height - padding;
+
+      if (coords.top < visibleTop) {
+        window.scrollBy({ top: coords.top - visibleTop - padding, behavior: 'smooth' });
+      } else if (coords.bottom > visibleBottom) {
+        window.scrollBy({ top: coords.bottom - visibleBottom + padding, behavior: 'smooth' });
+      }
+    } catch (e) { /* ignore */ }
+  });
+}
+
 function isProbablyHtml(str) {
   return /<\s*(p|ul|ol|li|table|tr|td|th|h[1-6]|img|br)[^>]*>/i.test(str);
 }
@@ -56,6 +178,9 @@ export default function TiptapEditor({
   const contextMenuRef = useRef();
   const didInit = useRef(false);
 
+  // Mobile keyboard hook
+  useMobileKeyboard();
+
   // Editor instance
   const editor = useEditor({
     extensions: [
@@ -75,6 +200,11 @@ export default function TiptapEditor({
     content: '',
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+      // Auto-scroll to keep cursor visible on mobile
+      scrollToCursor(editor);
+    },
+    onSelectionUpdate: ({ editor }) => {
+      scrollToCursor(editor);
     },
     editorProps: {
       attributes: {

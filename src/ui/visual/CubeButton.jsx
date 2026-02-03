@@ -49,7 +49,7 @@ export default function CubeButton3D({
           position: absolute;
           left: 0;
           top: 0;
-          border: 2px solid var(--cube-border-color, #fff4);
+          border: none;
           display: flex;
           align-items: center;
           justify-content: center;
