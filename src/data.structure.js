@@ -43,7 +43,7 @@ export default {
           {
             "id": 206,
             "title": "Pattes à vis - Types et dimensioning",
-            "text": "<p><span style=\"color: rgb(90, 114, 190); font-size: 22px;\"><strong><u>Pattes à vis métal</u></strong></span></p><p><span style=\"color: rgb(59, 81, 221); font-size: 18px;\"><strong>Adaptées aux chevilles métalliques</strong></span></p><p>Ø5 ou Ø6</p><p>Longueurs jusqu'à 70 mm</p><p>Support : Cloisons, placos</p><p></p><p><span style=\"color: rgb(59, 81, 221); font-size: 18px;\"><strong>Règles de vissage minimum</strong></span></p><p>🔹 Cheville plastique : 30 mm minimum</p><p>🔹 Bois tendre : 20 mm minimum</p><p>🔹 Bois dur : 10 mm minimum</p><p></p><p><span style=\"color: rgb(248, 33, 57); font-size: 18px;\"><strong>À respecter impérativement</strong></span></p><p><span style=\"color: rgb(219, 149, 61);\">Insuffisant = arrachement garanti</span></p>",
+            "text": "<p><span style=\"color: rgb(90, 114, 190); font-size: 22px;\"><strong><u>Pattes à vis métal</u></strong></span></p><p><span style=\"color: rgb(59, 81, 221); font-size: 18px;\"><strong>Adaptées aux chevilles métalliques</strong></span></p><p><span style=\"color: rgb(234, 46, 94); font-size: 28px;\">Ø5 ou Ø6</span></p><p>Longueurs jusqu'à 70 mm</p><p>Support : Cloisons, placos</p><p></p><p><span style=\"color: rgb(59, 81, 221); font-size: 18px;\"><strong>Règles de vissage minimum</strong></span></p><p>🔹 Cheville plastique : 30 mm minimum</p><p>🔹 Bois tendre : 20 mm minimum</p><p>🔹 Bois dur : 10 mm minimum</p><p></p><p><span style=\"color: rgb(248, 33, 57); font-size: 18px;\"><strong>À respecter impérativement</strong></span></p><p><span style=\"color: rgb(219, 149, 61);\">Insuffisant = arrachement garanti</span></p>",
             "color": "#8a96a8",
             "images": [
               {
@@ -347,7 +347,7 @@ export default {
       {
         "id": 902,
         "name": "Instantané + chaudière",
-        "icon": "🔥",
+        "icon": "��",
         "sectionId": 2,
         "color": "#f97316",
         "subs": [
